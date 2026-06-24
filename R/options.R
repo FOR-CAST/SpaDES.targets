@@ -58,8 +58,10 @@ spades_safe_options <- function(strict = FALSE) {
     spades.browserOnError = FALSE, # guard vs worker hang on error
     reproducible.interactiveOnDownloadFail = FALSE, # guard vs stdin block on download fail
     reproducible.objSize = FALSE,
-    ## spatial -- terra-first
-    reproducible.rasterRead = "terra::rast", # was reproducible.useTerra (removed in dev)
+    ## spatial -- terra-first. useTerra was renamed to rasterRead in dev; set both
+    ## for cross-version safety (consumers pin different reproducible dev SHAs).
+    reproducible.useTerra = TRUE,
+    reproducible.rasterRead = "terra::rast",
     reproducible.shapefileRead = "terra::vect", # override dev default "sf::st_read"
     ## development diagnostics -- off for production, on under strict = TRUE
     spades.debug = diag,

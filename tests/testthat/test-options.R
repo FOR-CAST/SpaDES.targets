@@ -10,9 +10,9 @@ test_that("spades_safe_options disables the destructive/unsafe behaviours", {
 
 test_that("spades_safe_options keeps spatial reads terra-first (live option names)", {
   opts <- spades_safe_options()
-  expect_identical(opts$reproducible.rasterRead, "terra::rast") # was useTerra (removed in dev)
+  expect_identical(opts$reproducible.rasterRead, "terra::rast") # live successor of useTerra
+  expect_identical(opts$reproducible.useTerra, TRUE) # old name kept for cross-version safety
   expect_identical(opts$reproducible.shapefileRead, "terra::vect") # override dev default sf::st_read
-  expect_null(opts$reproducible.useTerra) # dead option not set
 })
 
 test_that("spades_safe_options sets both the old and renamed sequential-caching option", {

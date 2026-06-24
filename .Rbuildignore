@@ -1,0 +1,12 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^_pkgdown\.yml$
+^LICENSE$
+^\.httr-oauth$
+^\.git$
+^\.github$
+^codecov\.yml$
+^man-roxygen$
+^[.]?air[.]toml$
+^\.vscode$
+^LICENSE\.md$

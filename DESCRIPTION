@@ -1,0 +1,42 @@
+Type: Package
+Package: SpaDES.targets
+Title: Orchestrate SpaDES Simulations with 'targets'
+Version: 0.0.0.9000
+Authors@R: c(
+    person("Alex M", "Chubaty", , "achubaty@for-cast.ca", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0001-7146-8135"))
+  )
+Description: Helpers to run 'SpaDES' simulations (simInitAndSpades) as stages of
+    a 'targets' pipeline. Each stage runs in-process and returns the discrete
+    components the next stage needs -- plain objects as ordinary targets and
+    spatial ('terra') objects as 'format = "file"' targets -- so whole simList
+    objects are never serialized. Also provides a hard options "firewall" that
+    disables the known-destructive 'reproducible'/'SpaDES.core' behaviours, plus
+    spatial file-target and provenance helpers.
+License: Apache License (>= 2)
+URL: https://github.com/FOR-CAST/SpaDES.targets
+BugReports: https://github.com/FOR-CAST/SpaDES.targets/issues
+Depends:
+    R (>= 4.4)
+Imports:
+    cli,
+    fs,
+    rlang,
+    targets,
+    terra,
+    tools,
+    utils,
+    withr
+Suggests:
+    covr,
+    crew,
+    lifecycle,
+    qs2,
+    SpaDES.core,
+    testthat (>= 3.0.0)
+Additional_repositories: https://predictiveecology.r-universe.dev
+Config/testthat/edition: 3
+Encoding: UTF-8
+Language: en-CA
+Roxygen: list(markdown = TRUE)
+Config/roxygen2/version: 8.0.0

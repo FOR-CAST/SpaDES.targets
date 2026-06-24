@@ -4,13 +4,18 @@
 \alias{with_spades_safe_options}
 \title{Evaluate code with the safe SpaDES options set}
 \usage{
-with_spades_safe_options(code, .options = list())
+with_spades_safe_options(code, .options = list(), strict = FALSE)
 }
 \arguments{
 \item{code}{Code to evaluate.}
 
 \item{.options}{A named \code{list} of extra options to merge over (and override)
 \code{\link[=spades_safe_options]{spades_safe_options()}}.}
+
+\item{strict}{If \code{TRUE}, additionally re-enable the development diagnostics
+that the firewall leaves off for speed (module code checks, memory-leak
+tests, and keeping the completed-event queue). Use during development to
+validate modules; leave \code{FALSE} (default) for production runs.}
 }
 \value{
 The value of \code{code}, invisibly if \code{code} is invisible.

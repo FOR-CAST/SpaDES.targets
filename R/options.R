@@ -1,23 +1,37 @@
 #' Safe 'SpaDES'/'reproducible' options for targets-orchestrated runs
 #'
-#' Returns the set of options that must be set so that `targets` is the sole
-#' orchestrator and cache, and the known-destructive PredictiveEcology
-#' behaviours are off. In particular `reproducible.useCache = FALSE` makes
-#' `reproducible::Cache()` a pass-through (caching is delegated to `targets`),
-#' `spades.saveSimOnExit = FALSE` keeps a `simList` from being serialized to
-#' disk on exit (this package never serializes a `simList`), and
-#' `spades.browserOnError = FALSE` prevents a `browser()` from hanging a
-#' non-interactive worker.
+#' Returns the set of options that make `targets` the sole orchestrator and
+#' cache and disable the known-destructive / non-headless-safe PredictiveEcology
+#' behaviours. In particular it:
 #'
-#' This is the single place that encodes the option "firewall"; audit it against
-#' new `SpaDES.core`/`reproducible` development versions and add any further
-#' unsafe defaults here. Audited against `SpaDES.core` 3.1.2.9016 /
-#' `reproducible` 3.1.1.9062.
+#' * makes caching a pass-through so `targets` is the only cache
+#'   (`reproducible.useCache = FALSE`, etc.);
+#' * keeps a `simList` from being serialized to disk on exit
+#'   (`spades.saveSimOnExit = FALSE`) -- this package never serializes a `simList`;
+#' * keeps spatial reads on the `terra` path (`reproducible.rasterRead`,
+#'   `reproducible.shapefileRead`);
+#' * guards against a non-interactive worker hanging on `browser()`
+#'   (`spades.browserOnError = FALSE`) or on a blocking download prompt
+#'   (`reproducible.interactiveOnDownloadFail = FALSE`).
 #'
-#' @param strict If `TRUE`, additionally re-enable the development diagnostics
-#'   that the firewall leaves off for speed (module code checks, memory-leak
-#'   tests, and keeping the completed-event queue). Use during development to
-#'   validate modules; leave `FALSE` (default) for production runs.
+#' This is the single place that encodes the option "firewall" -- the one
+#' adapter that absorbs upstream option renames/removals (e.g. the dev-version
+#' renames `spades.allowSequentialCaching` -> `spades.cacheChaining` and
+#' `reproducible.useTerra` -> `reproducible.rasterRead`, both handled here).
+#' Audited against `SpaDES.core` 3.1.2.9016 / `reproducible` 3.1.1.9062; audit it
+#' again on each dev bump.
+#'
+#' Not set here (left to the caller / per run): `reproducible.leaveOnDisk`
+#' (keep its `TRUE` default, but pin terra scratch + `memfrac` and always
+#' [write_spatial()] before a process/target boundary so file-backed rasters
+#' stay valid), and the Google Drive download knobs
+#' (`reproducible.gdriveNoAuth` / `reproducible.useGdown`), which are
+#' per-project and asset-specific.
+#'
+#' @param strict If `TRUE`, turn the development diagnostics back **on**
+#'   (`spades.debug`, `spades.moduleCodeChecks`, `spades.testMemoryLeaks`,
+#'   `spades.keepCompleted`), which the production default (`FALSE`) leaves off
+#'   for speed/memory. Use during development to validate modules.
 #' @return A named `list` of options suitable for [base::options()] or
 #'   [withr::with_options()].
 #' @export
@@ -25,31 +39,34 @@
 #' str(spades_safe_options())
 #' str(spades_safe_options(strict = TRUE))
 spades_safe_options <- function(strict = FALSE) {
-  opts <- list(
+  diag <- isTRUE(strict) # dev diagnostics: off in production, on under strict
+  list(
+    ## package management -- renv is the installer, not Require
     Require.install = FALSE,
     spades.useRequire = FALSE,
-    # cacheChaining replaced allowSequentialCaching in SpaDES.core dev; set both
-    # so the firewall is robust across the version range consumers may pin.
+    ## caching -- targets is the sole cache
     spades.cacheChaining = FALSE,
-    spades.allowSequentialCaching = FALSE,
-    spades.allowInitDuringSimInit = FALSE,
-    spades.futureEvents = FALSE,
-    spades.recoveryMode = FALSE, # dev default is 1 (ON) -> disable
-    spades.saveSimOnExit = FALSE, # dev default TRUE -> never serialize the simList
-    spades.browserOnError = FALSE, # guard vs a worker hang on error
+    spades.allowSequentialCaching = FALSE, # removed-in-dev alias; set for cross-version safety
     reproducible.useCache = FALSE,
     reproducible.useMemoise = FALSE,
     reproducible.useCloud = FALSE,
+    ## destructive behaviours / non-headless-safe guards
+    spades.allowInitDuringSimInit = FALSE,
+    spades.futureEvents = FALSE,
+    spades.recoveryMode = FALSE, # dev default 1 (ON)
+    spades.saveSimOnExit = FALSE, # dev default TRUE -> never serialize the simList
+    spades.browserOnError = FALSE, # guard vs worker hang on error
+    reproducible.interactiveOnDownloadFail = FALSE, # guard vs stdin block on download fail
     reproducible.objSize = FALSE,
-    reproducible.useTerra = TRUE,
-    reproducible.shapefileRead = "terra::vect"
+    ## spatial -- terra-first
+    reproducible.rasterRead = "terra::rast", # was reproducible.useTerra (removed in dev)
+    reproducible.shapefileRead = "terra::vect", # override dev default "sf::st_read"
+    ## development diagnostics -- off for production, on under strict = TRUE
+    spades.debug = diag,
+    spades.moduleCodeChecks = diag,
+    spades.testMemoryLeaks = diag,
+    spades.keepCompleted = diag
   )
-  if (isTRUE(strict)) {
-    opts$spades.moduleCodeChecks <- TRUE
-    opts$spades.testMemoryLeaks <- TRUE
-    opts$spades.keepCompleted <- TRUE
-  }
-  opts
 }
 
 #' Evaluate code with the safe SpaDES options set

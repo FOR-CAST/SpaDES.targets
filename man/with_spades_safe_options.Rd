@@ -12,10 +12,10 @@ with_spades_safe_options(code, .options = list(), strict = FALSE)
 \item{.options}{A named \code{list} of extra options to merge over (and override)
 \code{\link[=spades_safe_options]{spades_safe_options()}}.}
 
-\item{strict}{If \code{TRUE}, additionally re-enable the development diagnostics
-that the firewall leaves off for speed (module code checks, memory-leak
-tests, and keeping the completed-event queue). Use during development to
-validate modules; leave \code{FALSE} (default) for production runs.}
+\item{strict}{If \code{TRUE}, turn the development diagnostics back \strong{on}
+(\code{spades.debug}, \code{spades.moduleCodeChecks}, \code{spades.testMemoryLeaks},
+\code{spades.keepCompleted}), which the production default (\code{FALSE}) leaves off
+for speed/memory. Use during development to validate modules.}
 }
 \value{
 The value of \code{code}, invisibly if \code{code} is invisible.

@@ -7,30 +7,46 @@
 spades_safe_options(strict = FALSE)
 }
 \arguments{
-\item{strict}{If \code{TRUE}, additionally re-enable the development diagnostics
-that the firewall leaves off for speed (module code checks, memory-leak
-tests, and keeping the completed-event queue). Use during development to
-validate modules; leave \code{FALSE} (default) for production runs.}
+\item{strict}{If \code{TRUE}, turn the development diagnostics back \strong{on}
+(\code{spades.debug}, \code{spades.moduleCodeChecks}, \code{spades.testMemoryLeaks},
+\code{spades.keepCompleted}), which the production default (\code{FALSE}) leaves off
+for speed/memory. Use during development to validate modules.}
 }
 \value{
 A named \code{list} of options suitable for \code{\link[base:options]{base::options()}} or
 \code{\link[withr:with_options]{withr::with_options()}}.
 }
 \description{
-Returns the set of options that must be set so that \code{targets} is the sole
-orchestrator and cache, and the known-destructive PredictiveEcology
-behaviours are off. In particular \code{reproducible.useCache = FALSE} makes
-\code{reproducible::Cache()} a pass-through (caching is delegated to \code{targets}),
-\code{spades.saveSimOnExit = FALSE} keeps a \code{simList} from being serialized to
-disk on exit (this package never serializes a \code{simList}), and
-\code{spades.browserOnError = FALSE} prevents a \code{browser()} from hanging a
-non-interactive worker.
+Returns the set of options that make \code{targets} the sole orchestrator and
+cache and disable the known-destructive / non-headless-safe PredictiveEcology
+behaviours. In particular it:
 }
 \details{
-This is the single place that encodes the option "firewall"; audit it against
-new \code{SpaDES.core}/\code{reproducible} development versions and add any further
-unsafe defaults here. Audited against \code{SpaDES.core} 3.1.2.9016 /
-\code{reproducible} 3.1.1.9062.
+\itemize{
+\item makes caching a pass-through so \code{targets} is the only cache
+(\code{reproducible.useCache = FALSE}, etc.);
+\item keeps a \code{simList} from being serialized to disk on exit
+(\code{spades.saveSimOnExit = FALSE}) -- this package never serializes a \code{simList};
+\item keeps spatial reads on the \code{terra} path (\code{reproducible.rasterRead},
+\code{reproducible.shapefileRead});
+\item guards against a non-interactive worker hanging on \code{browser()}
+(\code{spades.browserOnError = FALSE}) or on a blocking download prompt
+(\code{reproducible.interactiveOnDownloadFail = FALSE}).
+}
+
+This is the single place that encodes the option "firewall" -- the one
+adapter that absorbs upstream option renames/removals (e.g. the dev-version
+renames \code{spades.allowSequentialCaching} -> \code{spades.cacheChaining} and
+\code{reproducible.useTerra} -> \code{reproducible.rasterRead}, both handled here).
+Audited against \code{SpaDES.core} 3.1.2.9016 / \code{reproducible} 3.1.1.9062; audit it
+again on each dev bump.
+
+Not set here (left to the caller / per run): \code{reproducible.leaveOnDisk}
+(keep its \code{TRUE} default, but pin terra scratch + \code{memfrac} and always
+\code{\link[=write_spatial]{write_spatial()}} before a process/target boundary so file-backed rasters
+stay valid), and the Google Drive download knobs
+(\code{reproducible.gdriveNoAuth} / \code{reproducible.useGdown}), which are
+per-project and asset-specific.
 }
 \examples{
 str(spades_safe_options())

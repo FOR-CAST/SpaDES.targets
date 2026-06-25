@@ -8,7 +8,7 @@ restoring the previous options afterwards.
 ## Usage
 
 ``` r
-with_spades_safe_options(code, .options = list())
+with_spades_safe_options(code, .options = list(), strict = FALSE)
 ```
 
 ## Arguments
@@ -21,6 +21,13 @@ with_spades_safe_options(code, .options = list())
 
   A named `list` of extra options to merge over (and override)
   [`spades_safe_options()`](https://github.com/FOR-CAST/SpaDES.targets/reference/spades_safe_options.md).
+
+- strict:
+
+  If `TRUE`, turn the development diagnostics back **on**
+  (`spades.debug`, `spades.moduleCodeChecks`, `spades.testMemoryLeaks`,
+  `spades.keepCompleted`), which the production default (`FALSE`) leaves
+  off for speed/memory. Use during development to validate modules.
 
 ## Value
 

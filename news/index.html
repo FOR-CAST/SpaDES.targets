@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,7 +40,7 @@
 <li>
 <code><a href="../reference/run_simspades.html">run_simspades()</a></code> worker: runs a stage under the safe options and extracts its components.</li>
 <li>
-<code><a href="../reference/spades_safe_options.html">spades_safe_options()</a></code> / <code><a href="../reference/with_spades_safe_options.html">with_spades_safe_options()</a></code>: the options “firewall” that makes <code>targets</code> the sole cache and disables known-destructive <code>reproducible</code>/<code>SpaDES.core</code> behaviours.</li>
+<code><a href="../reference/spades_safe_options.html">spades_safe_options()</a></code> / <code><a href="../reference/with_spades_safe_options.html">with_spades_safe_options()</a></code>: the options “firewall” that makes <code>targets</code> the sole cache and disables known-destructive / non-headless-safe <code>reproducible</code>/<code>SpaDES.core</code> behaviours. Audited against <code>SpaDES.core</code> 3.1.2.9016 / <code>reproducible</code> 3.1.1.9062: adds <code>spades.saveSimOnExit = FALSE</code> (dev default <code>TRUE</code> would serialize the simList), <code>spades.browserOnError = FALSE</code> and <code>reproducible.interactiveOnDownloadFail = FALSE</code> (guards against hanging a non-interactive worker on a <code><a href="https://rdrr.io/r/base/browser.html" class="external-link">browser()</a></code> or a download prompt); replaces the dead <code>reproducible.useTerra</code> with <code>reproducible.rasterRead = "terra::rast"</code> and keeps <code>reproducible.shapefileRead = "terra::vect"</code> (now a meaningful override); sets both <code>spades.cacheChaining</code> and the renamed-away <code>spades.allowSequentialCaching</code>. A <code>strict</code> argument turns the development diagnostics (<code>spades.debug</code>, <code>spades.moduleCodeChecks</code>, <code>spades.testMemoryLeaks</code>, <code>spades.keepCompleted</code>) back on, which the production default leaves off.</li>
 <li>
 <code><a href="../reference/write_spatial.html">write_spatial()</a></code> / <code><a href="../reference/read_spatial.html">read_spatial()</a></code> / <code><a href="../reference/is_spatial.html">is_spatial()</a></code>: terra-first spatial file-target helpers.</li>
 <li>

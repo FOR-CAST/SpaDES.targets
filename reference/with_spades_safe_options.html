@@ -9,7 +9,7 @@ for the duration of code, restoring the previous options afterwards."></head><bo
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,7 +42,7 @@ for the duration of <code>code</code>, restoring the previous options afterwards
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">with_spades_safe_options</span><span class="op">(</span><span class="va">code</span>, .options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">with_spades_safe_options</span><span class="op">(</span><span class="va">code</span>, .options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, strict <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -56,6 +56,13 @@ for the duration of <code>code</code>, restoring the previous options afterwards
 <dt id="arg--options">.options<a class="anchor" aria-label="anchor" href="#arg--options"></a></dt>
 <dd><p>A named <code>list</code> of extra options to merge over (and override)
 <code><a href="spades_safe_options.html">spades_safe_options()</a></code>.</p></dd>
+
+
+<dt id="arg-strict">strict<a class="anchor" aria-label="anchor" href="#arg-strict"></a></dt>
+<dd><p>If <code>TRUE</code>, turn the development diagnostics back <strong>on</strong>
+(<code>spades.debug</code>, <code>spades.moduleCodeChecks</code>, <code>spades.testMemoryLeaks</code>,
+<code>spades.keepCompleted</code>), which the production default (<code>FALSE</code>) leaves off
+for speed/memory. Use during development to validate modules.</p></dd>
 
 </dl></div>
     <div class="section level2">

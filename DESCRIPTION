@@ -1,7 +1,7 @@
 Type: Package
 Package: SpaDES.targets
 Title: Orchestrate SpaDES Simulations with 'targets'
-Version: 0.0.0.9003
+Version: 0.0.0.9004
 Authors@R: c(
     person("Alex M", "Chubaty", , "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
@@ -23,6 +23,7 @@ Depends:
 Imports:
     cli,
     fs,
+    methods,
     rlang,
     targets,
     terra,
@@ -34,6 +35,7 @@ Suggests:
     crew,
     lifecycle,
     qs2,
+    sf,
     SpaDES.core,
     testthat (>= 3.0.0)
 Additional_repositories: https://predictiveecology.r-universe.dev

@@ -8,12 +8,13 @@ Builds the `targets` for one `simInitAndSpades` stage:
 tar_simspades(
   name,
   modules,
-  inputs = quote(list()),
+  objects = quote(list()),
+  inputs = NULL,
+  outputs = NULL,
   params = list(),
   times = list(start = 0, end = 1),
   paths = NULL,
   plain = character(),
-  spatial = character(),
   out_dir = NULL,
   seed = NULL,
   format = "rds",
@@ -31,28 +32,39 @@ tar_simspades(
 
   Character vector (or list) of module names for this stage.
 
+- objects:
+
+  A **quoted** expression giving the small in-memory upstream components
+  to pass as `simInitAndSpades(objects =)` (e.g.
+  `quote(list(sppEquiv = preamble$sppEquiv))`). Defaults to
+  `quote(list())`.
+
 - inputs:
 
-  A **quoted** expression (e.g.
-  `quote(list(rasterToMatch = preamble_rasterToMatch, sppEquiv = preamble$sppEquiv))`)
-  giving the upstream component targets to pass as
-  `simInitAndSpades(objects =)`. Spatial inputs that arrive as
-  file-target paths should be wrapped in
-  [`read_spatial()`](https://github.com/FOR-CAST/SpaDES.targets/reference/read_spatial.md).
+  A **quoted** expression giving the `simInit(inputs=)` table of
+  file-backed upstream outputs, typically
+  `quote(sim_inputs(preamble, objects = c(...), files = preamble_files))`.
+  `NULL` for none.
+
+- outputs:
+
+  A **quoted** expression (or literal `data.frame`) declaring which
+  objects to save and when, passed to `simInit(outputs=)`. `NULL` to
+  rely solely on module-side saving (`registerOutputs()` / `Plots()`).
 
 - params, times, paths, seed, .options:
 
   Passed through to
   [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md).
 
-- plain, spatial:
+- plain:
 
-  Character vectors naming the objects this stage emits; `spatial` ones
-  additionally get file targets.
+  Character vector naming in-memory objects the primary target should
+  also return as-is.
 
 - out_dir:
 
-  Directory for spatial file outputs; defaults to
+  Directory for this stage's saved outputs and figures; defaults to
   `file.path("outputs", name)`.
 
 - format:
@@ -62,41 +74,40 @@ tar_simspades(
 
 ## Value
 
-A `list` of `tar_target` objects (primary first, then one per spatial
-output) — return it from `_targets.R` like any target list.
+A `list` of two `tar_target` objects (the primary, then the companion
+`format = "file"` target) — return it from `_targets.R` like any target
+list.
 
 ## Details
 
 - a **primary** target `name` that runs the stage
   ([`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md))
-  and returns its `plain` components plus `"<obj>_path"` entries for the
-  spatial outputs; and
+  and returns its output `manifest` (a `data.frame` mapping each saved
+  `objectName` to its `file`), the `files` character vector, and any
+  `plain` in-memory objects; and
 
-- one **`format = "file"`** target `name_<obj>` per `spatial` output,
-  whose command is `name[["<obj>_path"]]` so `targets` hashes the
-  written file.
+- one **`format = "file"`** target `name_files` whose command is
+  `name[["files"]]`, so `targets` content-hashes every file the stage
+  wrote (per-timestep saves, summary dumps, and `Plots()` figures alike)
+  and invalidates downstream when any of them change.
 
 Downstream stages consume the plain components as `name$<obj>` and the
-spatial outputs via
-[`read_spatial()`](https://github.com/FOR-CAST/SpaDES.targets/reference/read_spatial.md)
-on the file target, and pass them to their own `simInit` through
-`inputs`. No `simList` ever crosses a target boundary.
+saved files via
+[`sim_inputs()`](https://github.com/FOR-CAST/SpaDES.targets/reference/sim_inputs.md)
+on `name$manifest` (passing `name_files` as the `files` dependency),
+feeding them to their own `simInit` through `inputs`. No `simList` ever
+crosses a target boundary.
 
 ## See also
 
 [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md),
-[`extract_components()`](https://github.com/FOR-CAST/SpaDES.targets/reference/extract_components.md),
-[`read_spatial()`](https://github.com/FOR-CAST/SpaDES.targets/reference/read_spatial.md)
+[`extract_outputs()`](https://github.com/FOR-CAST/SpaDES.targets/reference/extract_outputs.md),
+[`sim_inputs()`](https://github.com/FOR-CAST/SpaDES.targets/reference/sim_inputs.md)
 
 ## Examples
 
 ``` r
-tl <- tar_simspades(
-  "preamble",
-  modules = "LandWeb_preamble",
-  plain = c("sppEquiv", "sppColorVect"),
-  spatial = c("rasterToMatch", "studyArea")
-)
-length(tl) # 1 primary + 2 file targets
-#> [1] 3
+tl <- tar_simspades("preamble", modules = "LandWeb_preamble")
+length(tl) # primary + companion file target
+#> [1] 2
 ```

@@ -11,8 +11,8 @@
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Orchestrate SpaDES Simulations with targets">
-<meta name="description" content='Helpers to run SpaDES simulations (simInitAndSpades) as stages of a targets pipeline. Each stage runs in-process and returns the discrete components the next stage needs -- plain objects as ordinary targets and spatial (terra) objects as format = "file" targets -- so whole simList objects are never serialized. Also provides a hard options "firewall" that disables the known-destructive reproducible/SpaDES.core behaviours, plus spatial file-target and provenance helpers.'>
-<meta property="og:description" content='Helpers to run SpaDES simulations (simInitAndSpades) as stages of a targets pipeline. Each stage runs in-process and returns the discrete components the next stage needs -- plain objects as ordinary targets and spatial (terra) objects as format = "file" targets -- so whole simList objects are never serialized. Also provides a hard options "firewall" that disables the known-destructive reproducible/SpaDES.core behaviours, plus spatial file-target and provenance helpers.'>
+<meta name="description" content='Helpers to run SpaDES simulations (simInitAndSpades) as stages of a targets pipeline. Each stage runs in-process and, instead of serializing the whole simList, returns a manifest of the files it saved -- discovered dynamically from outputs(sim), which captures per-timestep saves, module-registered outputs, and Plots() figures alike -- exposed as a format = "file" target so targets tracks them and a downstream stage reloads them via its own inputs. Also provides a hard options "firewall" that disables the known-destructive reproducible/SpaDES.core behaviours, plus spatial file-target and provenance helpers.'>
+<meta property="og:description" content='Helpers to run SpaDES simulations (simInitAndSpades) as stages of a targets pipeline. Each stage runs in-process and, instead of serializing the whole simList, returns a manifest of the files it saved -- discovered dynamically from outputs(sim), which captures per-timestep saves, module-registered outputs, and Plots() figures alike -- exposed as a format = "file" target so targets tracks them and a downstream stage reloads them via its own inputs. Also provides a hard options "firewall" that disables the known-destructive reproducible/SpaDES.core behaviours, plus spatial file-target and provenance helpers.'>
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9002</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9003</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,7 +67,7 @@
 <li>
 <code><a href="reference/write_spatial.html">write_spatial()</a></code> / <code><a href="reference/read_spatial.html">read_spatial()</a></code> / <code><a href="reference/is_spatial.html">is_spatial()</a></code> — spatial file helpers.</li>
 <li>
-<code><a href="reference/extract_components.html">extract_components()</a></code> — split needed objects into plain values + spatial file paths.</li>
+<code>extract_components()</code> — split needed objects into plain values + spatial file paths.</li>
 <li>
 <code><a href="reference/provenance_manifest.html">provenance_manifest()</a></code> — software-environment + input/output fingerprints.</li>
 </ul>

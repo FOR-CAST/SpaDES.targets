@@ -32,8 +32,8 @@ file-target and provenance helpers.
   /
   [`is_spatial()`](https://github.com/FOR-CAST/SpaDES.targets/reference/is_spatial.md)
   — spatial file helpers.
-- [`extract_components()`](https://github.com/FOR-CAST/SpaDES.targets/reference/extract_components.md)
-  — split needed objects into plain values + spatial file paths.
+- `extract_components()` — split needed objects into plain values +
+  spatial file paths.
 - [`provenance_manifest()`](https://github.com/FOR-CAST/SpaDES.targets/reference/provenance_manifest.md)
   — software-environment + input/output fingerprints.
 

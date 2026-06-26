@@ -1,4 +1,4 @@
-# Run one SpaDES stage and return its extracted components
+# Run one SpaDES stage and return its output manifest
 
 The worker behind
 [`tar_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/tar_simspades.md).
@@ -6,21 +6,24 @@ Runs
 [`SpaDES.core::simInitAndSpades()`](https://spades-core.predictiveecology.org/reference/simInitAndSpades.html)
 in-process under the safe options
 ([`with_spades_safe_options()`](https://github.com/FOR-CAST/SpaDES.targets/reference/with_spades_safe_options.md)),
-then returns only the components the next stage needs via
-[`extract_components()`](https://github.com/FOR-CAST/SpaDES.targets/reference/extract_components.md).
-The `simList` itself is never returned or serialized.
+with this stage's saved outputs (and figures) directed to `out_dir`,
+then returns the manifest of files it wrote via
+[`extract_outputs()`](https://github.com/FOR-CAST/SpaDES.targets/reference/extract_outputs.md)
+(plus any `plain` in-memory objects). The `simList` itself is never
+returned or serialized.
 
 ## Usage
 
 ``` r
 run_simspades(
   modules,
-  inputs = list(),
+  objects = list(),
+  inputs = NULL,
+  outputs = NULL,
   params = list(),
   times = list(start = 0, end = 1),
   paths = NULL,
   plain = character(),
-  spatial = character(),
   out_dir = ".",
   seed = NULL,
   .options = list()
@@ -33,10 +36,25 @@ run_simspades(
 
   Character vector (or list) of module names.
 
+- objects:
+
+  Named `list` of in-memory objects passed to
+  `simInitAndSpades(objects =)` (small upstream components passed
+  directly).
+
 - inputs:
 
-  Named `list` of objects passed to `simInitAndSpades(objects =)` (the
-  upstream components).
+  A `data.frame` passed to `simInitAndSpades(inputs =)` so SpaDES loads
+  file-backed upstream outputs itself; typically built with
+  [`sim_inputs()`](https://github.com/FOR-CAST/SpaDES.targets/reference/sim_inputs.md)
+  from an upstream manifest. `NULL` for none.
+
+- outputs:
+
+  A `data.frame` passed to `simInitAndSpades(outputs =)` declaring which
+  objects to save and when (the same mechanism LandWeb uses for
+  per-timestep saves). `NULL` to rely solely on module-side saving
+  (`registerOutputs()` / `Plots()`).
 
 - params:
 
@@ -49,19 +67,20 @@ run_simspades(
 - paths:
 
   A `list` of SpaDES paths (e.g. `modulePath`, `inputPath`,
-  `outputPath`, `scratchPath`). When `scratchPath` is set, the run uses
-  a unique subdir beneath it and removes that subdir on exit, so each
-  pipeline phase cleans up its scratch and concurrent runs do not
-  collide.
+  `scratchPath`). `outputPath` is overridden to `out_dir`. When
+  `scratchPath` is set, the run uses a unique subdir beneath it and
+  removes that subdir on exit, so each pipeline phase cleans up its
+  scratch and concurrent runs do not collide.
 
-- plain, spatial:
+- plain:
 
-  Character vectors naming the objects to extract; see
-  [`extract_components()`](https://github.com/FOR-CAST/SpaDES.targets/reference/extract_components.md).
+  Character vector naming in-memory objects to also return as-is; see
+  [`extract_outputs()`](https://github.com/FOR-CAST/SpaDES.targets/reference/extract_outputs.md).
 
 - out_dir:
 
-  Directory for spatial file outputs.
+  Directory for this stage's saved outputs and figures (set as
+  `paths$outputPath`).
 
 - seed:
 
@@ -75,5 +94,7 @@ run_simspades(
 
 ## Value
 
-A named `list`: the `plain` objects plus `"<name>_path"` entries for the
-`spatial` objects.
+The
+[`extract_outputs()`](https://github.com/FOR-CAST/SpaDES.targets/reference/extract_outputs.md)
+result: a `list` with a `manifest` `data.frame`, a `files` character
+vector, and any `plain` objects.

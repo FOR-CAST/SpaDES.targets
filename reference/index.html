@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9002</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9003</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,10 +43,10 @@
 
       <dl><dt>
 
-          <code><a href="extract_components.html">extract_components()</a></code>
+          <code><a href="extract_outputs.html">extract_outputs()</a></code>
 
         </dt>
-        <dd>Extract the components a downstream stage needs from a simList</dd>
+        <dd>Extract a stage's output manifest from a completed simList</dd>
 
         <dt>
 
@@ -54,6 +54,13 @@
 
         </dt>
         <dd>Is an object a spatial object?</dd>
+
+        <dt>
+
+          <code><a href="outputs_spec.html">outputs_spec()</a></code>
+
+        </dt>
+        <dd>Build a <code>simInit(outputs=)</code> table for terra and RDS objects</dd>
 
         <dt>
 
@@ -74,7 +81,14 @@
           <code><a href="run_simspades.html">run_simspades()</a></code>
 
         </dt>
-        <dd>Run one SpaDES stage and return its extracted components</dd>
+        <dd>Run one SpaDES stage and return its output manifest</dd>
+
+        <dt>
+
+          <code><a href="sim_inputs.html">sim_inputs()</a></code>
+
+        </dt>
+        <dd>Build a <code>simInit(inputs=)</code> table from an upstream manifest</dd>
 
         <dt>
 

@@ -17,6 +17,25 @@ test_that("run_simspades directs saved outputs to out_dir", {
   expect_true(dir.exists(out_dir))
 })
 
+test_that("run_simspades clears out_dir before a run (re-run safety)", {
+  out_dir <- withr::local_tempdir()
+  writeLines("old", file.path(out_dir, "stale.tif"))
+  saw_leftover <- NULL
+  testthat::local_mocked_bindings(
+    simInitAndSpades = function(..., paths) {
+      saw_leftover <<- file.exists(file.path(paths$outputPath, "stale.tif"))
+      list()
+    },
+    .package = "SpaDES.core"
+  )
+  testthat::local_mocked_bindings(extract_outputs = function(...) list())
+
+  run_simspades(modules = "m", out_dir = out_dir)
+
+  expect_false(saw_leftover)
+  expect_true(dir.exists(out_dir))
+})
+
 test_that("run_simspades runs each phase in a per-run scratch subdir and removes it on exit", {
   base <- withr::local_tempdir()
   used <- NULL

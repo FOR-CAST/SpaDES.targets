@@ -1,5 +1,8 @@
 # SpaDES.targets (development version)
 
+* `extract_outputs()` now keeps manifest file paths PROJECT-relative even when a stage writes through a symlinked subdir to shared storage (e.g. `outputs` symlinked to NFS): the symlink-resolved absolute path is re-relativized to the project root (the deepest shared path component, `outputs/preamble/x.tif`) rather than relativized into an `../../../../mnt/...` escape that fails to resolve in a downstream `simInit(inputs=)`.
+* `run_simspades()` now clears `out_dir` at the start of each run so a re-run regenerates cleanly; `terra::writeRaster()`/`writeVector()` and module-side saves do not overwrite, so leftover files from a prior (e.g. failed) run would otherwise error.
+
 * `extract_components()` is removed in favour of `extract_outputs()`. **Breaking change**: replace `extract_components(sim, plain, spatial)` (write named spatial objects to per-object file paths) with declaring saves via `outputs_spec()` / `simInit(outputs=)` and reading the resulting manifest with `extract_outputs()`.
 * `extract_outputs()` extracts a stage's saved files dynamically from `outputs(sim)` after a run, returning a `manifest` data.frame plus a `files` vector. This captures runtime-determined output sets -- per-timestep saves, module `registerOutputs()` dumps, and `Plots()` figures -- that did not need to be declared a priori.
 * `outputs_spec()` builds a `simInit(outputs=)` table for terra and RDS objects grouped by save function, expanded over `saveTime`.

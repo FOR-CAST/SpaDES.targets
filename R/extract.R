@@ -68,10 +68,44 @@ normalize_outputs <- function(om, base_dir = ".") {
   }
   data.frame(
     objectName = pick("objectName"),
-    file = as.character(fs::path_rel(fs::path_abs(om$file), start = fs::path_abs(base_dir))),
+    file = path_rel_project(om$file, base_dir),
     saveTime = if ("saveTime" %in% names(om)) om$saveTime else rep(NA_real_, nrow(om)),
     fun = pick("fun"),
     package = pick("package"),
     stringsAsFactors = FALSE
+  )
+}
+
+# Re-relativize each saved file path to the project (base_dir). `outputs(sim)`
+# records the symlink-resolved absolute path -- e.g. a stage that writes through
+# an `outputs` -> `/mnt/.../LandWeb/outputs` symlink records the `/mnt` path -- and
+# a lexical relativize against the project dir would give an `../../../../mnt/...`
+# escape that does not resolve in a downstream `simInit(inputs=)`. Instead keep the
+# path tail after the DEEPEST component shared with base_dir (the project root),
+# mapping it to a real project-relative path SpaDES resolves against the project.
+# Mirrors `SpaDES.config:::.getRelativePath()`; replicated here (not imported) to
+# keep this package's dependencies lean. Falls back to a plain relative path when
+# nothing is shared.
+path_rel_project <- function(files, base_dir) {
+  split_nz <- function(p) {
+    parts <- strsplit(as.character(p), "/", fixed = TRUE)[[1L]]
+    parts[nzchar(parts)]
+  }
+  base_real <- fs::path_real(fs::path_abs(base_dir))
+  b <- split_nz(base_real)
+  vapply(
+    files,
+    function(f) {
+      fr <- fs::path_real(f)
+      a <- split_nz(fr)
+      shared <- which(a %in% b)
+      if (length(shared) && max(shared) < length(a)) {
+        do.call(file.path, as.list(a[(max(shared) + 1L):length(a)]))
+      } else {
+        as.character(fs::path_rel(fr, base_real))
+      }
+    },
+    character(1),
+    USE.NAMES = FALSE
   )
 }

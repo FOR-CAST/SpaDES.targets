@@ -48,7 +48,13 @@ run_simspades <- function(
 ) {
   rlang::check_installed("SpaDES.core")
   ## This stage's saved outputs and figures land in its own directory, which the
-  ## companion `format = "file"` target hashes.
+  ## companion `format = "file"` target hashes. Clear it first so a re-run (after
+  ## a failure, or a `targets` invalidation) regenerates cleanly: terra's
+  ## `writeRaster()`/`writeVector()` and module-side saves do NOT overwrite, so
+  ## leftover files from a prior run would error. Guard against clobbering `.`.
+  if (!identical(fs::path_abs(out_dir), fs::path_abs(".")) && fs::dir_exists(out_dir)) {
+    unlink(list.files(out_dir, full.names = TRUE), recursive = TRUE, force = TRUE)
+  }
   fs::dir_create(out_dir)
   paths$outputPath <- out_dir
   ## Isolate this run's scratch in a unique subdir under `paths$scratchPath` and remove it on exit,

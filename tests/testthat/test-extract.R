@@ -46,3 +46,30 @@ test_that("extract_outputs returns an empty manifest for no outputs", {
   expect_identical(nrow(out$manifest), 0L)
   expect_identical(out$files, character())
 })
+
+test_that("extract_outputs re-relativizes a shared-storage path to the project root", {
+  # Mimic LandWeb: project at .../home/LandWeb, a stage writes through an
+  # `outputs` -> .../mnt/LandWeb/outputs shared-NFS symlink, so outputs(sim)
+  # records the resolved /mnt path. It must come back project-relative (matching
+  # the deepest shared `LandWeb` component), not an `../..`-into-/mnt escape.
+  root <- withr::local_tempdir()
+  proj <- file.path(root, "home", "LandWeb")
+  dir.create(proj, recursive = TRUE)
+  saved <- file.path(root, "mnt", "LandWeb", "outputs", "preamble", "rasterToMatch.tif")
+  dir.create(dirname(saved), recursive = TRUE)
+  file.create(saved)
+  om <- data.frame(
+    objectName = "rasterToMatch",
+    file = normalizePath(saved),
+    saveTime = NA_real_,
+    fun = "writeRaster",
+    package = "terra",
+    saved = TRUE,
+    stringsAsFactors = FALSE
+  )
+  local_mocked_bindings(sim_outputs_table = function(sim) om)
+
+  out <- extract_outputs(list(), base_dir = proj)
+
+  expect_identical(out$files, "outputs/preamble/rasterToMatch.tif")
+})

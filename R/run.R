@@ -11,7 +11,9 @@
 #' @param params A `list` of module parameters.
 #' @param times A `list` with `start` and `end`.
 #' @param paths A `list` of SpaDES paths (e.g. `modulePath`, `inputPath`,
-#'   `outputPath`).
+#'   `outputPath`, `scratchPath`). When `scratchPath` is set, the run uses a
+#'   unique subdir beneath it and removes that subdir on exit, so each pipeline
+#'   phase cleans up its scratch and concurrent runs do not collide.
 #' @param plain,spatial Character vectors naming the objects to extract; see
 #'   [extract_components()].
 #' @param out_dir Directory for spatial file outputs.
@@ -34,6 +36,16 @@ run_simspades <- function(
   .options = list()
 ) {
   rlang::check_installed("SpaDES.core")
+  ## Isolate this run's scratch in a unique subdir under `paths$scratchPath` and remove it on exit,
+  ## so each pipeline phase cleans up after itself and concurrent runs don't collide. The base
+  ## `scratchPath` stays in the (deterministic) target command; the per-run subdir is created here at
+  ## run time.
+  if (!is.null(paths$scratchPath)) {
+    scratch_run <- file.path(paths$scratchPath, basename(tempfile("run_")))
+    dir.create(scratch_run, recursive = TRUE, showWarnings = FALSE)
+    on.exit(unlink(scratch_run, recursive = TRUE, force = TRUE), add = TRUE)
+    paths$scratchPath <- scratch_run
+  }
   with_spades_safe_options(.options = .options, {
     if (!is.null(seed)) {
       set.seed(seed)

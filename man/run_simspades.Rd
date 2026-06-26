@@ -28,7 +28,9 @@ run_simspades(
 \item{times}{A \code{list} with \code{start} and \code{end}.}
 
 \item{paths}{A \code{list} of SpaDES paths (e.g. \code{modulePath}, \code{inputPath},
-\code{outputPath}).}
+\code{outputPath}, \code{scratchPath}). When \code{scratchPath} is set, the run uses a
+unique subdir beneath it and removes that subdir on exit, so each pipeline
+phase cleans up its scratch and concurrent runs do not collide.}
 
 \item{plain, spatial}{Character vectors naming the objects to extract; see
 \code{\link[=extract_components]{extract_components()}}.}

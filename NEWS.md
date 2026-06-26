@@ -1,5 +1,6 @@
 # SpaDES.targets (development version)
 
+* `run_simspades()` now runs each stage in a unique subdir under `paths$scratchPath` and removes it on exit, so each pipeline phase cleans up its scratch and concurrent runs do not collide.
 * initial version.
 * `tar_simspades()` target factory: runs one `simInitAndSpades()` stage and emits its components as targets (plain objects + one `format = "file"` target per spatial output); no `simList` is serialized.
 * `run_simspades()` worker: runs a stage under the safe options and extracts its components.

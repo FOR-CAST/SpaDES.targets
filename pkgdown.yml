@@ -2,7 +2,7 @@ pandoc: 3.8.3
 pkgdown: 2.2.0
 pkgdown_sha: ~
 articles: {}
-last_built: 2026-06-26T19:33Z
+last_built: 2026-06-26T22:24Z
 urls:
   reference: https://github.com/FOR-CAST/SpaDES.targets/reference
   article: https://github.com/FOR-CAST/SpaDES.targets/articles

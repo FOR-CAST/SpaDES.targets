@@ -19,6 +19,13 @@
 - [`outputs_spec()`](https://github.com/FOR-CAST/SpaDES.targets/reference/outputs_spec.md)
   builds a `simInit(outputs=)` table for terra and RDS objects grouped
   by save function, expanded over `saveTime`.
+- `outputs_spec(vect = )` now also handles modules that still emit
+  `sf`/`sfc` objects: when `sf` is installed,
+  [`terra::writeVector()`](https://rspatial.github.io/terra/reference/writeVector.html)
+  methods coercing `sf`/`sfc` to `SpatVector` are registered on load, so
+  the terra-first save path works for not-yet-converted modules
+  (e.g. `LandWeb_preamble`); a bridge, unused once a module emits
+  `SpatVector` directly.
 - [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
   gains `objects`, `inputs`, and `outputs` arguments mapping directly
   onto the `simInitAndSpades()` arguments of the same name, directs each

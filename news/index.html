@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,8 @@
 <code><a href="../reference/extract_outputs.html">extract_outputs()</a></code> extracts a stage’s saved files dynamically from <code>outputs(sim)</code> after a run, returning a <code>manifest</code> data.frame plus a <code>files</code> vector. This captures runtime-determined output sets – per-timestep saves, module <code>registerOutputs()</code> dumps, and <code>Plots()</code> figures – that did not need to be declared a priori.</li>
 <li>
 <code><a href="../reference/outputs_spec.html">outputs_spec()</a></code> builds a <code>simInit(outputs=)</code> table for terra and RDS objects grouped by save function, expanded over <code>saveTime</code>.</li>
+<li>
+<code>outputs_spec(vect = )</code> now also handles modules that still emit <code>sf</code>/<code>sfc</code> objects: when <code>sf</code> is installed, <code><a href="https://rspatial.github.io/terra/reference/writeVector.html" class="external-link">terra::writeVector()</a></code> methods coercing <code>sf</code>/<code>sfc</code> to <code>SpatVector</code> are registered on load, so the terra-first save path works for not-yet-converted modules (e.g. <code>LandWeb_preamble</code>); a bridge, unused once a module emits <code>SpatVector</code> directly.</li>
 <li>
 <code><a href="../reference/run_simspades.html">run_simspades()</a></code> gains <code>objects</code>, <code>inputs</code>, and <code>outputs</code> arguments mapping directly onto the <code>simInitAndSpades()</code> arguments of the same name, directs each stage’s saved outputs to <code>out_dir</code>, and returns the <code><a href="../reference/extract_outputs.html">extract_outputs()</a></code> manifest. <strong>Breaking change</strong>: the former <code>inputs</code> argument (an in-memory object list) is now <code>objects</code>.</li>
 <li>

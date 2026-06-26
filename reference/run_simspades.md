@@ -49,7 +49,10 @@ run_simspades(
 - paths:
 
   A `list` of SpaDES paths (e.g. `modulePath`, `inputPath`,
-  `outputPath`).
+  `outputPath`, `scratchPath`). When `scratchPath` is set, the run uses
+  a unique subdir beneath it and removes that subdir on exit, so each
+  pipeline phase cleans up its scratch and concurrent runs do not
+  collide.
 
 - plain, spatial:
 

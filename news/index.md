@@ -2,6 +2,10 @@
 
 ## SpaDES.targets (development version)
 
+- [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
+  now runs each stage in a unique subdir under `paths$scratchPath` and
+  removes it on exit, so each pipeline phase cleans up its scratch and
+  concurrent runs do not collide.
 - initial version.
 - [`tar_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/tar_simspades.md)
   target factory: runs one `simInitAndSpades()` stage and emits its

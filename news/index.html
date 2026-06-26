@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9002</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,7 +34,9 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="spadestargets-development-version">SpaDES.targets (development version)<a class="anchor" aria-label="anchor" href="#spadestargets-development-version"></a></h2>
-<ul><li>initial version.</li>
+<ul><li>
+<code><a href="../reference/run_simspades.html">run_simspades()</a></code> now runs each stage in a unique subdir under <code>paths$scratchPath</code> and removes it on exit, so each pipeline phase cleans up its scratch and concurrent runs do not collide.</li>
+<li>initial version.</li>
 <li>
 <code><a href="../reference/tar_simspades.html">tar_simspades()</a></code> target factory: runs one <code>simInitAndSpades()</code> stage and emits its components as targets (plain objects + one <code>format = "file"</code> target per spatial output); no <code>simList</code> is serialized.</li>
 <li>

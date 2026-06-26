@@ -13,7 +13,7 @@ simList itself is never returned or serialized."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9002</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -85,7 +85,9 @@ only the components the next stage needs via <code><a href="extract_components.h
 
 <dt id="arg-paths">paths<a class="anchor" aria-label="anchor" href="#arg-paths"></a></dt>
 <dd><p>A <code>list</code> of SpaDES paths (e.g. <code>modulePath</code>, <code>inputPath</code>,
-<code>outputPath</code>).</p></dd>
+<code>outputPath</code>, <code>scratchPath</code>). When <code>scratchPath</code> is set, the run uses a
+unique subdir beneath it and removes that subdir on exit, so each pipeline
+phase cleans up its scratch and concurrent runs do not collide.</p></dd>
 
 
 <dt id="arg-plain-spatial">plain, spatial<a class="anchor" aria-label="anchor" href="#arg-plain-spatial"></a></dt>

@@ -7,12 +7,13 @@
 tar_simspades(
   name,
   modules,
-  inputs = quote(list()),
+  objects = quote(list()),
+  inputs = NULL,
+  outputs = NULL,
   params = list(),
   times = list(start = 0, end = 1),
   paths = NULL,
   plain = character(),
-  spatial = character(),
   out_dir = NULL,
   seed = NULL,
   format = "rds",
@@ -24,24 +25,32 @@ tar_simspades(
 
 \item{modules}{Character vector (or list) of module names for this stage.}
 
-\item{inputs}{A \strong{quoted} expression (e.g. \code{quote(list(rasterToMatch = preamble_rasterToMatch, sppEquiv = preamble$sppEquiv))}) giving the upstream
-component targets to pass as \code{simInitAndSpades(objects =)}. Spatial inputs
-that arrive as file-target paths should be wrapped in \code{\link[=read_spatial]{read_spatial()}}.}
+\item{objects}{A \strong{quoted} expression giving the small in-memory upstream
+components to pass as \code{simInitAndSpades(objects =)} (e.g.
+\code{quote(list(sppEquiv = preamble$sppEquiv))}). Defaults to \code{quote(list())}.}
+
+\item{inputs}{A \strong{quoted} expression giving the \code{simInit(inputs=)} table of
+file-backed upstream outputs, typically \code{quote(sim_inputs(preamble, objects = c(...), files = preamble_files))}. \code{NULL} for none.}
+
+\item{outputs}{A \strong{quoted} expression (or literal \code{data.frame}) declaring
+which objects to save and when, passed to \code{simInit(outputs=)}. \code{NULL} to
+rely solely on module-side saving (\code{registerOutputs()} / \code{Plots()}).}
 
 \item{params, times, paths, seed, .options}{Passed through to \code{\link[=run_simspades]{run_simspades()}}.}
 
-\item{plain, spatial}{Character vectors naming the objects this stage emits;
-\code{spatial} ones additionally get file targets.}
+\item{plain}{Character vector naming in-memory objects the primary target
+should also return as-is.}
 
-\item{out_dir}{Directory for spatial file outputs; defaults to
-\code{file.path("outputs", name)}.}
+\item{out_dir}{Directory for this stage's saved outputs and figures; defaults
+to \code{file.path("outputs", name)}.}
 
 \item{format}{\code{targets} storage format for the primary target (default
 \code{"rds"}; use \code{"qs2"} if the \code{qs2} format is registered).}
 }
 \value{
-A \code{list} of \code{tar_target} objects (primary first, then one per spatial
-output) — return it from \verb{_targets.R} like any target list.
+A \code{list} of two \code{tar_target} objects (the primary, then the companion
+\code{format = "file"} target) — return it from \verb{_targets.R} like any target
+list.
 }
 \description{
 Builds the \code{targets} for one \code{simInitAndSpades} stage:
@@ -49,25 +58,24 @@ Builds the \code{targets} for one \code{simInitAndSpades} stage:
 \details{
 \itemize{
 \item a \strong{primary} target \code{name} that runs the stage (\code{\link[=run_simspades]{run_simspades()}}) and
-returns its \code{plain} components plus \code{"<obj>_path"} entries for the spatial
-outputs; and
-\item one \strong{\code{format = "file"}} target \verb{name_<obj>} per \code{spatial} output, whose
-command is \code{name[["<obj>_path"]]} so \code{targets} hashes the written file.
+returns its output \code{manifest} (a \code{data.frame} mapping each saved
+\code{objectName} to its \code{file}), the \code{files} character vector, and any \code{plain}
+in-memory objects; and
+\item one \strong{\code{format = "file"}} target \code{name_files} whose command is
+\code{name[["files"]]}, so \code{targets} content-hashes every file the stage wrote
+(per-timestep saves, summary dumps, and \code{Plots()} figures alike) and
+invalidates downstream when any of them change.
 }
 
-Downstream stages consume the plain components as \verb{name$<obj>} and the spatial
-outputs via \code{\link[=read_spatial]{read_spatial()}} on the file target, and pass them to their own
-\code{simInit} through \code{inputs}. No \code{simList} ever crosses a target boundary.
+Downstream stages consume the plain components as \verb{name$<obj>} and the saved
+files via \code{\link[=sim_inputs]{sim_inputs()}} on \code{name$manifest} (passing \code{name_files} as the
+\code{files} dependency), feeding them to their own \code{simInit} through \code{inputs}.
+No \code{simList} ever crosses a target boundary.
 }
 \examples{
-tl <- tar_simspades(
-  "preamble",
-  modules = "LandWeb_preamble",
-  plain = c("sppEquiv", "sppColorVect"),
-  spatial = c("rasterToMatch", "studyArea")
-)
-length(tl) # 1 primary + 2 file targets
+tl <- tar_simspades("preamble", modules = "LandWeb_preamble")
+length(tl) # primary + companion file target
 }
 \seealso{
-\code{\link[=run_simspades]{run_simspades()}}, \code{\link[=extract_components]{extract_components()}}, \code{\link[=read_spatial]{read_spatial()}}
+\code{\link[=run_simspades]{run_simspades()}}, \code{\link[=extract_outputs]{extract_outputs()}}, \code{\link[=sim_inputs]{sim_inputs()}}
 }

@@ -8,9 +8,10 @@
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
 
-Run 'SpaDES' simulations as stages of a 'targets' pipeline, passing the
-discrete components each stage needs (plain objects as ordinary targets,
-spatial objects as \code{format = "file"} targets) rather than whole simLists.
+Run 'SpaDES' simulations as stages of a 'targets' pipeline. Each stage
+returns a manifest of the files it saved -- discovered dynamically from
+\code{outputs(sim)} and tracked via a \code{format = "file"} target -- rather than a
+whole simList, and a downstream stage reloads them through its own \code{inputs}.
 }
 \seealso{
 Useful links:

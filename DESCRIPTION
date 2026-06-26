@@ -1,18 +1,20 @@
 Type: Package
 Package: SpaDES.targets
 Title: Orchestrate SpaDES Simulations with 'targets'
-Version: 0.0.0.9002
+Version: 0.0.0.9003
 Authors@R: c(
     person("Alex M", "Chubaty", , "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
   )
 Description: Helpers to run 'SpaDES' simulations (simInitAndSpades) as stages of
-    a 'targets' pipeline. Each stage runs in-process and returns the discrete
-    components the next stage needs -- plain objects as ordinary targets and
-    spatial ('terra') objects as 'format = "file"' targets -- so whole simList
-    objects are never serialized. Also provides a hard options "firewall" that
-    disables the known-destructive 'reproducible'/'SpaDES.core' behaviours, plus
-    spatial file-target and provenance helpers.
+    a 'targets' pipeline. Each stage runs in-process and, instead of serializing
+    the whole simList, returns a manifest of the files it saved -- discovered
+    dynamically from 'outputs(sim)', which captures per-timestep saves,
+    module-registered outputs, and 'Plots()' figures alike -- exposed as a
+    'format = "file"' target so 'targets' tracks them and a downstream stage
+    reloads them via its own 'inputs'. Also provides a hard options "firewall"
+    that disables the known-destructive 'reproducible'/'SpaDES.core' behaviours,
+    plus spatial file-target and provenance helpers.
 License: Apache License (>= 2)
 URL: https://github.com/FOR-CAST/SpaDES.targets
 BugReports: https://github.com/FOR-CAST/SpaDES.targets/issues

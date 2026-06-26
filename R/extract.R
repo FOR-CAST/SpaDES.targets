@@ -1,33 +1,77 @@
-#' Extract the components a downstream stage needs from a simList
+#' Extract a stage's output manifest from a completed simList
 #'
-#' Pulls named objects out of a (completed) `simList` and splits them by kind so
-#' they can become `targets` of the right type, **without serializing the whole
-#' `simList`**:
+#' Reads `SpaDES.core::outputs(sim)` after a run and returns a compact manifest
+#' of every file the simulation actually saved, **without serializing the whole
+#' `simList`**. Instead of declaring object names a priori, it discovers them
+#' from the simulation's own outputs table, so runtime-determined file sets are
+#' captured automatically. That table is fed by all of SpaDES's save mechanisms
+#' at once:
 #'
-#' * `plain` objects (data.tables, vectors, scalars, lists) are returned as-is
-#'   and serialize cleanly via the default/`qs2` target format;
-#' * `spatial` objects (`terra`/`sf`) are written to disk with [write_spatial()]
-#'   and returned as `"<name>_path"` character entries, for companion
-#'   `format = "file"` targets.
+#' * objects requested via the `outputs` argument to `SpaDES.core::simInit()`
+#'   (e.g. per-timestep saves of `vegTypeMap`, `standAgeMap`, ...);
+#' * files registered by a module with `SpaDES.core::registerOutputs()` (e.g. a
+#'   summary module dumping a timeseries of objects in "single" mode); and
+#' * figures written by `SpaDES.core::Plots()` (the saved `.png`/`.pdf` files are
+#'   appended to `outputs(sim)`).
 #'
-#' @param sim A `simList` (or any object supporting `sim[["name"]]`).
-#' @param plain Character vector of object names to return as-is.
-#' @param spatial Character vector of spatial object names to write to files.
-#' @param dir Directory to write spatial files into (created if needed).
-#' @return A named `list` with the `plain` objects plus `"<name>_path"` entries
-#'   for each `spatial` object.
+#' @param sim A completed `simList`.
+#' @param plain Optional character vector of in-memory object names to also
+#'   return as-is. An escape hatch for small objects (vectors, data.tables,
+#'   colour tables) you would rather pass directly than round-trip through disk.
+#' @param base_dir Directory the manifest file paths are made relative to
+#'   (default the working directory), so paths stay portable across hosts and
+#'   stable for `targets` file-content hashing.
+#' @return A named `list` with:
+#'   * `manifest`: a `data.frame` with one row per saved file, columns
+#'     `objectName`, `file`, `saveTime`, `fun`, `package`;
+#'   * `files`: the `character` vector of saved file paths (the value a companion
+#'     `format = "file"` target should yield); and
+#'   * any `plain` objects, each under its own name.
+#' @seealso [sim_inputs()] turns a manifest into a downstream `simInit(inputs=)`
+#'   table; [tar_simspades()] wires both into a pipeline.
 #' @export
-extract_components <- function(sim, plain = character(), spatial = character(), dir = ".") {
-  fs::dir_create(dir)
-  out <- list()
+extract_outputs <- function(sim, plain = character(), base_dir = ".") {
+  manifest <- normalize_outputs(sim_outputs_table(sim), base_dir = base_dir)
+  out <- list(manifest = manifest, files = manifest$file)
   for (nm in plain) {
     out[[nm]] <- sim[[nm]]
   }
-  for (nm in spatial) {
-    x <- sim[[nm]]
-    ext <- if (inherits(x, c("SpatVector", "sf", "sfc"))) "gpkg" else "tif"
-    path <- fs::path(dir, paste0(nm, ".", ext))
-    out[[paste0(nm, "_path")]] <- as.character(write_spatial(x, path))
-  }
   out
+}
+
+# Pull the `outputs(sim)` data.frame. Separated out so tests can mock it without
+# a real `simList` / SpaDES.core.
+sim_outputs_table <- function(sim) {
+  rlang::check_installed("SpaDES.core")
+  SpaDES.core::outputs(sim)
+}
+
+# Reduce a raw `outputs(sim)` data.frame to the manifest columns, keeping only
+# rows that were actually written, with portable (base_dir-relative) paths.
+normalize_outputs <- function(om, base_dir = ".") {
+  if (is.null(om) || nrow(om) == 0L) {
+    return(data.frame(
+      objectName = character(),
+      file = character(),
+      saveTime = numeric(),
+      fun = character(),
+      package = character(),
+      stringsAsFactors = FALSE
+    ))
+  }
+  if ("saved" %in% names(om)) {
+    om <- om[!is.na(om$saved) & om$saved, , drop = FALSE]
+  }
+  om <- om[file.exists(om$file), , drop = FALSE]
+  pick <- function(nm) {
+    if (nm %in% names(om)) as.character(om[[nm]]) else rep(NA_character_, nrow(om))
+  }
+  data.frame(
+    objectName = pick("objectName"),
+    file = as.character(fs::path_rel(fs::path_abs(om$file), start = fs::path_abs(base_dir))),
+    saveTime = if ("saveTime" %in% names(om)) om$saveTime else rep(NA_real_, nrow(om)),
+    fun = pick("fun"),
+    package = pick("package"),
+    stringsAsFactors = FALSE
+  )
 }

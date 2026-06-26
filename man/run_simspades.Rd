@@ -2,16 +2,17 @@
 % Please edit documentation in R/run.R
 \name{run_simspades}
 \alias{run_simspades}
-\title{Run one SpaDES stage and return its extracted components}
+\title{Run one SpaDES stage and return its output manifest}
 \usage{
 run_simspades(
   modules,
-  inputs = list(),
+  objects = list(),
+  inputs = NULL,
+  outputs = NULL,
   params = list(),
   times = list(start = 0, end = 1),
   paths = NULL,
   plain = character(),
-  spatial = character(),
   out_dir = ".",
   seed = NULL,
   .options = list()
@@ -20,22 +21,33 @@ run_simspades(
 \arguments{
 \item{modules}{Character vector (or list) of module names.}
 
-\item{inputs}{Named \code{list} of objects passed to \code{simInitAndSpades(objects =)}
-(the upstream components).}
+\item{objects}{Named \code{list} of in-memory objects passed to
+\code{simInitAndSpades(objects =)} (small upstream components passed directly).}
+
+\item{inputs}{A \code{data.frame} passed to \code{simInitAndSpades(inputs =)} so SpaDES
+loads file-backed upstream outputs itself; typically built with
+\code{\link[=sim_inputs]{sim_inputs()}} from an upstream manifest. \code{NULL} for none.}
+
+\item{outputs}{A \code{data.frame} passed to \code{simInitAndSpades(outputs =)}
+declaring which objects to save and when (the same mechanism LandWeb uses
+for per-timestep saves). \code{NULL} to rely solely on module-side saving
+(\code{registerOutputs()} / \code{Plots()}).}
 
 \item{params}{A \code{list} of module parameters.}
 
 \item{times}{A \code{list} with \code{start} and \code{end}.}
 
 \item{paths}{A \code{list} of SpaDES paths (e.g. \code{modulePath}, \code{inputPath},
-\code{outputPath}, \code{scratchPath}). When \code{scratchPath} is set, the run uses a
-unique subdir beneath it and removes that subdir on exit, so each pipeline
-phase cleans up its scratch and concurrent runs do not collide.}
+\code{scratchPath}). \code{outputPath} is overridden to \code{out_dir}. When \code{scratchPath}
+is set, the run uses a unique subdir beneath it and removes that subdir on
+exit, so each pipeline phase cleans up its scratch and concurrent runs do
+not collide.}
 
-\item{plain, spatial}{Character vectors naming the objects to extract; see
-\code{\link[=extract_components]{extract_components()}}.}
+\item{plain}{Character vector naming in-memory objects to also return as-is;
+see \code{\link[=extract_outputs]{extract_outputs()}}.}
 
-\item{out_dir}{Directory for spatial file outputs.}
+\item{out_dir}{Directory for this stage's saved outputs and figures
+(set as \code{paths$outputPath}).}
 
 \item{seed}{Optional integer seed set before the run (for deterministic
 replicates).}
@@ -43,12 +55,13 @@ replicates).}
 \item{.options}{Extra options merged over \code{\link[=spades_safe_options]{spades_safe_options()}}.}
 }
 \value{
-A named \code{list}: the \code{plain} objects plus \code{"<name>_path"} entries for
-the \code{spatial} objects.
+The \code{\link[=extract_outputs]{extract_outputs()}} result: a \code{list} with a \code{manifest}
+\code{data.frame}, a \code{files} character vector, and any \code{plain} objects.
 }
 \description{
 The worker behind \code{\link[=tar_simspades]{tar_simspades()}}. Runs \code{SpaDES.core::simInitAndSpades()}
-in-process under the safe options (\code{\link[=with_spades_safe_options]{with_spades_safe_options()}}), then returns
-only the components the next stage needs via \code{\link[=extract_components]{extract_components()}}. The
-\code{simList} itself is never returned or serialized.
+in-process under the safe options (\code{\link[=with_spades_safe_options]{with_spades_safe_options()}}), with this
+stage's saved outputs (and figures) directed to \code{out_dir}, then returns the
+manifest of files it wrote via \code{\link[=extract_outputs]{extract_outputs()}} (plus any \code{plain}
+in-memory objects). The \code{simList} itself is never returned or serialized.
 }

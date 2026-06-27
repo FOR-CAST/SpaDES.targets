@@ -19,7 +19,7 @@ picked up by extract_outputs()."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9006</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9007</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,6 +61,8 @@ picked up by <code><a href="extract_outputs.html">extract_outputs()</a></code>.<
 <span>  raster <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  vect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  rds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  qs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  csv <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  saveTime <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -82,6 +84,17 @@ picked up by <code><a href="extract_outputs.html">extract_outputs()</a></code>.<
 <dt id="arg-rds">rds<a class="anchor" aria-label="anchor" href="#arg-rds"></a></dt>
 <dd><p>Character vector of object names to save with <code><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS()</a></code>
 (<code>.rds</code>).</p></dd>
+
+
+<dt id="arg-qs">qs<a class="anchor" aria-label="anchor" href="#arg-qs"></a></dt>
+<dd><p>Character vector of object names to save with <code><a href="https://rdrr.io/pkg/qs2/man/qs_save.html" class="external-link">qs2::qs_save()</a></code>
+(<code>.qs</code>); read back with <code><a href="https://rdrr.io/pkg/qs2/man/qs_read.html" class="external-link">qs2::qs_read()</a></code> (see <code><a href="sim_inputs.html">sim_inputs()</a></code>).</p></dd>
+
+
+<dt id="arg-csv">csv<a class="anchor" aria-label="anchor" href="#arg-csv"></a></dt>
+<dd><p>Character vector of object names to save with
+<code><a href="https://rdrr.io/pkg/data.table/man/fwrite.html" class="external-link">data.table::fwrite()</a></code> (<code>.csv</code>) – for flat tables consumed downstream (e.g.
+LANDIS-II inputs). <code>fwrite</code> writes no row names, unlike <code><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">utils::write.csv()</a></code>.</p></dd>
 
 
 <dt id="arg-savetime">saveTime<a class="anchor" aria-label="anchor" href="#arg-savetime"></a></dt>

@@ -19,6 +19,8 @@ outputs_spec(
   raster = character(),
   vect = character(),
   rds = character(),
+  qs = character(),
+  csv = character(),
   saveTime = NULL
 )
 ```
@@ -41,6 +43,22 @@ outputs_spec(
 
   Character vector of object names to save with
   [`saveRDS()`](https://rdrr.io/r/base/readRDS.html) (`.rds`).
+
+- qs:
+
+  Character vector of object names to save with
+  [`qs2::qs_save()`](https://rdrr.io/pkg/qs2/man/qs_save.html) (`.qs`);
+  read back with
+  [`qs2::qs_read()`](https://rdrr.io/pkg/qs2/man/qs_read.html) (see
+  [`sim_inputs()`](https://github.com/FOR-CAST/SpaDES.targets/reference/sim_inputs.md)).
+
+- csv:
+
+  Character vector of object names to save with
+  [`data.table::fwrite()`](https://rdrr.io/pkg/data.table/man/fwrite.html)
+  (`.csv`) – for flat tables consumed downstream (e.g. LANDIS-II
+  inputs). `fwrite` writes no row names, unlike
+  [`utils::write.csv()`](https://rdrr.io/r/utils/write.table.html).
 
 - saveTime:
 

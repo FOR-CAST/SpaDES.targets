@@ -2,6 +2,21 @@
 
 ## SpaDES.targets (development version)
 
+- [`outputs_spec()`](https://github.com/FOR-CAST/SpaDES.targets/reference/outputs_spec.md)
+  gains per-object `qs` and `csv` groups
+  ([`qs2::qs_save`](https://rdrr.io/pkg/qs2/man/qs_save.html) and
+  [`data.table::fwrite`](https://rdrr.io/pkg/data.table/man/fwrite.html)),
+  so a stage can declare `qs2`/csv saves through the same helper instead
+  of hand-building the `outputs` data.frame;
+  [`sim_inputs()`](https://github.com/FOR-CAST/SpaDES.targets/reference/sim_inputs.md)
+  maps them back to
+  [`qs2::qs_read`](https://rdrr.io/pkg/qs2/man/qs_read.html) /
+  [`data.table::fread`](https://rdrr.io/pkg/data.table/man/fread.html).
+  SpaDES.targets only emits the `fun`/`package` strings (the actual save
+  runs in `SpaDES.core` on the worker), so this adds no dependencies.
+  (`csv` uses `fwrite` – no row names, unlike
+  [`utils::write.csv`](https://rdrr.io/r/utils/write.table.html).)
+
 - [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
   resolves each `simInit(inputs=)` `file` to an absolute path (against
   the working directory, i.e. the project root on a worker) just before

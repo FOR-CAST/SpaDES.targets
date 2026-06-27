@@ -2,6 +2,16 @@
 
 ## SpaDES.targets (development version)
 
+- [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
+  resolves each `simInit(inputs=)` `file` to an absolute path (against
+  the working directory, i.e. the project root on a worker) just before
+  the run: `SpaDES.core` resolves a *relative* input `file` against
+  `inputPath`, which would send a project-relative
+  `outputs/preamble/x.tif` manifest path to
+  `inputs/outputs/preamble/x.tif`. The stored manifest stays
+  project-relative/portable; only the in-flight `simInit()` call sees
+  the absolute path.
+
 - [`extract_outputs()`](https://github.com/FOR-CAST/SpaDES.targets/reference/extract_outputs.md)
   now keeps manifest file paths PROJECT-relative even when a stage
   writes through a symlinked subdir to shared storage (e.g. `outputs`

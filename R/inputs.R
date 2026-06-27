@@ -74,7 +74,8 @@ translate_load_fun <- function(save_fun) {
     writeRaster = "terra::rast",
     writeVector = "terra::vect",
     saveRDS = "base::readRDS",
-    qs_save = "qs2::qs_read"
+    qs_save = "qs2::qs_read",
+    fwrite = "data.table::fread"
   )
   unname(map[as.character(save_fun)])
 }

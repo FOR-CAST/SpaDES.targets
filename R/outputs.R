@@ -18,6 +18,11 @@
 #'   `terra::writeVector()` (`.gpkg`).
 #' @param rds Character vector of object names to save with `saveRDS()`
 #'   (`.rds`).
+#' @param qs Character vector of object names to save with `qs2::qs_save()`
+#'   (`.qs`); read back with `qs2::qs_read()` (see [sim_inputs()]).
+#' @param csv Character vector of object names to save with
+#'   `data.table::fwrite()` (`.csv`) -- for flat tables consumed downstream (e.g.
+#'   LANDIS-II inputs). `fwrite` writes no row names, unlike `utils::write.csv()`.
 #' @param saveTime Optional numeric vector of save times; the rows are expanded
 #'   over every (object, time) combination. `NULL` (default) lets
 #'   `SpaDES.core` save once at `end(sim)`.
@@ -35,12 +40,16 @@ outputs_spec <- function(
   raster = character(),
   vect = character(),
   rds = character(),
+  qs = character(),
+  csv = character(),
   saveTime = NULL
 ) {
   rows <- rbind(
     outputs_spec_rows(raster, "writeRaster", "terra"),
     outputs_spec_rows(vect, "writeVector", "terra"),
-    outputs_spec_rows(rds, "saveRDS", "base")
+    outputs_spec_rows(rds, "saveRDS", "base"),
+    outputs_spec_rows(qs, "qs_save", "qs2"),
+    outputs_spec_rows(csv, "fwrite", "data.table")
   )
   if (nrow(rows) == 0L) {
     return(rows)

@@ -35,6 +35,14 @@ test_that("sim_inputs translates the save function to a load function", {
   expect_identical(out2$fun, c("terra::rast", "terra::vect"))
 })
 
+test_that("sim_inputs maps qs_save and fwrite to their readers", {
+  m <- manifest()
+  m$objectName <- c("cohortData", "species", "species")
+  m$fun <- c("qs_save", "fwrite", "fwrite")
+  out <- sim_inputs(m, objects = c("cohortData", "species"))
+  expect_identical(out$fun, c("qs2::qs_read", "data.table::fread"))
+})
+
 test_that("sim_inputs adds loadTime when supplied", {
   out <- sim_inputs(manifest(), objects = "rasterToMatch", loadTime = 0)
   expect_identical(out$loadTime, 0)

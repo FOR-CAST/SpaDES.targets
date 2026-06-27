@@ -8,6 +8,8 @@ outputs_spec(
   raster = character(),
   vect = character(),
   rds = character(),
+  qs = character(),
+  csv = character(),
   saveTime = NULL
 )
 }
@@ -20,6 +22,13 @@ outputs_spec(
 
 \item{rds}{Character vector of object names to save with \code{saveRDS()}
 (\code{.rds}).}
+
+\item{qs}{Character vector of object names to save with \code{qs2::qs_save()}
+(\code{.qs}); read back with \code{qs2::qs_read()} (see \code{\link[=sim_inputs]{sim_inputs()}}).}
+
+\item{csv}{Character vector of object names to save with
+\code{data.table::fwrite()} (\code{.csv}) -- for flat tables consumed downstream (e.g.
+LANDIS-II inputs). \code{fwrite} writes no row names, unlike \code{utils::write.csv()}.}
 
 \item{saveTime}{Optional numeric vector of save times; the rows are expanded
 over every (object, time) combination. \code{NULL} (default) lets

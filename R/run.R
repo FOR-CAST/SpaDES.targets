@@ -79,7 +79,7 @@ run_simspades <- function(
       paths = paths
     )
     if (!is.null(inputs)) {
-      args$inputs <- inputs
+      args$inputs <- resolve_input_files(inputs)
     }
     if (!is.null(outputs)) {
       args$outputs <- outputs
@@ -87,4 +87,21 @@ run_simspades <- function(
     sim <- do.call(SpaDES.core::simInitAndSpades, args)
     extract_outputs(sim, plain = plain, base_dir = ".")
   })
+}
+
+# `sim_inputs()` keeps a manifest's file paths PROJECT-relative (portable across
+# nodes and the shared store). `SpaDES.core::simInit(inputs=)`, however, resolves
+# a relative `file` against `inputPath`, which would send a project-relative
+# `outputs/preamble/x.tif` to `inputs/outputs/preamble/x.tif` (the upstream files
+# live in `outputs/`, a sibling of `inputs/`). Resolve each relative path to an
+# absolute one against the working directory -- the project root on a worker --
+# so simInit reads the real file; absolute paths are left untouched. The stored
+# manifest stays project-relative; only the in-flight `simInit()` call sees the
+# absolute path.
+resolve_input_files <- function(inputs) {
+  if (is.data.frame(inputs) && "file" %in% names(inputs) && nrow(inputs)) {
+    rel <- !fs::is_absolute_path(inputs$file)
+    inputs$file[rel] <- as.character(fs::path_abs(inputs$file[rel]))
+  }
+  inputs
 }

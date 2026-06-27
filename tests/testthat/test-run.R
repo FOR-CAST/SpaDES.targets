@@ -76,3 +76,31 @@ test_that("run_simspades leaves scratchPath unset when it is not supplied", {
 
   expect_null(used)
 })
+
+test_that("resolve_input_files makes relative input files absolute, leaving absolute ones", {
+  inputs <- data.frame(
+    file = c("outputs/preamble/x.tif", "/already/abs.tif"),
+    objectName = c("x", "y"),
+    stringsAsFactors = FALSE
+  )
+  out <- resolve_input_files(inputs)
+  expect_identical(out$file[[1]], as.character(fs::path_abs("outputs/preamble/x.tif")))
+  expect_identical(out$file[[2]], "/already/abs.tif")
+})
+
+test_that("run_simspades resolves inputs file paths to absolute at the simInit boundary", {
+  seen <- NULL
+  testthat::local_mocked_bindings(
+    simInitAndSpades = function(..., paths) {
+      seen <<- list(...)$inputs
+      list()
+    },
+    .package = "SpaDES.core"
+  )
+  testthat::local_mocked_bindings(extract_outputs = function(...) list())
+
+  inputs <- data.frame(file = "outputs/preamble/x.tif", objectName = "x", stringsAsFactors = FALSE)
+  run_simspades(modules = "m", out_dir = withr::local_tempdir(), inputs = inputs)
+
+  expect_identical(seen$file, as.character(fs::path_abs("outputs/preamble/x.tif")))
+})

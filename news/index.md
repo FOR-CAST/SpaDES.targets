@@ -2,6 +2,19 @@
 
 ## SpaDES.targets (development version)
 
+- [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
+  attaches the `reqdPkgs` of every module in `modulePath` (via
+  [`SpaDES.core::packages()`](https://spades-core.predictiveecology.org/reference/packages.html))
+  before the run, because the options firewall
+  (`spades.useRequire = FALSE`) stops `SpaDES.core` from attaching them
+  itself – a module that calls a reqdPkg function unqualified
+  (e.g. `Biomass_core`’s `factorValues2()` from `pemisc`) would
+  otherwise fail with “could not find function”. This also covers
+  modules a stage nests internally (e.g. `Biomass_speciesFactorial` runs
+  `Biomass_core`). Only already-installed packages are attached
+  (uninstalled ones such as `SpaDES.project` are skipped); `renv`
+  remains the installer.
+
 - [`outputs_spec()`](https://github.com/FOR-CAST/SpaDES.targets/reference/outputs_spec.md)
   gains per-object `qs` and `csv` groups
   ([`qs2::qs_save`](https://rdrr.io/pkg/qs2/man/qs_save.html) and

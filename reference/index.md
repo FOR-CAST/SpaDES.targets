@@ -30,6 +30,12 @@
 
   Build a `simInit(inputs=)` table from an upstream manifest
 
+- [`sim_objects()`](https://github.com/FOR-CAST/SpaDES.targets/reference/sim_objects.md)
+  :
+
+  Load an upstream manifest's outputs into memory for
+  `simInit(objects=)`
+
 - [`spades_safe_options()`](https://github.com/FOR-CAST/SpaDES.targets/reference/spades_safe_options.md)
   : Safe 'SpaDES'/'reproducible' options for targets-orchestrated runs
 

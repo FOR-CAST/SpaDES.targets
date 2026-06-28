@@ -2,6 +2,19 @@
 
 ## SpaDES.targets (development version)
 
+- [`sim_objects()`](https://github.com/FOR-CAST/SpaDES.targets/reference/sim_objects.md)
+  loads an upstream manifest’s outputs into memory (on the worker) and
+  returns them as a named list for `SpaDES.core::simInit(objects=)` –
+  the counterpart to
+  [`sim_inputs()`](https://github.com/FOR-CAST/SpaDES.targets/reference/sim_inputs.md).
+  Use it for spatial handoff objects a downstream module touches in
+  `.inputObjects()` (which runs during `simInit()`, before `inputs=`
+  load), e.g. `Biomass_borealDataPrep` reading
+  `sim$studyArea`/`sim$rasterToMatch`;
+  [`sim_inputs()`](https://github.com/FOR-CAST/SpaDES.targets/reference/sim_inputs.md)
+  remains right for objects only needed once events run. `terra`
+  rasters/vectors load lazily, so it is cheap even for large layers.
+
 - [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
   attaches the `reqdPkgs` of every module in `modulePath` (via
   [`SpaDES.core::packages()`](https://spades-core.predictiveecology.org/reference/packages.html))

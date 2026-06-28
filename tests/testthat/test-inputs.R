@@ -54,3 +54,47 @@ test_that("sim_inputs errors when a selected file is not tracked", {
     sim_inputs(manifest(), objects = "rasterToMatch", files = "outputs/p/other.tif")
   )
 })
+
+test_that("sim_objects loads manifest objects into memory", {
+  dir <- withr::local_tempdir()
+  obj <- list(a = 1:3)
+  saveRDS(obj, file.path(dir, "obj.rds"))
+  terra::writeRaster(terra::rast(nrows = 2, ncols = 2, vals = 1:4), file.path(dir, "r.tif"))
+  m <- data.frame(
+    objectName = c("obj", "r"),
+    file = file.path(dir, c("obj.rds", "r.tif")),
+    saveTime = 1,
+    fun = c("saveRDS", "writeRaster"),
+    stringsAsFactors = FALSE
+  )
+  out <- sim_objects(m)
+  expect_named(out, c("obj", "r"))
+  expect_identical(out$obj, obj)
+  expect_s4_class(out$r, "SpatRaster")
+  expect_equal(terra::ncell(out$r), 4)
+})
+
+test_that("sim_objects subsets by name", {
+  dir <- withr::local_tempdir()
+  saveRDS(1, file.path(dir, "x.rds"))
+  m <- data.frame(
+    objectName = "x",
+    file = file.path(dir, "x.rds"),
+    saveTime = 1,
+    fun = "saveRDS",
+    stringsAsFactors = FALSE
+  )
+  expect_identical(sim_objects(m, objects = "x")$x, 1)
+  expect_length(sim_objects(m, objects = "nope"), 0L)
+})
+
+test_that("sim_objects errors when a selected file is not tracked", {
+  m <- data.frame(
+    objectName = "x",
+    file = "outputs/p/x.rds",
+    saveTime = 1,
+    fun = "saveRDS",
+    stringsAsFactors = FALSE
+  )
+  expect_snapshot(error = TRUE, sim_objects(m, files = "outputs/p/other.rds"))
+})

@@ -36,7 +36,7 @@ test_that("run_simspades clears out_dir before a run (re-run safety)", {
   expect_true(dir.exists(out_dir))
 })
 
-test_that("run_simspades runs each phase in a per-run scratch subdir and removes it on exit", {
+test_that("run_simspades runs each phase in a per-run scratch subdir, removed on a successful run", {
   base <- withr::local_tempdir()
   used <- NULL
   existed_during <- NULL
@@ -55,6 +55,83 @@ test_that("run_simspades runs each phase in a per-run scratch subdir and removes
   expect_match(used, base, fixed = TRUE)
   expect_true(existed_during)
   expect_false(dir.exists(used))
+})
+
+test_that("run_simspades keeps the scratch subdir (renamed .FAILED) when the run errors", {
+  base <- withr::local_tempdir()
+  used <- NULL
+  testthat::local_mocked_bindings(
+    simInitAndSpades = function(..., paths) {
+      used <<- paths$scratchPath
+      stop("boom")
+    },
+    .package = "SpaDES.core"
+  )
+  testthat::local_mocked_bindings(extract_outputs = function(...) list())
+
+  err <- tryCatch(
+    run_simspades(
+      modules = "m",
+      out_dir = withr::local_tempdir(),
+      paths = list(scratchPath = base)
+    ),
+    error = function(e) conditionMessage(e)
+  )
+
+  expect_match(err, "boom")
+  expect_false(dir.exists(used)) # original subdir renamed away
+  expect_true(dir.exists(paste0(used, ".FAILED"))) # kept for inspection
+})
+
+test_that("sweep_scratch reclaims stale run dirs past retain_days, keeping recent and non-matching", {
+  base <- withr::local_tempdir()
+  old_run <- file.path(base, "run_deadbeef")
+  old_failed <- file.path(base, "run_cafef00d.FAILED")
+  fresh_run <- file.path(base, "run_12345abc")
+  other <- file.path(base, "keep_me")
+  for (d in c(old_run, old_failed, fresh_run, other)) {
+    dir.create(d)
+  }
+  Sys.setFileTime(old_run, Sys.time() - 10 * 86400)
+  Sys.setFileTime(old_failed, Sys.time() - 10 * 86400)
+
+  sweep_scratch(base, retain_days = 7)
+
+  expect_false(dir.exists(old_run)) # stale crash-orphan removed
+  expect_false(dir.exists(old_failed)) # stale .FAILED removed
+  expect_true(dir.exists(fresh_run)) # recent run kept
+  expect_true(dir.exists(other)) # non-matching dir untouched
+})
+
+test_that("sweep_scratch with retain_days = Inf is a no-op", {
+  base <- withr::local_tempdir()
+  old_run <- file.path(base, "run_deadbeef")
+  dir.create(old_run)
+  Sys.setFileTime(old_run, Sys.time() - 100 * 86400)
+
+  sweep_scratch(base, retain_days = Inf)
+
+  expect_true(dir.exists(old_run))
+})
+
+test_that("finalize_scratch removes scratch on success and renames to .FAILED on failure", {
+  base <- withr::local_tempdir()
+  ok_dir <- file.path(base, "run_okok")
+  fail_dir <- file.path(base, "run_failfail")
+  dir.create(ok_dir)
+  dir.create(fail_dir)
+
+  finalize_scratch(ok_dir, ok = TRUE)
+  finalize_scratch(fail_dir, ok = FALSE)
+
+  expect_false(dir.exists(ok_dir))
+  expect_false(dir.exists(fail_dir))
+  expect_true(dir.exists(paste0(fail_dir, ".FAILED")))
+})
+
+test_that("finalize_scratch is a no-op for NULL or a missing subdir", {
+  expect_invisible(finalize_scratch(NULL, ok = TRUE))
+  expect_invisible(finalize_scratch(file.path(tempdir(), "no-such-run"), ok = FALSE))
 })
 
 test_that("run_simspades leaves scratchPath unset when it is not supplied", {

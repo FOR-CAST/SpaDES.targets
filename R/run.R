@@ -20,15 +20,19 @@
 #' @param times A `list` with `start` and `end`.
 #' @param paths A `list` of SpaDES paths (e.g. `modulePath`, `inputPath`,
 #'   `scratchPath`). `outputPath` is overridden to `out_dir`. When `scratchPath`
-#'   is set, the run uses a unique subdir beneath it and removes that subdir on
-#'   exit, so each pipeline phase cleans up its scratch and concurrent runs do
-#'   not collide.
+#'   is set, the run uses a unique subdir beneath it so concurrent runs do not
+#'   collide; see `scratch_retain_days` for how that scratch is reclaimed.
 #' @param plain Character vector naming in-memory objects to also return as-is;
 #'   see [extract_outputs()].
 #' @param out_dir Directory for this stage's saved outputs and figures
 #'   (set as `paths$outputPath`).
 #' @param seed Optional integer seed set before the run (for deterministic
 #'   replicates).
+#' @param scratch_retain_days Numeric. A successful run removes its `scratchPath`
+#'   subdir immediately; an R-level failure keeps it (renamed `*.FAILED`) for
+#'   inspection. Before each run, leftover subdirs from earlier failed or killed
+#'   runs are swept once older than this many days (default 7), so transient
+#'   scratch never becomes long-term storage. `Inf` disables the sweep.
 #' @param .options Extra options merged over [spades_safe_options()].
 #' @return The [extract_outputs()] result: a `list` with a `manifest`
 #'   `data.frame`, a `files` character vector, and any `plain` objects.
@@ -44,6 +48,7 @@ run_simspades <- function(
   plain = character(),
   out_dir = ".",
   seed = NULL,
+  scratch_retain_days = 7,
   .options = list()
 ) {
   rlang::check_installed("SpaDES.core")
@@ -57,17 +62,23 @@ run_simspades <- function(
   }
   fs::dir_create(out_dir)
   paths$outputPath <- out_dir
-  ## Isolate this run's scratch in a unique subdir under `paths$scratchPath` and remove it on exit,
-  ## so each pipeline phase cleans up after itself and concurrent runs don't collide. The base
-  ## `scratchPath` stays in the (deterministic) target command; the per-run subdir is created here at
-  ## run time.
+  ## Scratch is transient. Isolate this run in a unique subdir under `paths$scratchPath`
+  ## (so concurrent runs don't collide): a success removes it, an R-level failure keeps it
+  ## (renamed `*.FAILED`) for inspection, and a killed process leaves the bare subdir. Before
+  ## creating ours, sweep stale subdirs from earlier failed/killed runs once older than
+  ## `scratch_retain_days`, so scratch never grows into long-term storage while recent failures
+  ## stay inspectable. The base `scratchPath` stays in the (deterministic) target command; the
+  ## per-run subdir is created here at run time.
+  scratch_run <- NULL
   if (!is.null(paths$scratchPath)) {
+    sweep_scratch(paths$scratchPath, retain_days = scratch_retain_days)
     scratch_run <- file.path(paths$scratchPath, basename(tempfile("run_")))
     dir.create(scratch_run, recursive = TRUE, showWarnings = FALSE)
-    on.exit(unlink(scratch_run, recursive = TRUE, force = TRUE), add = TRUE)
     paths$scratchPath <- scratch_run
   }
-  with_spades_safe_options(.options = .options, {
+  ok <- FALSE
+  on.exit(finalize_scratch(scratch_run, ok), add = TRUE)
+  result <- with_spades_safe_options(.options = .options, {
     if (!is.null(seed)) {
       set.seed(seed)
     }
@@ -88,6 +99,46 @@ run_simspades <- function(
     sim <- do.call(SpaDES.core::simInitAndSpades, args)
     extract_outputs(sim, plain = plain, base_dir = ".")
   })
+  ok <- TRUE
+  result
+}
+
+# Reclaim stale per-run scratch subdirs left by earlier crashed (bare `run_*`) or
+# failed (`run_*.FAILED`) runs once their last-modified time is older than
+# `retain_days`, keeping transient scratch from becoming long-term storage while
+# leaving recent failures available for inspection. A live run continuously
+# touches its own subdir, so an age threshold will not reap an in-progress run.
+sweep_scratch <- function(base, retain_days = 7) {
+  if (is.null(base) || !dir.exists(base) || !is.finite(retain_days)) {
+    return(invisible())
+  }
+  subs <- list.dirs(base, recursive = FALSE)
+  subs <- subs[grepl("^run_[A-Za-z0-9]+(\\.FAILED)?$", basename(subs))]
+  if (!length(subs)) {
+    return(invisible())
+  }
+  stale <- subs[file.mtime(subs) < Sys.time() - retain_days * 86400]
+  for (d in stale) {
+    unlink(d, recursive = TRUE, force = TRUE)
+  }
+  invisible()
+}
+
+# Resolve a finished run's scratch subdir: a success (`ok`) removes it; a failure
+# keeps it for inspection, renamed `*.FAILED` (reclaimed later by `sweep_scratch()`).
+finalize_scratch <- function(scratch_run, ok) {
+  if (is.null(scratch_run) || !dir.exists(scratch_run)) {
+    return(invisible())
+  }
+  if (isTRUE(ok)) {
+    unlink(scratch_run, recursive = TRUE, force = TRUE)
+  } else {
+    failed <- paste0(scratch_run, ".FAILED")
+    if (suppressWarnings(file.rename(scratch_run, failed))) {
+      cli::cli_alert_warning("Run failed; scratch kept for inspection: {.path {failed}}")
+    }
+  }
+  invisible()
 }
 
 # `sim_inputs()` keeps a manifest's file paths PROJECT-relative (portable across

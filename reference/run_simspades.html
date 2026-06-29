@@ -15,7 +15,7 @@ in-memory objects). The simList itself is never returned or serialized."></head>
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9009</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9010</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,6 +62,7 @@ in-memory objects). The <code>simList</code> itself is never returned or seriali
 <span>  plain <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  out_dir <span class="op">=</span> <span class="st">"."</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  scratch_retain_days <span class="op">=</span> <span class="fl">7</span>,</span>
 <span>  .options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -103,9 +104,8 @@ for per-timestep saves). <code>NULL</code> to rely solely on module-side saving
 <dt id="arg-paths">paths<a class="anchor" aria-label="anchor" href="#arg-paths"></a></dt>
 <dd><p>A <code>list</code> of SpaDES paths (e.g. <code>modulePath</code>, <code>inputPath</code>,
 <code>scratchPath</code>). <code>outputPath</code> is overridden to <code>out_dir</code>. When <code>scratchPath</code>
-is set, the run uses a unique subdir beneath it and removes that subdir on
-exit, so each pipeline phase cleans up its scratch and concurrent runs do
-not collide.</p></dd>
+is set, the run uses a unique subdir beneath it so concurrent runs do not
+collide; see <code>scratch_retain_days</code> for how that scratch is reclaimed.</p></dd>
 
 
 <dt id="arg-plain">plain<a class="anchor" aria-label="anchor" href="#arg-plain"></a></dt>
@@ -121,6 +121,14 @@ see <code><a href="extract_outputs.html">extract_outputs()</a></code>.</p></dd>
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>Optional integer seed set before the run (for deterministic
 replicates).</p></dd>
+
+
+<dt id="arg-scratch-retain-days">scratch_retain_days<a class="anchor" aria-label="anchor" href="#arg-scratch-retain-days"></a></dt>
+<dd><p>Numeric. A successful run removes its <code>scratchPath</code>
+subdir immediately; an R-level failure keeps it (renamed <code>*.FAILED</code>) for
+inspection. Before each run, leftover subdirs from earlier failed or killed
+runs are swept once older than this many days (default 7), so transient
+scratch never becomes long-term storage. <code>Inf</code> disables the sweep.</p></dd>
 
 
 <dt id="arg--options">.options<a class="anchor" aria-label="anchor" href="#arg--options"></a></dt>

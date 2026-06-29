@@ -106,9 +106,13 @@
   in-memory object list) is now `objects`.
 
 - [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
-  now runs each stage in a unique subdir under `paths$scratchPath` and
-  removes it on exit, so each pipeline phase cleans up its scratch and
-  concurrent runs do not collide.
+  runs each stage in a unique subdir under `paths$scratchPath` (so
+  concurrent runs don’t collide) and treats it as transient storage: a
+  successful run removes it, an R-level failure keeps it (renamed
+  `*.FAILED`) for error inspection, and stale subdirs left by earlier
+  failed or killed runs are swept at the start of the next run once
+  older than `scratch_retain_days` (default 7) – so scratch never
+  accumulates as long-term storage.
 
 - [`sim_inputs()`](https://github.com/FOR-CAST/SpaDES.targets/reference/sim_inputs.md)
   builds a `simInit(inputs=)` table from an upstream manifest, so a

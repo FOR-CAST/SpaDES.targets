@@ -26,6 +26,7 @@ run_simspades(
   plain = character(),
   out_dir = ".",
   seed = NULL,
+  scratch_retain_days = 7,
   .options = list()
 )
 ```
@@ -68,9 +69,9 @@ run_simspades(
 
   A `list` of SpaDES paths (e.g. `modulePath`, `inputPath`,
   `scratchPath`). `outputPath` is overridden to `out_dir`. When
-  `scratchPath` is set, the run uses a unique subdir beneath it and
-  removes that subdir on exit, so each pipeline phase cleans up its
-  scratch and concurrent runs do not collide.
+  `scratchPath` is set, the run uses a unique subdir beneath it so
+  concurrent runs do not collide; see `scratch_retain_days` for how that
+  scratch is reclaimed.
 
 - plain:
 
@@ -86,6 +87,15 @@ run_simspades(
 
   Optional integer seed set before the run (for deterministic
   replicates).
+
+- scratch_retain_days:
+
+  Numeric. A successful run removes its `scratchPath` subdir
+  immediately; an R-level failure keeps it (renamed `*.FAILED`) for
+  inspection. Before each run, leftover subdirs from earlier failed or
+  killed runs are swept once older than this many days (default 7), so
+  transient scratch never becomes long-term storage. `Inf` disables the
+  sweep.
 
 - .options:
 

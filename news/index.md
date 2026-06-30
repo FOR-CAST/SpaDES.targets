@@ -16,17 +16,18 @@
   rasters/vectors load lazily, so it is cheap even for large layers.
 
 - [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
-  attaches the `reqdPkgs` of every module in `modulePath` (via
-  [`SpaDES.core::packages()`](https://spades-core.predictiveecology.org/reference/packages.html))
-  before the run, because the options firewall
-  (`spades.useRequire = FALSE`) stops `SpaDES.core` from attaching them
-  itself – a module that calls a reqdPkg function unqualified
-  (e.g. `Biomass_core`’s `factorValues2()` from `pemisc`) would
-  otherwise fail with “could not find function”. This also covers
-  modules a stage nests internally (e.g. `Biomass_speciesFactorial` runs
-  `Biomass_core`). Only already-installed packages are attached
-  (uninstalled ones such as `SpaDES.project` are skipped); `renv`
-  remains the installer.
+  no longer attaches module `reqdPkgs` before the run (the
+  `attach_reqd_pkgs()` helper is removed). It was redundant: `simInit()`
+  already loads each module’s `reqdPkgs` – including nested/child
+  modules – via [`require()`](https://rdrr.io/r/base/library.html)
+  whenever `spades.loadReqdPkgs` is `TRUE` (its default, which the
+  firewall leaves untouched); `spades.useRequire = FALSE` only changes
+  the loader, it does not disable loading. The earlier
+  `factorValues2()`/`pemisc` “could not find function” failure was
+  actually an unpinned runtime `getModule("Biomass_core@development")`
+  fetch in `Biomass_speciesFactorial`/`Biomass_borealDataPrep` fetching
+  a version that under-declared the dep, since fixed module-side by
+  pinning `Biomass_core`.
 
 - [`outputs_spec()`](https://github.com/FOR-CAST/SpaDES.targets/reference/outputs_spec.md)
   gains per-object `qs` and `csv` groups

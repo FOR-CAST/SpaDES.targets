@@ -82,7 +82,6 @@ run_simspades <- function(
     if (!is.null(seed)) {
       set.seed(seed)
     }
-    attach_reqd_pkgs(paths)
     args <- list(
       times = times,
       params = params,
@@ -156,59 +155,4 @@ resolve_input_files <- function(inputs) {
     inputs$file[rel] <- as.character(fs::path_abs(inputs$file[rel]))
   }
   inputs
-}
-
-# The options firewall sets `spades.useRequire = FALSE`, so `SpaDES.core` does
-# NOT attach the modules' `reqdPkgs`; modules that call a reqdPkg function
-# UNQUALIFIED (e.g. `Biomass_core`'s `factorValues2()` from `pemisc`) then fail
-# with "could not find function". Attach the reqdPkgs of every module present in
-# `modulePath` onto the search path -- this also covers modules a stage runs
-# internally (e.g. `Biomass_speciesFactorial` nests `Biomass_core`). `renv`
-# remains the installer; this only attaches already-installed packages and skips
-# any that are not installed (e.g. the unbuildable `SpaDES.project`).
-attach_reqd_pkgs <- function(paths) {
-  mp <- paths$modulePath
-  if (is.null(mp)) {
-    return(invisible())
-  }
-  mp <- mp[dir.exists(mp)]
-  if (!length(mp)) {
-    return(invisible())
-  }
-  mods <- unique(unlist(lapply(mp, function(d) {
-    sub <- list.dirs(d, recursive = FALSE)
-    is_mod <- vapply(
-      sub,
-      function(s) file.exists(file.path(s, paste0(basename(s), ".R"))),
-      logical(1)
-    )
-    basename(sub[is_mod])
-  })))
-  if (!length(mods)) {
-    return(invisible())
-  }
-  reqd <- tryCatch(
-    SpaDES.core::packages(modules = mods, paths = list(modulePath = mp)),
-    error = function(e) NULL
-  )
-  pkgs <- unique(vapply(unlist(reqd), extract_pkg_name, character(1), USE.NAMES = FALSE))
-  for (pkg in pkgs[nzchar(pkgs)]) {
-    ok <- isTRUE(tryCatch(requireNamespace(pkg, quietly = TRUE), error = function(e) FALSE))
-    if (ok) {
-      suppressWarnings(suppressMessages(try(
-        library(pkg, character.only = TRUE, warn.conflicts = FALSE),
-        silent = TRUE
-      )))
-    }
-  }
-  invisible()
-}
-
-# Reduce a `reqdPkgs` entry to its bare package name:
-# "Org/pkg@branch (>= 1.2.3)" -> "pkg"; "pkg (>= 1.2.3)" -> "pkg".
-extract_pkg_name <- function(x) {
-  x <- trimws(x)
-  x <- sub("\\s*\\(.*$", "", x) # drop ' (>= version)'
-  x <- sub("@.*$", "", x) # drop '@branch'
-  basename(x) # drop 'org/' prefix
 }

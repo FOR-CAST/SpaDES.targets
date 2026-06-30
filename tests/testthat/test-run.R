@@ -181,34 +181,3 @@ test_that("run_simspades resolves inputs file paths to absolute at the simInit b
 
   expect_identical(seen$file, as.character(fs::path_abs("outputs/preamble/x.tif")))
 })
-
-test_that("extract_pkg_name reduces reqdPkgs entries to bare names", {
-  expect_identical(extract_pkg_name("pemisc"), "pemisc")
-  expect_identical(extract_pkg_name("reproducible (>= 2.1.0)"), "reproducible")
-  expect_identical(extract_pkg_name("PredictiveEcology/LandR@development (>= 1.0.7.9025)"), "LandR")
-  expect_identical(extract_pkg_name("ianmseddy/LandR.CS@development"), "LandR.CS")
-})
-
-test_that("attach_reqd_pkgs is a no-op for a missing modulePath", {
-  expect_invisible(attach_reqd_pkgs(list()))
-  expect_invisible(attach_reqd_pkgs(list(modulePath = file.path(tempdir(), "no-such-dir"))))
-})
-
-test_that("attach_reqd_pkgs discovers modules in modulePath and queries their reqdPkgs", {
-  mp <- withr::local_tempdir()
-  for (m in c("ModA", "ModB")) {
-    dir.create(file.path(mp, m))
-    writeLines("x", file.path(mp, m, paste0(m, ".R")))
-  }
-  dir.create(file.path(mp, "not-a-module")) # no <name>.R -> skipped
-  seen <- NULL
-  testthat::local_mocked_bindings(
-    packages = function(modules, paths, ...) {
-      seen <<- modules
-      list()
-    },
-    .package = "SpaDES.core"
-  )
-  attach_reqd_pkgs(list(modulePath = mp))
-  expect_setequal(seen, c("ModA", "ModB"))
-})

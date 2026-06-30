@@ -181,3 +181,21 @@ test_that("run_simspades resolves inputs file paths to absolute at the simInit b
 
   expect_identical(seen$file, as.character(fs::path_abs("outputs/preamble/x.tif")))
 })
+
+test_that("run_simspades passes loadOrder through to simInitAndSpades, omitting it when NULL", {
+  seen <- list()
+  testthat::local_mocked_bindings(
+    simInitAndSpades = function(..., paths) {
+      seen <<- list(...)
+      list()
+    },
+    .package = "SpaDES.core"
+  )
+  testthat::local_mocked_bindings(extract_outputs = function(...) list())
+
+  run_simspades(modules = c("a", "b"), out_dir = withr::local_tempdir(), loadOrder = c("b", "a"))
+  expect_identical(seen$loadOrder, c("b", "a"))
+
+  run_simspades(modules = "a", out_dir = withr::local_tempdir())
+  expect_false("loadOrder" %in% names(seen))
+})

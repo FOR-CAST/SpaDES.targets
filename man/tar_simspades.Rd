@@ -10,6 +10,7 @@ tar_simspades(
   objects = quote(list()),
   inputs = NULL,
   outputs = NULL,
+  loadOrder = NULL,
   params = list(),
   times = list(start = 0, end = 1),
   paths = NULL,
@@ -36,7 +37,9 @@ file-backed upstream outputs, typically \code{quote(sim_inputs(preamble, objects
 which objects to save and when, passed to \code{simInit(outputs=)}. \code{NULL} to
 rely solely on module-side saving (\code{registerOutputs()} / \code{Plots()}).}
 
-\item{params, times, paths, seed, .options}{Passed through to \code{\link[=run_simspades]{run_simspades()}}.}
+\item{loadOrder, params, times, paths, seed, .options}{Passed through to
+\code{\link[=run_simspades]{run_simspades()}}. Set \code{loadOrder} (a character vector of module names) when
+a stage's automatic load-order inference is ambiguous or broken.}
 
 \item{plain}{Character vector naming in-memory objects the primary target
 should also return as-is.}

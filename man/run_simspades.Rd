@@ -9,6 +9,7 @@ run_simspades(
   objects = list(),
   inputs = NULL,
   outputs = NULL,
+  loadOrder = NULL,
   params = list(),
   times = list(start = 0, end = 1),
   paths = NULL,
@@ -33,6 +34,13 @@ loads file-backed upstream outputs itself; typically built with
 declaring which objects to save and when (the same mechanism LandWeb uses
 for per-timestep saves). \code{NULL} to rely solely on module-side saving
 (\code{registerOutputs()} / \code{Plots()}).}
+
+\item{loadOrder}{Optional character vector passed to
+\code{simInitAndSpades(loadOrder =)} to set an explicit module load (and init)
+order. \code{NULL} (default) lets \code{SpaDES.core} infer it from module
+dependencies; set it when inference is ambiguous or broken (e.g. a stage
+whose modules carry \code{loadOrder} metadata referencing modules absent from
+the stage).}
 
 \item{params}{A \code{list} of module parameters.}
 

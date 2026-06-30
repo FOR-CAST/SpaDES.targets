@@ -16,6 +16,12 @@
 #'   declaring which objects to save and when (the same mechanism LandWeb uses
 #'   for per-timestep saves). `NULL` to rely solely on module-side saving
 #'   (`registerOutputs()` / `Plots()`).
+#' @param loadOrder Optional character vector passed to
+#'   `simInitAndSpades(loadOrder =)` to set an explicit module load (and init)
+#'   order. `NULL` (default) lets `SpaDES.core` infer it from module
+#'   dependencies; set it when inference is ambiguous or broken (e.g. a stage
+#'   whose modules carry `loadOrder` metadata referencing modules absent from
+#'   the stage).
 #' @param params A `list` of module parameters.
 #' @param times A `list` with `start` and `end`.
 #' @param paths A `list` of SpaDES paths (e.g. `modulePath`, `inputPath`,
@@ -42,6 +48,7 @@ run_simspades <- function(
   objects = list(),
   inputs = NULL,
   outputs = NULL,
+  loadOrder = NULL,
   params = list(),
   times = list(start = 0, end = 1),
   paths = NULL,
@@ -94,6 +101,9 @@ run_simspades <- function(
     }
     if (!is.null(outputs)) {
       args$outputs <- outputs
+    }
+    if (!is.null(loadOrder)) {
+      args$loadOrder <- loadOrder
     }
     sim <- do.call(SpaDES.core::simInitAndSpades, args)
     extract_outputs(sim, plain = plain, base_dir = ".")

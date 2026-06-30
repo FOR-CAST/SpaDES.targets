@@ -27,7 +27,9 @@
 #' @param outputs A **quoted** expression (or literal `data.frame`) declaring
 #'   which objects to save and when, passed to `simInit(outputs=)`. `NULL` to
 #'   rely solely on module-side saving (`registerOutputs()` / `Plots()`).
-#' @param params,times,paths,seed,.options Passed through to [run_simspades()].
+#' @param loadOrder,params,times,paths,seed,.options Passed through to
+#'   [run_simspades()]. Set `loadOrder` (a character vector of module names) when
+#'   a stage's automatic load-order inference is ambiguous or broken.
 #' @param plain Character vector naming in-memory objects the primary target
 #'   should also return as-is.
 #' @param out_dir Directory for this stage's saved outputs and figures; defaults
@@ -48,6 +50,7 @@ tar_simspades <- function(
   objects = quote(list()),
   inputs = NULL,
   outputs = NULL,
+  loadOrder = NULL,
   params = list(),
   times = list(start = 0, end = 1),
   paths = NULL,
@@ -66,6 +69,7 @@ tar_simspades <- function(
     objects = .(objects),
     inputs = .(inputs),
     outputs = .(outputs),
+    loadOrder = .(loadOrder),
     params = .(params),
     times = .(times),
     paths = .(paths),

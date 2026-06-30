@@ -2,6 +2,15 @@
 
 ## SpaDES.targets (development version)
 
+- [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
+  and
+  [`tar_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/tar_simspades.md)
+  gain a `loadOrder` argument passed through to
+  `SpaDES.core::simInitAndSpades(loadOrder=)`, for setting an explicit
+  module load/init order when a stage’s automatic inference is ambiguous
+  or broken (e.g. a module carrying `loadOrder` metadata that references
+  a module absent from the stage).
+
 - [`sim_objects()`](https://github.com/FOR-CAST/SpaDES.targets/reference/sim_objects.md)
   loads an upstream manifest’s outputs into memory (on the worker) and
   returns them as a named list for `SpaDES.core::simInit(objects=)` –

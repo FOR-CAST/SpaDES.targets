@@ -15,7 +15,7 @@ in-memory objects). The simList itself is never returned or serialized."></head>
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9011</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9012</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,6 +56,7 @@ in-memory objects). The <code>simList</code> itself is never returned or seriali
 <span>  objects <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  inputs <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  outputs <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  loadOrder <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  times <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>start <span class="op">=</span> <span class="fl">0</span>, end <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  paths <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -91,6 +92,15 @@ loads file-backed upstream outputs itself; typically built with
 declaring which objects to save and when (the same mechanism LandWeb uses
 for per-timestep saves). <code>NULL</code> to rely solely on module-side saving
 (<code>registerOutputs()</code> / <code>Plots()</code>).</p></dd>
+
+
+<dt id="arg-loadorder">loadOrder<a class="anchor" aria-label="anchor" href="#arg-loadorder"></a></dt>
+<dd><p>Optional character vector passed to
+<code>simInitAndSpades(loadOrder =)</code> to set an explicit module load (and init)
+order. <code>NULL</code> (default) lets <code>SpaDES.core</code> infer it from module
+dependencies; set it when inference is ambiguous or broken (e.g. a stage
+whose modules carry <code>loadOrder</code> metadata referencing modules absent from
+the stage).</p></dd>
 
 
 <dt id="arg-params">params<a class="anchor" aria-label="anchor" href="#arg-params"></a></dt>

@@ -11,6 +11,7 @@ tar_simspades(
   objects = quote(list()),
   inputs = NULL,
   outputs = NULL,
+  loadOrder = NULL,
   params = list(),
   times = list(start = 0, end = 1),
   paths = NULL,
@@ -52,10 +53,12 @@ tar_simspades(
   objects to save and when, passed to `simInit(outputs=)`. `NULL` to
   rely solely on module-side saving (`registerOutputs()` / `Plots()`).
 
-- params, times, paths, seed, .options:
+- loadOrder, params, times, paths, seed, .options:
 
   Passed through to
   [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md).
+  Set `loadOrder` (a character vector of module names) when a stage's
+  automatic load-order inference is ambiguous or broken.
 
 - plain:
 

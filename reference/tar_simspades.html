@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9011</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9012</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,6 +45,7 @@
 <span>  objects <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/substitute.html" class="external-link">quote</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  inputs <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  outputs <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  loadOrder <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  times <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>start <span class="op">=</span> <span class="fl">0</span>, end <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  paths <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -85,8 +86,10 @@ which objects to save and when, passed to <code>simInit(outputs=)</code>. <code>
 rely solely on module-side saving (<code>registerOutputs()</code> / <code>Plots()</code>).</p></dd>
 
 
-<dt id="arg-params-times-paths-seed-options">params, times, paths, seed, .options<a class="anchor" aria-label="anchor" href="#arg-params-times-paths-seed-options"></a></dt>
-<dd><p>Passed through to <code><a href="run_simspades.html">run_simspades()</a></code>.</p></dd>
+<dt id="arg-loadorder-params-times-paths-seed-options">loadOrder, params, times, paths, seed, .options<a class="anchor" aria-label="anchor" href="#arg-loadorder-params-times-paths-seed-options"></a></dt>
+<dd><p>Passed through to
+<code><a href="run_simspades.html">run_simspades()</a></code>. Set <code>loadOrder</code> (a character vector of module names) when
+a stage's automatic load-order inference is ambiguous or broken.</p></dd>
 
 
 <dt id="arg-plain">plain<a class="anchor" aria-label="anchor" href="#arg-plain"></a></dt>

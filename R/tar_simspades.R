@@ -34,6 +34,10 @@
 #'   should also return as-is.
 #' @param out_dir Directory for this stage's saved outputs and figures; defaults
 #'   to `file.path("outputs", name)`.
+#' @param clean_out_dir Logical passed to [run_simspades()]; when `TRUE`
+#'   (default) `out_dir` is wiped before the run. Set `FALSE` for a
+#'   post-processing stage whose `out_dir` is the shared parent holding the
+#'   per-replicate sub-directories it reads (e.g. `mode = "multi"` summaries).
 #' @param format `targets` storage format for the primary target (default
 #'   `"rds"`; use `"qs2"` if the `qs2` format is registered).
 #' @return A `list` of two `tar_target` objects (the primary, then the companion
@@ -56,6 +60,7 @@ tar_simspades <- function(
   paths = NULL,
   plain = character(),
   out_dir = NULL,
+  clean_out_dir = TRUE,
   seed = NULL,
   format = "rds",
   .options = list()
@@ -75,6 +80,7 @@ tar_simspades <- function(
     paths = .(paths),
     plain = .(plain),
     out_dir = .(out_dir),
+    clean_out_dir = .(clean_out_dir),
     seed = .(seed),
     .options = .(.options)
   ))

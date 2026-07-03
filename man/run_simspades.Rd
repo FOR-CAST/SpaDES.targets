@@ -15,6 +15,7 @@ run_simspades(
   paths = NULL,
   plain = character(),
   out_dir = ".",
+  clean_out_dir = TRUE,
   seed = NULL,
   scratch_retain_days = 7,
   .options = list()
@@ -56,6 +57,15 @@ see \code{\link[=extract_outputs]{extract_outputs()}}.}
 
 \item{out_dir}{Directory for this stage's saved outputs and figures
 (set as \code{paths$outputPath}).}
+
+\item{clean_out_dir}{Logical; when \code{TRUE} (default) the contents of \code{out_dir}
+are removed before the run so a re-run regenerates cleanly (terra's
+\code{writeRaster()}/\code{writeVector()} and module-side saves do not overwrite).
+Set \code{FALSE} for a post-processing stage whose \code{out_dir} is the shared
+per-study-area PARENT that holds the per-replicate sub-directories it reads
+(e.g. the \code{mode = "multi"} NRV / burn summaries, which aggregate across
+\verb{out_dir/rep\%02d/}): wiping it would delete the very rep outputs the stage
+consumes. Such stages must instead overwrite their own outputs in place.}
 
 \item{seed}{Optional integer seed set before the run (for deterministic
 replicates).}

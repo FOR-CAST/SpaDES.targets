@@ -32,6 +32,14 @@
 #'   see [extract_outputs()].
 #' @param out_dir Directory for this stage's saved outputs and figures
 #'   (set as `paths$outputPath`).
+#' @param clean_out_dir Logical; when `TRUE` (default) the contents of `out_dir`
+#'   are removed before the run so a re-run regenerates cleanly (terra's
+#'   `writeRaster()`/`writeVector()` and module-side saves do not overwrite).
+#'   Set `FALSE` for a post-processing stage whose `out_dir` is the shared
+#'   per-study-area PARENT that holds the per-replicate sub-directories it reads
+#'   (e.g. the `mode = "multi"` NRV / burn summaries, which aggregate across
+#'   `out_dir/rep%02d/`): wiping it would delete the very rep outputs the stage
+#'   consumes. Such stages must instead overwrite their own outputs in place.
 #' @param seed Optional integer seed set before the run (for deterministic
 #'   replicates).
 #' @param scratch_retain_days Numeric. A successful run removes its `scratchPath`
@@ -54,6 +62,7 @@ run_simspades <- function(
   paths = NULL,
   plain = character(),
   out_dir = ".",
+  clean_out_dir = TRUE,
   seed = NULL,
   scratch_retain_days = 7,
   .options = list()
@@ -64,7 +73,14 @@ run_simspades <- function(
   ## a failure, or a `targets` invalidation) regenerates cleanly: terra's
   ## `writeRaster()`/`writeVector()` and module-side saves do NOT overwrite, so
   ## leftover files from a prior run would error. Guard against clobbering `.`.
-  if (!identical(fs::path_abs(out_dir), fs::path_abs(".")) && fs::dir_exists(out_dir)) {
+  ## `clean_out_dir = FALSE` skips this: a post-processing stage sets `out_dir`
+  ## to the shared per-study-area PARENT that HOLDS its per-rep input sub-dirs
+  ## (`out_dir/rep%02d/`), so wiping would delete the reps it must read.
+  if (
+    isTRUE(clean_out_dir) &&
+      !identical(fs::path_abs(out_dir), fs::path_abs(".")) &&
+      fs::dir_exists(out_dir)
+  ) {
     unlink(list.files(out_dir, full.names = TRUE), recursive = TRUE, force = TRUE)
   }
   fs::dir_create(out_dir)

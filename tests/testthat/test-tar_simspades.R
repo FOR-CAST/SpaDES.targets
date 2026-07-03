@@ -28,3 +28,13 @@ test_that("tar_simspades threads objects/inputs/outputs into the primary's deps"
   )
   expect_true(all(c("preamble", "preamble_files") %in% tl[[1]]$deps))
 })
+
+test_that("tar_simspades threads clean_out_dir into the run_simspades command", {
+  cmd <- function(tl) paste(deparse(tl[[1]]$command$expr), collapse = " ")
+
+  expect_match(cmd(tar_simspades("preamble", modules = "LandWeb_preamble")), "clean_out_dir = TRUE")
+  expect_match(
+    cmd(tar_simspades("summaries", modules = "NRV_summary", clean_out_dir = FALSE)),
+    "clean_out_dir = FALSE"
+  )
+})

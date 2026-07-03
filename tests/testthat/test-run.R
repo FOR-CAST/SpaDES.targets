@@ -36,6 +36,27 @@ test_that("run_simspades clears out_dir before a run (re-run safety)", {
   expect_true(dir.exists(out_dir))
 })
 
+test_that("run_simspades keeps out_dir contents when clean_out_dir = FALSE", {
+  # a post-processing stage points out_dir at the shared parent that HOLDS the
+  # per-rep sub-dirs it reads; wiping would delete the very outputs it aggregates.
+  out_dir <- withr::local_tempdir()
+  writeLines("rep-output", file.path(out_dir, "rep01_keep.tif"))
+  saw_leftover <- NULL
+  testthat::local_mocked_bindings(
+    simInitAndSpades = function(..., paths) {
+      saw_leftover <<- file.exists(file.path(paths$outputPath, "rep01_keep.tif"))
+      list()
+    },
+    .package = "SpaDES.core"
+  )
+  testthat::local_mocked_bindings(extract_outputs = function(...) list())
+
+  run_simspades(modules = "m", out_dir = out_dir, clean_out_dir = FALSE)
+
+  expect_true(saw_leftover) # rep outputs preserved for the summary to read
+  expect_true(dir.exists(out_dir))
+})
+
 test_that("run_simspades runs each phase in a per-run scratch subdir, removed on a successful run", {
   base <- withr::local_tempdir()
   used <- NULL

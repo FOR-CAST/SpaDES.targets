@@ -1,5 +1,7 @@
 # SpaDES.targets (development version)
 
+* `run_simspades()` and `tar_simspades()` gain a `clean_out_dir` argument (default `TRUE`, preserving the existing wipe-before-run behaviour). Set `FALSE` for a post-processing stage whose `out_dir` is the shared per-study-area PARENT that holds the per-replicate sub-directories it reads (e.g. the `mode = "multi"` NRV / burn summaries, which aggregate across `out_dir/rep%02d/`): wiping would delete the very rep outputs the stage consumes. Such stages overwrite their own outputs in place.
+
 * `run_simspades()` and `tar_simspades()` gain a `loadOrder` argument passed through to `SpaDES.core::simInitAndSpades(loadOrder=)`, for setting an explicit module load/init order when a stage's automatic inference is ambiguous or broken (e.g. a module carrying `loadOrder` metadata that references a module absent from the stage).
 
 * `sim_objects()` loads an upstream manifest's outputs into memory (on the worker) and returns them as a named list for `SpaDES.core::simInit(objects=)` -- the counterpart to `sim_inputs()`. Use it for spatial handoff objects a downstream module touches in `.inputObjects()` (which runs during `simInit()`, before `inputs=` load), e.g. `Biomass_borealDataPrep` reading `sim$studyArea`/`sim$rasterToMatch`; `sim_inputs()` remains right for objects only needed once events run. `terra` rasters/vectors load lazily, so it is cheap even for large layers.

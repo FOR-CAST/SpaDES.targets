@@ -16,6 +16,7 @@ tar_simspades(
   paths = NULL,
   plain = character(),
   out_dir = NULL,
+  clean_out_dir = TRUE,
   seed = NULL,
   format = "rds",
   .options = list()
@@ -46,6 +47,11 @@ should also return as-is.}
 
 \item{out_dir}{Directory for this stage's saved outputs and figures; defaults
 to \code{file.path("outputs", name)}.}
+
+\item{clean_out_dir}{Logical passed to \code{\link[=run_simspades]{run_simspades()}}; when \code{TRUE}
+(default) \code{out_dir} is wiped before the run. Set \code{FALSE} for a
+post-processing stage whose \code{out_dir} is the shared parent holding the
+per-replicate sub-directories it reads (e.g. \code{mode = "multi"} summaries).}
 
 \item{format}{\code{targets} storage format for the primary target (default
 \code{"rds"}; use \code{"qs2"} if the \code{qs2} format is registered).}

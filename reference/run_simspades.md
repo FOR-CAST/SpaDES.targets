@@ -26,6 +26,7 @@ run_simspades(
   paths = NULL,
   plain = character(),
   out_dir = ".",
+  clean_out_dir = TRUE,
   seed = NULL,
   scratch_retain_days = 7,
   .options = list()
@@ -91,6 +92,18 @@ run_simspades(
 
   Directory for this stage's saved outputs and figures (set as
   `paths$outputPath`).
+
+- clean_out_dir:
+
+  Logical; when `TRUE` (default) the contents of `out_dir` are removed
+  before the run so a re-run regenerates cleanly (terra's
+  `writeRaster()`/`writeVector()` and module-side saves do not
+  overwrite). Set `FALSE` for a post-processing stage whose `out_dir` is
+  the shared per-study-area PARENT that holds the per-replicate
+  sub-directories it reads (e.g. the `mode = "multi"` NRV / burn
+  summaries, which aggregate across `out_dir/rep%02d/`): wiping it would
+  delete the very rep outputs the stage consumes. Such stages must
+  instead overwrite their own outputs in place.
 
 - seed:
 

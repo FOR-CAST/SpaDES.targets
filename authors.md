@@ -11,13 +11,13 @@ Source:
 [`DESCRIPTION`](https://github.com/FOR-CAST/SpaDES.targets/blob/main/DESCRIPTION)
 
 Chubaty A (2026). *SpaDES.targets: Orchestrate SpaDES Simulations with
-'targets'*. R package version 0.0.0.9012,
+'targets'*. R package version 0.0.0.9013,
 <https://github.com/FOR-CAST/SpaDES.targets>.
 
     @Manual{,
       title = {SpaDES.targets: Orchestrate SpaDES Simulations with 'targets'},
       author = {Alex M Chubaty},
       year = {2026},
-      note = {R package version 0.0.0.9012},
+      note = {R package version 0.0.0.9013},
       url = {https://github.com/FOR-CAST/SpaDES.targets},
     }

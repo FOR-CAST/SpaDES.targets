@@ -5,6 +5,17 @@
 - [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
   and
   [`tar_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/tar_simspades.md)
+  gain a `clean_out_dir` argument (default `TRUE`, preserving the
+  existing wipe-before-run behaviour). Set `FALSE` for a post-processing
+  stage whose `out_dir` is the shared per-study-area PARENT that holds
+  the per-replicate sub-directories it reads (e.g. the `mode = "multi"`
+  NRV / burn summaries, which aggregate across `out_dir/rep%02d/`):
+  wiping would delete the very rep outputs the stage consumes. Such
+  stages overwrite their own outputs in place.
+
+- [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
+  and
+  [`tar_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/tar_simspades.md)
   gain a `loadOrder` argument passed through to
   `SpaDES.core::simInitAndSpades(loadOrder=)`, for setting an explicit
   module load/init order when a stage’s automatic inference is ambiguous

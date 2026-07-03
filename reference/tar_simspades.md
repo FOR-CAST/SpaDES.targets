@@ -17,6 +17,7 @@ tar_simspades(
   paths = NULL,
   plain = character(),
   out_dir = NULL,
+  clean_out_dir = TRUE,
   seed = NULL,
   format = "rds",
   .options = list()
@@ -69,6 +70,15 @@ tar_simspades(
 
   Directory for this stage's saved outputs and figures; defaults to
   `file.path("outputs", name)`.
+
+- clean_out_dir:
+
+  Logical passed to
+  [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md);
+  when `TRUE` (default) `out_dir` is wiped before the run. Set `FALSE`
+  for a post-processing stage whose `out_dir` is the shared parent
+  holding the per-replicate sub-directories it reads (e.g.
+  `mode = "multi"` summaries).
 
 - format:
 

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9013</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9014</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,6 +54,8 @@
 <span>  clean_out_dir <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  format <span class="op">=</span> <span class="st">"rds"</span>,</span>
+<span>  pattern <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  iteration <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  .options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -113,6 +115,23 @@ per-replicate sub-directories it reads (e.g. <code>mode = "multi"</code> summari
 <dt id="arg-format">format<a class="anchor" aria-label="anchor" href="#arg-format"></a></dt>
 <dd><p><code>targets</code> storage format for the primary target (default
 <code>"rds"</code>; use <code>"qs2"</code> if the <code>qs2</code> format is registered).</p></dd>
+
+
+<dt id="arg-pattern">pattern<a class="anchor" aria-label="anchor" href="#arg-pattern"></a></dt>
+<dd><p>A <strong>quoted</strong> <code>targets</code> dynamic-branching pattern (e.g.
+<code>quote(map(rep_index))</code>) to run this stage as one branch per element, each
+writing to its own <code>out_dir</code>/<code>seed</code>. Pass <code>out_dir</code>/<code>seed</code> as <strong>quoted</strong>
+expressions referencing the branch variable, e.g. <code>out_dir = quote(file.path("outputs", "mainSim", sprintf("rep%02d", rep_index)))</code> and
+<code>seed = quote(rep_index)</code>. The companion <code>name_files</code> target branches in
+lockstep (mapping over the primary, so each branch tracks its own files).
+<code>NULL</code> (default) emits a single unbranched pair, byte-identical to before.</p></dd>
+
+
+<dt id="arg-iteration">iteration<a class="anchor" aria-label="anchor" href="#arg-iteration"></a></dt>
+<dd><p>Iteration method for the <strong>branched</strong> primary target; only
+used when <code>pattern</code> is non-<code>NULL</code>. Defaults to <code>"list"</code> because
+<code><a href="run_simspades.html">run_simspades()</a></code> returns a list per branch (the <code>targets</code> default
+<code>"vector"</code> would try to combine those per-branch lists).</p></dd>
 
 </dl></div>
     <div class="section level2">

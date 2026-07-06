@@ -20,6 +20,8 @@ tar_simspades(
   clean_out_dir = TRUE,
   seed = NULL,
   format = "rds",
+  pattern = NULL,
+  iteration = NULL,
   .options = list()
 )
 ```
@@ -84,6 +86,26 @@ tar_simspades(
 
   `targets` storage format for the primary target (default `"rds"`; use
   `"qs2"` if the `qs2` format is registered).
+
+- pattern:
+
+  A **quoted** `targets` dynamic-branching pattern (e.g.
+  `quote(map(rep_index))`) to run this stage as one branch per element,
+  each writing to its own `out_dir`/`seed`. Pass `out_dir`/`seed` as
+  **quoted** expressions referencing the branch variable, e.g.
+  `out_dir = quote(file.path("outputs", "mainSim", sprintf("rep%02d", rep_index)))`
+  and `seed = quote(rep_index)`. The companion `name_files` target
+  branches in lockstep (mapping over the primary, so each branch tracks
+  its own files). `NULL` (default) emits a single unbranched pair,
+  byte-identical to before.
+
+- iteration:
+
+  Iteration method for the **branched** primary target; only used when
+  `pattern` is non-`NULL`. Defaults to `"list"` because
+  [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
+  returns a list per branch (the `targets` default `"vector"` would try
+  to combine those per-branch lists).
 
 ## Value
 

@@ -2,6 +2,20 @@
 
 ## SpaDES.targets (development version)
 
+- [`tar_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/tar_simspades.md)
+  gains `pattern` and `iteration` arguments for `targets` dynamic
+  branching, so a stage can run as one branch per element
+  (e.g. `pattern = quote(map(rep_index))`) with per-branch
+  `out_dir`/`seed` passed as quoted expressions referencing the branch
+  variable
+  (e.g. `out_dir = quote(file.path("outputs", "mainSim", sprintf("rep%02d", rep_index)))`,
+  `seed = quote(rep_index)`). The branched primary iterates as `"list"`
+  by default (since
+  [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
+  returns a list per branch) and the companion `<name>_files` target
+  maps over the primary so each branch tracks its own saved files; an
+  unbranched call (`pattern = NULL`, the default) is unchanged.
+
 - [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
   and
   [`tar_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/tar_simspades.md)

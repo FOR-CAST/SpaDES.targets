@@ -1,5 +1,7 @@
 # SpaDES.targets (development version)
 
+* `tar_simspades()` gains `pattern` and `iteration` arguments for `targets` dynamic branching, so a stage can run as one branch per element (e.g. `pattern = quote(map(rep_index))`) with per-branch `out_dir`/`seed` passed as quoted expressions referencing the branch variable (e.g. `out_dir = quote(file.path("outputs", "mainSim", sprintf("rep%02d", rep_index)))`, `seed = quote(rep_index)`). The branched primary iterates as `"list"` by default (since `run_simspades()` returns a list per branch) and the companion `<name>_files` target maps over the primary so each branch tracks its own saved files; an unbranched call (`pattern = NULL`, the default) is unchanged.
+
 * `run_simspades()` and `tar_simspades()` gain a `clean_out_dir` argument (default `TRUE`, preserving the existing wipe-before-run behaviour). Set `FALSE` for a post-processing stage whose `out_dir` is the shared per-study-area PARENT that holds the per-replicate sub-directories it reads (e.g. the `mode = "multi"` NRV / burn summaries, which aggregate across `out_dir/rep%02d/`): wiping would delete the very rep outputs the stage consumes. Such stages overwrite their own outputs in place.
 
 * `run_simspades()` and `tar_simspades()` gain a `loadOrder` argument passed through to `SpaDES.core::simInitAndSpades(loadOrder=)`, for setting an explicit module load/init order when a stage's automatic inference is ambiguous or broken (e.g. a module carrying `loadOrder` metadata that references a module absent from the stage).

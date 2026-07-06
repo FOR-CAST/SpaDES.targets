@@ -40,6 +40,18 @@
 #'   per-replicate sub-directories it reads (e.g. `mode = "multi"` summaries).
 #' @param format `targets` storage format for the primary target (default
 #'   `"rds"`; use `"qs2"` if the `qs2` format is registered).
+#' @param pattern A **quoted** `targets` dynamic-branching pattern (e.g.
+#'   `quote(map(rep_index))`) to run this stage as one branch per element, each
+#'   writing to its own `out_dir`/`seed`. Pass `out_dir`/`seed` as **quoted**
+#'   expressions referencing the branch variable, e.g. `out_dir =
+#'   quote(file.path("outputs", "mainSim", sprintf("rep%02d", rep_index)))` and
+#'   `seed = quote(rep_index)`. The companion `name_files` target branches in
+#'   lockstep (mapping over the primary, so each branch tracks its own files).
+#'   `NULL` (default) emits a single unbranched pair, byte-identical to before.
+#' @param iteration Iteration method for the **branched** primary target; only
+#'   used when `pattern` is non-`NULL`. Defaults to `"list"` because
+#'   [run_simspades()] returns a list per branch (the `targets` default
+#'   `"vector"` would try to combine those per-branch lists).
 #' @return A `list` of two `tar_target` objects (the primary, then the companion
 #'   `format = "file"` target) — return it from `_targets.R` like any target
 #'   list.
@@ -63,6 +75,8 @@ tar_simspades <- function(
   clean_out_dir = TRUE,
   seed = NULL,
   format = "rds",
+  pattern = NULL,
+  iteration = NULL,
   .options = list()
 ) {
   stopifnot(is.character(name), length(name) == 1L)
@@ -84,11 +98,33 @@ tar_simspades <- function(
     seed = .(seed),
     .options = .(.options)
   ))
-  primary <- targets::tar_target_raw(name, command, format = format)
-  files <- targets::tar_target_raw(
-    paste0(name, "_files"),
-    bquote(.(as.symbol(name))[["files"]]),
-    format = "file"
-  )
+  files_command <- bquote(.(as.symbol(name))[["files"]])
+  if (is.null(pattern)) {
+    ## Unbranched stage: emit exactly as before so an existing stage's command +
+    ## settings hash are unchanged and cached upstream targets stay valid.
+    primary <- targets::tar_target_raw(name, command, format = format)
+    files <- targets::tar_target_raw(paste0(name, "_files"), files_command, format = "file")
+  } else {
+    ## Branched stage (e.g. `pattern = quote(map(rep_index))`): the primary must
+    ## iterate as "list" because run_simspades() returns a list per branch (the
+    ## default "vector" would vctrs-combine those per-branch lists and mis-slice
+    ## them). The companion maps over the PRIMARY, not the caller's branch var, so
+    ## each `name_files` branch aligns to one primary branch and
+    ## `name[["files"]]` subsets that branch -- referencing the branch var here
+    ## would resolve `name` to the whole aggregated target.
+    primary <- targets::tar_target_raw(
+      name,
+      command,
+      format = format,
+      pattern = pattern,
+      iteration = if (is.null(iteration)) "list" else iteration
+    )
+    files <- targets::tar_target_raw(
+      paste0(name, "_files"),
+      files_command,
+      format = "file",
+      pattern = substitute(map(n), list(n = as.symbol(name)))
+    )
+  }
   list(primary, files)
 }

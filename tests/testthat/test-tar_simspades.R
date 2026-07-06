@@ -38,3 +38,53 @@ test_that("tar_simspades threads clean_out_dir into the run_simspades command", 
     "clean_out_dir = FALSE"
   )
 })
+
+test_that("an unbranched stage carries no pattern (byte-identical to before)", {
+  tl <- tar_simspades("preamble", modules = "LandWeb_preamble")
+  expect_null(tl[[1]]$settings$pattern)
+  expect_null(tl[[2]]$settings$pattern)
+})
+
+test_that("a branched stage patterns the primary and maps the companion over it", {
+  tl <- tar_simspades(
+    "mainSim",
+    modules = "Biomass_core",
+    pattern = quote(map(rep_index)),
+    out_dir = quote(file.path("outputs", "mainSim", sprintf("rep%02d", rep_index))),
+    seed = quote(rep_index)
+  )
+
+  expect_equal(tl[[1]]$settings$pattern[[1]], quote(map(rep_index)))
+  expect_equal(tl[[1]]$settings$iteration, "list")
+  ## companion maps over the PRIMARY (mainSim), not the branch var (rep_index)
+  expect_equal(tl[[2]]$settings$pattern[[1]], quote(map(mainSim)))
+  ## the primary depends on the branch var; per-branch out_dir/seed spliced live
+  expect_true("rep_index" %in% tl[[1]]$deps)
+})
+
+test_that("a branched stage splices quoted out_dir/seed as per-branch expressions", {
+  cmd <- paste(
+    deparse(
+      tar_simspades(
+        "mainSim",
+        modules = "Biomass_core",
+        pattern = quote(map(rep_index)),
+        out_dir = quote(file.path("outputs", "mainSim", sprintf("rep%02d", rep_index))),
+        seed = quote(rep_index)
+      )[[1]]$command$expr
+    ),
+    collapse = " "
+  )
+  expect_match(cmd, "sprintf\\(\"rep%02d\", rep_index\\)")
+  expect_match(cmd, "seed = rep_index")
+})
+
+test_that("iteration can be overridden on a branched stage", {
+  tl <- tar_simspades(
+    "mainSim",
+    modules = "Biomass_core",
+    pattern = quote(map(rep_index)),
+    iteration = "vector"
+  )
+  expect_equal(tl[[1]]$settings$iteration, "vector")
+})

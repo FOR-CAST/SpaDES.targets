@@ -19,6 +19,8 @@ tar_simspades(
   clean_out_dir = TRUE,
   seed = NULL,
   format = "rds",
+  pattern = NULL,
+  iteration = NULL,
   .options = list()
 )
 }
@@ -55,6 +57,19 @@ per-replicate sub-directories it reads (e.g. \code{mode = "multi"} summaries).}
 
 \item{format}{\code{targets} storage format for the primary target (default
 \code{"rds"}; use \code{"qs2"} if the \code{qs2} format is registered).}
+
+\item{pattern}{A \strong{quoted} \code{targets} dynamic-branching pattern (e.g.
+\code{quote(map(rep_index))}) to run this stage as one branch per element, each
+writing to its own \code{out_dir}/\code{seed}. Pass \code{out_dir}/\code{seed} as \strong{quoted}
+expressions referencing the branch variable, e.g. \code{out_dir = quote(file.path("outputs", "mainSim", sprintf("rep\%02d", rep_index)))} and
+\code{seed = quote(rep_index)}. The companion \code{name_files} target branches in
+lockstep (mapping over the primary, so each branch tracks its own files).
+\code{NULL} (default) emits a single unbranched pair, byte-identical to before.}
+
+\item{iteration}{Iteration method for the \strong{branched} primary target; only
+used when \code{pattern} is non-\code{NULL}. Defaults to \code{"list"} because
+\code{\link[=run_simspades]{run_simspades()}} returns a list per branch (the \code{targets} default
+\code{"vector"} would try to combine those per-branch lists).}
 }
 \value{
 A \code{list} of two \code{tar_target} objects (the primary, then the companion

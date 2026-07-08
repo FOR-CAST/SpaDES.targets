@@ -15,7 +15,7 @@ in-memory objects). The simList itself is never returned or serialized."></head>
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9014</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9015</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,6 +65,8 @@ in-memory objects). The <code>simList</code> itself is never returned or seriali
 <span>  clean_out_dir <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  scratch_retain_days <span class="op">=</span> <span class="fl">7</span>,</span>
+<span>  mem_workers <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  mem_frac <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  .options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -153,6 +155,20 @@ runs are swept once older than this many days (default 7), so transient
 scratch never becomes long-term storage. <code>Inf</code> disables the sweep.</p></dd>
 
 
+<dt id="arg-mem-workers">mem_workers<a class="anchor" aria-label="anchor" href="#arg-mem-workers"></a></dt>
+<dd><p>Integer or <code>NULL</code>. Number of crew workers sharing this node.
+When set, terra's per-process memory is capped at <code>mem_max = mem_frac * (this node's RAM) / mem_workers</code> GB so that concurrent workers do not collectively
+OOM the node (terra's default <code>memfrac</code> is a per-process fraction of RAM with
+no cross-worker coordination). <code>NULL</code> (default) leaves terra at its defaults.</p></dd>
+
+
+<dt id="arg-mem-frac">mem_frac<a class="anchor" aria-label="anchor" href="#arg-mem-frac"></a></dt>
+<dd><p>Numeric in (0, 1]; the fraction of the node's RAM that all its
+workers' terra memory may collectively use (default 0.5, leaving headroom for
+the OS, non-terra R memory, and co-tenant processes). Only used when
+<code>mem_workers</code> is set.</p></dd>
+
+
 <dt id="arg--options">.options<a class="anchor" aria-label="anchor" href="#arg--options"></a></dt>
 <dd><p>Extra options merged over <code><a href="spades_safe_options.html">spades_safe_options()</a></code>.</p></dd>
 
@@ -172,7 +188,7 @@ scratch never becomes long-term storage. <code>Inf</code> disables the sweep.</p
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

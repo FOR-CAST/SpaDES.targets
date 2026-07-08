@@ -2,6 +2,23 @@
 
 ## SpaDES.targets (development version)
 
+- [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
+  and
+  [`tar_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/tar_simspades.md)
+  gain `mem_workers` and `mem_frac` arguments that bound terra’s
+  per-process memory
+  (`terraOptions(memmax = mem_frac * this node's RAM / mem_workers)`) so
+  that N crew workers sharing a node do not collectively OOM it. terra’s
+  default `memfrac` is a per-process fraction of RAM applied with no
+  cross-worker coordination, so concurrent workers each hoarding rasters
+  can exceed total RAM – this SIGKILLed concurrent `mainSim` replicates
+  in fire-spread. `mem_workers` (the number of workers per node)
+  defaults to `getOption("SpaDES.targets.mem_workers")` so a pipeline
+  can set it once for every stage; node RAM is read from `/proc/meminfo`
+  capped by any cgroup limit (container-aware), and terra’s scratch is
+  pointed at the fast per-run subdir so any spill is local. `NULL`
+  (default) leaves terra unchanged.
+
 - [`tar_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/tar_simspades.md)
   gains `pattern` and `iteration` arguments for `targets` dynamic
   branching, so a stage can run as one branch per element

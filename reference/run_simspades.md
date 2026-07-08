@@ -29,6 +29,8 @@ run_simspades(
   clean_out_dir = TRUE,
   seed = NULL,
   scratch_retain_days = 7,
+  mem_workers = NULL,
+  mem_frac = 0.5,
   .options = list()
 )
 ```
@@ -118,6 +120,22 @@ run_simspades(
   killed runs are swept once older than this many days (default 7), so
   transient scratch never becomes long-term storage. `Inf` disables the
   sweep.
+
+- mem_workers:
+
+  Integer or `NULL`. Number of crew workers sharing this node. When set,
+  terra's per-process memory is capped at
+  `mem_max = mem_frac * (this node's RAM) / mem_workers` GB so that
+  concurrent workers do not collectively OOM the node (terra's default
+  `memfrac` is a per-process fraction of RAM with no cross-worker
+  coordination). `NULL` (default) leaves terra at its defaults.
+
+- mem_frac:
+
+  Numeric in (0, 1\]; the fraction of the node's RAM that all its
+  workers' terra memory may collectively use (default 0.5, leaving
+  headroom for the OS, non-terra R memory, and co-tenant processes).
+  Only used when `mem_workers` is set.
 
 - .options:
 

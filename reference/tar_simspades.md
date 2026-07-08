@@ -22,6 +22,8 @@ tar_simspades(
   format = "rds",
   pattern = NULL,
   iteration = NULL,
+  mem_workers = getOption("SpaDES.targets.mem_workers", NULL),
+  mem_frac = getOption("SpaDES.targets.mem_frac", 0.5),
   .options = list()
 )
 ```
@@ -106,6 +108,17 @@ tar_simspades(
   [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
   returns a list per branch (the `targets` default `"vector"` would try
   to combine those per-branch lists).
+
+- mem_workers, mem_frac:
+
+  Passed to
+  [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
+  to cap terra's per-process memory so concurrent workers on a node do
+  not collectively OOM it. `mem_workers` (the number of workers sharing
+  a node) defaults to `getOption("SpaDES.targets.mem_workers")` so a
+  pipeline can set it once for every stage; `NULL` leaves terra at its
+  defaults. Resolved at pipeline definition time and baked into each
+  stage's command.
 
 ## Value
 

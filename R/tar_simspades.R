@@ -52,6 +52,12 @@
 #'   used when `pattern` is non-`NULL`. Defaults to `"list"` because
 #'   [run_simspades()] returns a list per branch (the `targets` default
 #'   `"vector"` would try to combine those per-branch lists).
+#' @param mem_workers,mem_frac Passed to [run_simspades()] to cap terra's
+#'   per-process memory so concurrent workers on a node do not collectively OOM
+#'   it. `mem_workers` (the number of workers sharing a node) defaults to
+#'   `getOption("SpaDES.targets.mem_workers")` so a pipeline can set it once for
+#'   every stage; `NULL` leaves terra at its defaults. Resolved at pipeline
+#'   definition time and baked into each stage's command.
 #' @return A `list` of two `tar_target` objects (the primary, then the companion
 #'   `format = "file"` target) — return it from `_targets.R` like any target
 #'   list.
@@ -77,6 +83,8 @@ tar_simspades <- function(
   format = "rds",
   pattern = NULL,
   iteration = NULL,
+  mem_workers = getOption("SpaDES.targets.mem_workers", NULL),
+  mem_frac = getOption("SpaDES.targets.mem_frac", 0.5),
   .options = list()
 ) {
   stopifnot(is.character(name), length(name) == 1L)
@@ -96,6 +104,8 @@ tar_simspades <- function(
     out_dir = .(out_dir),
     clean_out_dir = .(clean_out_dir),
     seed = .(seed),
+    mem_workers = .(mem_workers),
+    mem_frac = .(mem_frac),
     .options = .(.options)
   ))
   files_command <- bquote(.(as.symbol(name))[["files"]])

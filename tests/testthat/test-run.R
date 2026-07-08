@@ -220,3 +220,25 @@ test_that("run_simspades passes loadOrder through to simInitAndSpades, omitting 
   run_simspades(modules = "a", out_dir = withr::local_tempdir())
   expect_false("loadOrder" %in% names(seen))
 })
+
+test_that("node_ram_gb returns positive RAM (or NA off Linux)", {
+  gb <- node_ram_gb()
+  if (!is.na(gb)) {
+    expect_gt(gb, 0)
+  } else {
+    expect_true(is.na(gb))
+  }
+})
+
+test_that("cap_terra_memory caps terra memmax at mem_frac * RAM / mem_workers", {
+  skip_if_not_installed("terra")
+  ram <- node_ram_gb()
+  skip_if(is.na(ram))
+  withr::defer(try(terra::terraOptions(memmax = -1), silent = TRUE)) # -1 = no cap (terra default)
+  mm <- cap_terra_memory(mem_workers = 4L, mem_frac = 0.5)
+  expect_equal(mm, max(1, 0.5 * ram / 4))
+})
+
+test_that("cap_terra_memory is a no-op when mem_workers is NULL", {
+  expect_null(cap_terra_memory(mem_workers = NULL))
+})

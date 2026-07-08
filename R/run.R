@@ -47,6 +47,15 @@
 #'   inspection. Before each run, leftover subdirs from earlier failed or killed
 #'   runs are swept once older than this many days (default 7), so transient
 #'   scratch never becomes long-term storage. `Inf` disables the sweep.
+#' @param mem_workers Integer or `NULL`. Number of crew workers sharing this node.
+#'   When set, terra's per-process memory is capped at `mem_max = mem_frac * (this
+#'   node's RAM) / mem_workers` GB so that concurrent workers do not collectively
+#'   OOM the node (terra's default `memfrac` is a per-process fraction of RAM with
+#'   no cross-worker coordination). `NULL` (default) leaves terra at its defaults.
+#' @param mem_frac Numeric in (0, 1]; the fraction of the node's RAM that all its
+#'   workers' terra memory may collectively use (default 0.5, leaving headroom for
+#'   the OS, non-terra R memory, and co-tenant processes). Only used when
+#'   `mem_workers` is set.
 #' @param .options Extra options merged over [spades_safe_options()].
 #' @return The [extract_outputs()] result: a `list` with a `manifest`
 #'   `data.frame`, a `files` character vector, and any `plain` objects.
@@ -65,6 +74,8 @@ run_simspades <- function(
   clean_out_dir = TRUE,
   seed = NULL,
   scratch_retain_days = 7,
+  mem_workers = NULL,
+  mem_frac = 0.5,
   .options = list()
 ) {
   rlang::check_installed("SpaDES.core")
@@ -99,6 +110,17 @@ run_simspades <- function(
     dir.create(scratch_run, recursive = TRUE, showWarnings = FALSE)
     paths$scratchPath <- scratch_run
   }
+  ## Bound terra's per-process memory so N concurrent crew workers on one node don't
+  ## collectively OOM it. terra's default `memfrac` (0.6) is a fraction of RAM applied
+  ## PER PROCESS with no cross-worker coordination, so N workers each hoarding rasters
+  ## can far exceed total RAM (the OOM that SIGKILLed concurrent mainSim reps). Give each
+  ## worker an absolute `memmax` = `mem_frac` * this node's RAM / `mem_workers`, and point
+  ## terra's scratch at the fast per-run subdir so any spill is local NVMe, not NFS.
+  cap_terra_memory(mem_workers = mem_workers, mem_frac = mem_frac, tempdir = scratch_run)
+  on.exit(
+    if (!is.null(scratch_run)) try(terra::terraOptions(tempdir = tempdir()), silent = TRUE),
+    add = TRUE
+  )
   ok <- FALSE
   on.exit(finalize_scratch(scratch_run, ok), add = TRUE)
   result <- with_spades_safe_options(.options = .options, {
@@ -126,6 +148,50 @@ run_simspades <- function(
   })
   ok <- TRUE
   result
+}
+
+# Bound terra's per-process memory (`memmax`, GB) so that N crew workers sharing a
+# node do not collectively OOM it, and direct terra's scratch to a fast local dir.
+# `mem_workers` is the number of workers sharing this node (so the node's RAM is split
+# among them); `NULL`/`<= 0`, or an undeterminable node RAM, leaves terra at its
+# defaults. Idempotent; called once per run on the worker.
+cap_terra_memory <- function(mem_workers, mem_frac = 0.5, tempdir = NULL) {
+  if (!is.null(tempdir) && dir.exists(tempdir)) {
+    try(terra::terraOptions(tempdir = tempdir), silent = TRUE)
+  }
+  if (is.null(mem_workers) || !is.finite(mem_workers) || mem_workers < 1) {
+    return(invisible(NULL))
+  }
+  ram_gb <- node_ram_gb()
+  if (is.na(ram_gb)) {
+    return(invisible(NULL))
+  }
+  memmax <- max(1, mem_frac * ram_gb / mem_workers)
+  try(terra::terraOptions(memmax = memmax), silent = TRUE)
+  invisible(memmax)
+}
+
+# Total memory (GB) available to this process: the smaller of physical RAM
+# (`/proc/meminfo`) and any cgroup (v2 then v1) memory limit, so a containerized
+# worker is sized to its quota rather than the host. `NA` if undeterminable.
+node_ram_gb <- function() {
+  read1 <- function(p, n) {
+    if (!file.exists(p)) {
+      return(character())
+    }
+    tryCatch(suppressWarnings(readLines(p, n = n)), error = function(e) character())
+  }
+  gb <- Inf
+  line <- grep("^MemTotal:", read1("/proc/meminfo", 50L), value = TRUE)
+  if (length(line)) {
+    kb <- suppressWarnings(as.numeric(gsub("\\D", "", line[1L])))
+    if (!is.na(kb)) gb <- min(gb, kb / 1024 / 1024)
+  }
+  for (p in c("/sys/fs/cgroup/memory.max", "/sys/fs/cgroup/memory/memory.limit_in_bytes")) {
+    v <- read1(p, 1L)
+    if (length(v) && grepl("^[0-9]+$", v[1L])) gb <- min(gb, as.numeric(v[1L]) / 1024^3)
+  }
+  if (is.finite(gb)) gb else NA_real_
 }
 
 # Reclaim stale per-run scratch subdirs left by earlier crashed (bare `run_*`) or

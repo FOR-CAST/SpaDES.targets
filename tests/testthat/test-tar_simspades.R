@@ -88,3 +88,25 @@ test_that("iteration can be overridden on a branched stage", {
   )
   expect_equal(tl[[1]]$settings$iteration, "vector")
 })
+
+test_that("tar_simspades bakes mem_workers/mem_frac into the run_simspades command", {
+  cmd <- paste(
+    deparse(
+      tar_simspades("preamble", modules = "LandWeb_preamble", mem_workers = 8L, mem_frac = 0.5)[[
+        1
+      ]]$command$expr
+    ),
+    collapse = " "
+  )
+  expect_match(cmd, "mem_workers = 8")
+  expect_match(cmd, "mem_frac = 0.5")
+})
+
+test_that("tar_simspades reads the SpaDES.targets.mem_workers option as mem_workers default", {
+  withr::local_options(SpaDES.targets.mem_workers = 3L)
+  cmd <- paste(
+    deparse(tar_simspades("preamble", modules = "LandWeb_preamble")[[1]]$command$expr),
+    collapse = " "
+  )
+  expect_match(cmd, "mem_workers = 3")
+})

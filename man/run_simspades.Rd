@@ -18,6 +18,8 @@ run_simspades(
   clean_out_dir = TRUE,
   seed = NULL,
   scratch_retain_days = 7,
+  mem_workers = NULL,
+  mem_frac = 0.5,
   .options = list()
 )
 }
@@ -75,6 +77,16 @@ subdir immediately; an R-level failure keeps it (renamed \verb{*.FAILED}) for
 inspection. Before each run, leftover subdirs from earlier failed or killed
 runs are swept once older than this many days (default 7), so transient
 scratch never becomes long-term storage. \code{Inf} disables the sweep.}
+
+\item{mem_workers}{Integer or \code{NULL}. Number of crew workers sharing this node.
+When set, terra's per-process memory is capped at \verb{mem_max = mem_frac * (this node's RAM) / mem_workers} GB so that concurrent workers do not collectively
+OOM the node (terra's default \code{memfrac} is a per-process fraction of RAM with
+no cross-worker coordination). \code{NULL} (default) leaves terra at its defaults.}
+
+\item{mem_frac}{Numeric in (0, 1]; the fraction of the node's RAM that all its
+workers' terra memory may collectively use (default 0.5, leaving headroom for
+the OS, non-terra R memory, and co-tenant processes). Only used when
+\code{mem_workers} is set.}
 
 \item{.options}{Extra options merged over \code{\link[=spades_safe_options]{spades_safe_options()}}.}
 }

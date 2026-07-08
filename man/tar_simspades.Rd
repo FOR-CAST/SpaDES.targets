@@ -21,6 +21,8 @@ tar_simspades(
   format = "rds",
   pattern = NULL,
   iteration = NULL,
+  mem_workers = getOption("SpaDES.targets.mem_workers", NULL),
+  mem_frac = getOption("SpaDES.targets.mem_frac", 0.5),
   .options = list()
 )
 }
@@ -70,6 +72,13 @@ lockstep (mapping over the primary, so each branch tracks its own files).
 used when \code{pattern} is non-\code{NULL}. Defaults to \code{"list"} because
 \code{\link[=run_simspades]{run_simspades()}} returns a list per branch (the \code{targets} default
 \code{"vector"} would try to combine those per-branch lists).}
+
+\item{mem_workers, mem_frac}{Passed to \code{\link[=run_simspades]{run_simspades()}} to cap terra's
+per-process memory so concurrent workers on a node do not collectively OOM
+it. \code{mem_workers} (the number of workers sharing a node) defaults to
+\code{getOption("SpaDES.targets.mem_workers")} so a pipeline can set it once for
+every stage; \code{NULL} leaves terra at its defaults. Resolved at pipeline
+definition time and baked into each stage's command.}
 }
 \value{
 A \code{list} of two \code{tar_target} objects (the primary, then the companion

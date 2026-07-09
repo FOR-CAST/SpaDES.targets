@@ -7,9 +7,16 @@
   [`tar_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/tar_simspades.md)
   gain a `log_file` argument that restores per-run SpaDES logging (as
   the pre-`targets` orchestration did via `outputs/<run>/log/`). When
-  set, the SpaDES event trace is written to `log_file` via
-  `simInitAndSpades(debug = list(file = list(file = log_file, append = TRUE), debug = 1))`.
-  Because base
+  set, the SpaDES run log is written to `log_file` via
+  `simInitAndSpades(debug = list(file = list(file = log_file, append = TRUE)))`
+  – a **single-element** `debug` list on purpose: SpaDES.core’s
+  `debugToVerbose()` currently returns one value per top-level `debug`
+  element (a vector) instead of a scalar, so a 2-element
+  `list(file = ..., debug = 1)` makes `verbose` length-2 and
+  `simInit()`’s `setPaths(silent = verbose <= 0)` errors “condition has
+  length \> 1” (PredictiveEcology/SpaDES.core#322). The explicit
+  `debug = 1` per-event trace can be restored once `debugToVerbose()`
+  reduces to a scalar upstream. Because base
   [`warnings()`](https://rdrr.io/r/base/warnings.html)/[`traceback()`](https://rdrr.io/r/base/traceback.html)
   are unreliable here –
   [`warnings()`](https://rdrr.io/r/base/warnings.html) depends on

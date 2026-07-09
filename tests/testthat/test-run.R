@@ -258,7 +258,7 @@ test_that("run_simspades directs the SpaDES debug log to log_file when set", {
 
   run_simspades(modules = "m", out_dir = withr::local_tempdir(), log_file = log_file)
 
-  expect_equal(seen, list(file = list(file = log_file, append = TRUE), debug = 1))
+  expect_equal(seen, list(file = list(file = log_file, append = TRUE)))
   expect_true(dir.exists(dirname(log_file))) # log dir created
 })
 
@@ -330,5 +330,5 @@ test_that("init_run_log removes stale sibling captures and returns the debug lis
 
   expect_false(file.exists(sub("\\.log$", "_warnings.txt", log_file))) # stale removed
   expect_true(dir.exists(dirname(log_file)))
-  expect_equal(dbg, list(file = list(file = log_file, append = TRUE), debug = 1))
+  expect_equal(dbg, list(file = list(file = log_file, append = TRUE)))
 })

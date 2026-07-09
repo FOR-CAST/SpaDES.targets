@@ -173,7 +173,13 @@ run_simspades <- function(
 init_run_log <- function(log_file) {
   unlink(unlist(run_log_siblings(log_file), use.names = FALSE))
   fs::dir_create(dirname(log_file))
-  list(file = list(file = log_file, append = TRUE), debug = 1)
+  ## A SINGLE-element `debug` list (just `file`) -- deliberately NOT `list(file = ..., debug = 1)`.
+  ## SpaDES.core's `debugToVerbose()` does `sapply(debug, ...)`, returning ONE value per top-level
+  ## element instead of reducing to a scalar, so a 2-element list makes `verbose` length-2; then
+  ## `simInit()` does `setPaths(silent = verbose <= 0)` and `if (!silent)` errors "condition has
+  ## length > 1" (PredictiveEcology/SpaDES.core#322). The single-element form keeps `verbose` scalar.
+  ## Restore the `debug = 1` event-trace level once SpaDES.core reduces `debugToVerbose()` to a scalar.
+  list(file = list(file = log_file, append = TRUE))
 }
 
 # The two capture files that sit beside a run's `.log`: warnings and an error backtrace.

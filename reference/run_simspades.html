@@ -15,7 +15,7 @@ in-memory objects). The simList itself is never returned or serialized."></head>
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9017</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9018</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -149,9 +149,13 @@ replicates).</p></dd>
 
 
 <dt id="arg-log-file">log_file<a class="anchor" aria-label="anchor" href="#arg-log-file"></a></dt>
-<dd><p>Optional path to a per-run SpaDES debug log. When set, the
-SpaDES event trace is written there via <code>simInitAndSpades(debug = list(file = ...))</code>, and — because base <code><a href="https://rdrr.io/r/base/warnings.html" class="external-link">warnings()</a></code>/<code><a href="https://rdrr.io/r/base/traceback.html" class="external-link">traceback()</a></code> miss <code>rlang</code>/<code>cli</code>
-conditions and depend on <code>options(warn)</code> — every warning is captured as it
+<dd><p>Optional path to a per-run SpaDES log. When set, the run uses a
+scalar <code>debug = 1</code> (which emits the per-event trace + informational output as
+messages) and every message is captured to <code>log_file</code>; a scalar <code>debug</code>
+deliberately avoids the debug-as-list crashes in current SpaDES.core
+(PredictiveEcology/SpaDES.core#322 and an unguarded <code>ifelse(debug &lt; 1, ...)</code>
+in the event loop). Because base <code><a href="https://rdrr.io/r/base/warnings.html" class="external-link">warnings()</a></code>/<code><a href="https://rdrr.io/r/base/traceback.html" class="external-link">traceback()</a></code> miss <code>rlang</code>/<code>cli</code>
+conditions and depend on <code>options(warn)</code>, every warning is also captured as it
 is signalled to a sibling <code>*_warnings.txt</code>, and an <code>rlang</code> backtrace at the
 error site to a sibling <code>*_traceback.txt</code>. Stale logs from a prior run of the
 stage are removed first (the log dir lives outside the cleaned <code>out_dir</code>).

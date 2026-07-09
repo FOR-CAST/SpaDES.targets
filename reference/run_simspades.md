@@ -115,15 +115,18 @@ run_simspades(
 
 - log_file:
 
-  Optional path to a per-run SpaDES debug log. When set, the SpaDES
-  event trace is written there via
-  `simInitAndSpades(debug = list(file = ...))`, and — because base
+  Optional path to a per-run SpaDES log. When set, the run uses a scalar
+  `debug = 1` (which emits the per-event trace + informational output as
+  messages) and every message is captured to `log_file`; a scalar
+  `debug` deliberately avoids the debug-as-list crashes in current
+  SpaDES.core (PredictiveEcology/SpaDES.core#322 and an unguarded
+  `ifelse(debug < 1, ...)` in the event loop). Because base
   [`warnings()`](https://rdrr.io/r/base/warnings.html)/[`traceback()`](https://rdrr.io/r/base/traceback.html)
-  miss `rlang`/`cli` conditions and depend on `options(warn)` — every
-  warning is captured as it is signalled to a sibling `*_warnings.txt`,
-  and an `rlang` backtrace at the error site to a sibling
-  `*_traceback.txt`. Stale logs from a prior run of the stage are
-  removed first (the log dir lives outside the cleaned `out_dir`).
+  miss `rlang`/`cli` conditions and depend on `options(warn)`, every
+  warning is also captured as it is signalled to a sibling
+  `*_warnings.txt`, and an `rlang` backtrace at the error site to a
+  sibling `*_traceback.txt`. Stale logs from a prior run of the stage
+  are removed first (the log dir lives outside the cleaned `out_dir`).
   `NULL` (default) disables per-run logging.
 
 - scratch_retain_days:

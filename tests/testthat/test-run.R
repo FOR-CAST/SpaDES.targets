@@ -243,7 +243,7 @@ test_that("cap_terra_memory is a no-op when mem_workers is NULL", {
   expect_null(cap_terra_memory(mem_workers = NULL))
 })
 
-test_that("run_simspades directs the SpaDES debug log to log_file when set", {
+test_that("run_simspades runs with scalar debug = 1 + creates the log dir when log_file set", {
   base <- withr::local_tempdir()
   log_file <- file.path(base, "logs", "preamble.log")
   seen <- NULL
@@ -258,7 +258,7 @@ test_that("run_simspades directs the SpaDES debug log to log_file when set", {
 
   run_simspades(modules = "m", out_dir = withr::local_tempdir(), log_file = log_file)
 
-  expect_equal(seen, list(file = list(file = log_file, append = TRUE)))
+  expect_identical(seen, 1L) # scalar debug (NOT a list): dodges the debug-as-list SpaDES.core bugs
   expect_true(dir.exists(dirname(log_file))) # log dir created
 })
 
@@ -319,16 +319,35 @@ test_that("run_simspades writes a backtrace to *_traceback.txt on error and stil
   expect_match(paste(readLines(tf), collapse = "\n"), "kaboom")
 })
 
-test_that("init_run_log removes stale sibling captures and returns the debug list", {
+test_that("init_run_log removes stale sibling captures and creates the log dir", {
   base <- withr::local_tempdir()
   log_file <- file.path(base, "logs", "s.log")
   dir.create(dirname(log_file), recursive = TRUE)
   writeLines("old", log_file)
   writeLines("old", sub("\\.log$", "_warnings.txt", log_file))
 
-  dbg <- init_run_log(log_file)
+  ret <- init_run_log(log_file)
 
   expect_false(file.exists(sub("\\.log$", "_warnings.txt", log_file))) # stale removed
+  expect_false(file.exists(log_file)) # stale log removed too
   expect_true(dir.exists(dirname(log_file)))
-  expect_equal(dbg, list(file = list(file = log_file, append = TRUE)))
+  expect_identical(ret, log_file) # returns the path (invisibly); no debug list
+})
+
+test_that("run_simspades captures messages (the debug=1 event trace) to the log file", {
+  base <- withr::local_tempdir()
+  log_file <- file.path(base, "logs", "s.log")
+  testthat::local_mocked_bindings(
+    simInitAndSpades = function(..., paths) {
+      message("frSprd:burn total elpsd") # SpaDES emits the event trace as messages under debug = 1
+      list()
+    },
+    .package = "SpaDES.core"
+  )
+  testthat::local_mocked_bindings(extract_outputs = function(...) list())
+
+  run_simspades(modules = "m", out_dir = withr::local_tempdir(), log_file = log_file)
+
+  expect_true(file.exists(log_file))
+  expect_match(paste(readLines(log_file), collapse = "\n"), "frSprd:burn total elpsd")
 })

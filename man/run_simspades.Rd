@@ -73,9 +73,13 @@ consumes. Such stages must instead overwrite their own outputs in place.}
 \item{seed}{Optional integer seed set before the run (for deterministic
 replicates).}
 
-\item{log_file}{Optional path to a per-run SpaDES debug log. When set, the
-SpaDES event trace is written there via \code{simInitAndSpades(debug = list(file = ...))}, and — because base \code{warnings()}/\code{traceback()} miss \code{rlang}/\code{cli}
-conditions and depend on \code{options(warn)} — every warning is captured as it
+\item{log_file}{Optional path to a per-run SpaDES log. When set, the run uses a
+scalar \code{debug = 1} (which emits the per-event trace + informational output as
+messages) and every message is captured to \code{log_file}; a scalar \code{debug}
+deliberately avoids the debug-as-list crashes in current SpaDES.core
+(PredictiveEcology/SpaDES.core#322 and an unguarded \code{ifelse(debug < 1, ...)}
+in the event loop). Because base \code{warnings()}/\code{traceback()} miss \code{rlang}/\code{cli}
+conditions and depend on \code{options(warn)}, every warning is also captured as it
 is signalled to a sibling \verb{*_warnings.txt}, and an \code{rlang} backtrace at the
 error site to a sibling \verb{*_traceback.txt}. Stale logs from a prior run of the
 stage are removed first (the log dir lives outside the cleaned \code{out_dir}).

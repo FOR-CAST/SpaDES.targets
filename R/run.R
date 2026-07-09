@@ -42,10 +42,13 @@
 #'   consumes. Such stages must instead overwrite their own outputs in place.
 #' @param seed Optional integer seed set before the run (for deterministic
 #'   replicates).
-#' @param log_file Optional path to a per-run SpaDES debug log. When set, the
-#'   SpaDES event trace is written there via `simInitAndSpades(debug = list(file
-#'   = ...))`, and — because base `warnings()`/`traceback()` miss `rlang`/`cli`
-#'   conditions and depend on `options(warn)` — every warning is captured as it
+#' @param log_file Optional path to a per-run SpaDES log. When set, the run uses a
+#'   scalar `debug = 1` (which emits the per-event trace + informational output as
+#'   messages) and every message is captured to `log_file`; a scalar `debug`
+#'   deliberately avoids the debug-as-list crashes in current SpaDES.core
+#'   (PredictiveEcology/SpaDES.core#322 and an unguarded `ifelse(debug < 1, ...)`
+#'   in the event loop). Because base `warnings()`/`traceback()` miss `rlang`/`cli`
+#'   conditions and depend on `options(warn)`, every warning is also captured as it
 #'   is signalled to a sibling `*_warnings.txt`, and an `rlang` backtrace at the
 #'   error site to a sibling `*_traceback.txt`. Stale logs from a prior run of the
 #'   stage are removed first (the log dir lives outside the cleaned `out_dir`).
@@ -153,7 +156,13 @@ run_simspades <- function(
       args$loadOrder <- loadOrder
     }
     if (!is.null(log_file)) {
-      args$debug <- init_run_log(log_file)
+      init_run_log(log_file)
+      ## SCALAR `debug` (not a list): makes SpaDES emit the per-event trace as messages, and dodges
+      ## the debug-as-list bugs entirely -- SpaDES.core#322 (`debugToVerbose()` -> vector ->
+      ## `setPaths(silent = verbose <= 0)`) AND the unguarded `ifelse(debug < 1, ...)` in the event
+      ## loop -- both of which crash simInit/spades when `debug` is a list. with_run_logging()
+      ## captures those messages (the event trace + all SpaDES output) to `log_file`.
+      args$debug <- 1L
     }
     run_one <- function() {
       sim <- do.call(SpaDES.core::simInitAndSpades, args)
@@ -165,21 +174,14 @@ run_simspades <- function(
   result
 }
 
-# Per-run SpaDES logging (restores the pre-`targets` `development` behaviour). Returns the
-# `debug` list for `simInitAndSpades()` that directs the SpaDES event trace to `log_file`, after
-# removing any stale log + sibling capture files from an earlier run of this stage (the log dir
-# lives OUTSIDE the cleaned `out_dir`, so it would otherwise accumulate across re-runs) and
-# (re)creating the log directory.
+# Prepare a per-run log: remove any stale log + sibling capture files from an earlier run of this
+# stage (the log dir lives OUTSIDE the cleaned `out_dir`, so it would otherwise accumulate across
+# re-runs) and (re)create the log directory. The run itself is invoked with a SCALAR `debug = 1`
+# and its messages captured to the files by with_run_logging() -- see there.
 init_run_log <- function(log_file) {
   unlink(unlist(run_log_siblings(log_file), use.names = FALSE))
   fs::dir_create(dirname(log_file))
-  ## A SINGLE-element `debug` list (just `file`) -- deliberately NOT `list(file = ..., debug = 1)`.
-  ## SpaDES.core's `debugToVerbose()` does `sapply(debug, ...)`, returning ONE value per top-level
-  ## element instead of reducing to a scalar, so a 2-element list makes `verbose` length-2; then
-  ## `simInit()` does `setPaths(silent = verbose <= 0)` and `if (!silent)` errors "condition has
-  ## length > 1" (PredictiveEcology/SpaDES.core#322). The single-element form keeps `verbose` scalar.
-  ## Restore the `debug = 1` event-trace level once SpaDES.core reduces `debugToVerbose()` to a scalar.
-  list(file = list(file = log_file, append = TRUE))
+  invisible(log_file)
 }
 
 # The two capture files that sit beside a run's `.log`: warnings and an error backtrace.
@@ -191,16 +193,23 @@ run_log_siblings <- function(log_file) {
   )
 }
 
-# Run `fn()` while capturing conditions the SpaDES debug log alone would miss. `warnings()` is
-# unreliable here (it depends on `options(warn)`, caps at 50, and misses `rlang`/`cli` classed
-# warnings), so log EVERY warning as it is signalled via a calling handler -- without muffling,
-# so it still propagates to the SpaDES log + console. On error, capture an `rlang` backtrace at
-# the signal site (base `traceback()` needs `.Traceback`, unset inside handled calls) and let the
-# error propagate so the caller's scratch-finalize marks the run `.FAILED`.
+# Run `fn()` while capturing to per-run files what the run emits. With `debug = 1` (set by the
+# caller) SpaDES emits the event trace + informational output as MESSAGES; capture every message
+# to `log_file` and muffle it, so the trace lands in the file (regardless of SpaDES.core's own,
+# currently broken, file-appender routing) without also flooding the worker console. `warnings()`
+# is unreliable (depends on `options(warn)`, caps at 50, misses `rlang`/`cli` classed conditions),
+# so log EVERY warning as it is signalled to `*_warnings.txt` -- NOT muffled, so it still reaches
+# the console. On error, capture an `rlang` backtrace at the signal site (base `traceback()` needs
+# `.Traceback`, unset inside handled calls) to `*_traceback.txt`, then let the error propagate so
+# the caller's scratch-finalize marks the run `.FAILED`.
 with_run_logging <- function(fn, log_file) {
   sib <- run_log_siblings(log_file)
   withCallingHandlers(
     fn(),
+    message = function(m) {
+      cat(conditionMessage(m), file = sib$log, append = TRUE)
+      invokeRestart("muffleMessage")
+    },
     warning = function(w) {
       cat(
         sprintf("[%s] %s\n", format(Sys.time()), conditionMessage(w)),

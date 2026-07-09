@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9015</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9016</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -53,6 +53,7 @@
 <span>  out_dir <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  clean_out_dir <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  log_file <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  format <span class="op">=</span> <span class="st">"rds"</span>,</span>
 <span>  pattern <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  iteration <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -112,6 +113,12 @@ to <code>file.path("outputs", name)</code>.</p></dd>
 (default) <code>out_dir</code> is wiped before the run. Set <code>FALSE</code> for a
 post-processing stage whose <code>out_dir</code> is the shared parent holding the
 per-replicate sub-directories it reads (e.g. <code>mode = "multi"</code> summaries).</p></dd>
+
+
+<dt id="arg-log-file">log_file<a class="anchor" aria-label="anchor" href="#arg-log-file"></a></dt>
+<dd><p>Passed to <code><a href="run_simspades.html">run_simspades()</a></code>: path to a per-run SpaDES debug
+log (plus sibling <code>*_warnings.txt</code> / <code>*_traceback.txt</code>). Pass a <strong>quoted</strong>
+expression when it references the branch variable, e.g. <code>log_file = quote(file.path("outputs", "logs", sprintf("mainSim_rep%02d.log", rep_index)))</code>. <code>NULL</code> (default) disables per-run logging.</p></dd>
 
 
 <dt id="arg-format">format<a class="anchor" aria-label="anchor" href="#arg-format"></a></dt>

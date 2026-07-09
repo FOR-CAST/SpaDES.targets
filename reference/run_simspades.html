@@ -15,7 +15,7 @@ in-memory objects). The simList itself is never returned or serialized."></head>
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9015</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9016</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,6 +64,7 @@ in-memory objects). The <code>simList</code> itself is never returned or seriali
 <span>  out_dir <span class="op">=</span> <span class="st">"."</span>,</span>
 <span>  clean_out_dir <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  log_file <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  scratch_retain_days <span class="op">=</span> <span class="fl">7</span>,</span>
 <span>  mem_workers <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  mem_frac <span class="op">=</span> <span class="fl">0.5</span>,</span>
@@ -145,6 +146,16 @@ consumes. Such stages must instead overwrite their own outputs in place.</p></dd
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>Optional integer seed set before the run (for deterministic
 replicates).</p></dd>
+
+
+<dt id="arg-log-file">log_file<a class="anchor" aria-label="anchor" href="#arg-log-file"></a></dt>
+<dd><p>Optional path to a per-run SpaDES debug log. When set, the
+SpaDES event trace is written there via <code>simInitAndSpades(debug = list(file = ...))</code>, and — because base <code><a href="https://rdrr.io/r/base/warnings.html" class="external-link">warnings()</a></code>/<code><a href="https://rdrr.io/r/base/traceback.html" class="external-link">traceback()</a></code> miss <code>rlang</code>/<code>cli</code>
+conditions and depend on <code>options(warn)</code> — every warning is captured as it
+is signalled to a sibling <code>*_warnings.txt</code>, and an <code>rlang</code> backtrace at the
+error site to a sibling <code>*_traceback.txt</code>. Stale logs from a prior run of the
+stage are removed first (the log dir lives outside the cleaned <code>out_dir</code>).
+<code>NULL</code> (default) disables per-run logging.</p></dd>
 
 
 <dt id="arg-scratch-retain-days">scratch_retain_days<a class="anchor" aria-label="anchor" href="#arg-scratch-retain-days"></a></dt>

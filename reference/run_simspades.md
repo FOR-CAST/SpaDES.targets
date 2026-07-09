@@ -28,6 +28,7 @@ run_simspades(
   out_dir = ".",
   clean_out_dir = TRUE,
   seed = NULL,
+  log_file = NULL,
   scratch_retain_days = 7,
   mem_workers = NULL,
   mem_frac = 0.5,
@@ -111,6 +112,19 @@ run_simspades(
 
   Optional integer seed set before the run (for deterministic
   replicates).
+
+- log_file:
+
+  Optional path to a per-run SpaDES debug log. When set, the SpaDES
+  event trace is written there via
+  `simInitAndSpades(debug = list(file = ...))`, and — because base
+  [`warnings()`](https://rdrr.io/r/base/warnings.html)/[`traceback()`](https://rdrr.io/r/base/traceback.html)
+  miss `rlang`/`cli` conditions and depend on `options(warn)` — every
+  warning is captured as it is signalled to a sibling `*_warnings.txt`,
+  and an `rlang` backtrace at the error site to a sibling
+  `*_traceback.txt`. Stale logs from a prior run of the stage are
+  removed first (the log dir lives outside the cleaned `out_dir`).
+  `NULL` (default) disables per-run logging.
 
 - scratch_retain_days:
 

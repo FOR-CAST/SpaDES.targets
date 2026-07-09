@@ -5,6 +5,32 @@
 - [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
   and
   [`tar_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/tar_simspades.md)
+  gain a `log_file` argument that restores per-run SpaDES logging (as
+  the pre-`targets` orchestration did via `outputs/<run>/log/`). When
+  set, the SpaDES event trace is written to `log_file` via
+  `simInitAndSpades(debug = list(file = list(file = log_file, append = TRUE), debug = 1))`.
+  Because base
+  [`warnings()`](https://rdrr.io/r/base/warnings.html)/[`traceback()`](https://rdrr.io/r/base/traceback.html)
+  are unreliable here –
+  [`warnings()`](https://rdrr.io/r/base/warnings.html) depends on
+  `options(warn)`, caps at 50, and (like
+  [`traceback()`](https://rdrr.io/r/base/traceback.html)) misses
+  `rlang`/`cli` classed conditions – every warning is instead captured
+  *as it is signalled* via a calling handler (unmuffled, so it still
+  reaches the SpaDES log/console) to a sibling `*_warnings.txt`, and an
+  [`rlang::trace_back()`](https://rlang.r-lib.org/reference/trace_back.html)
+  captured at the error site is written to a sibling `*_traceback.txt`
+  before the error propagates (so the caller’s scratch-finalize still
+  marks the run `.FAILED`). Stale logs from a prior run of the stage are
+  removed first (the log dir lives outside the cleaned `out_dir`).
+  `NULL` (default) disables per-run logging. In
+  [`tar_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/tar_simspades.md),
+  pass a quoted expression when the path references the branch variable
+  (e.g. `log_file = quote(file.path("outputs", "logs", sprintf("mainSim_rep%02d.log", rep_index)))`).
+
+- [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
+  and
+  [`tar_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/tar_simspades.md)
   gain `mem_workers` and `mem_frac` arguments that bound terra’s
   per-process memory
   (`terraOptions(memmax = mem_frac * this node's RAM / mem_workers)`) so

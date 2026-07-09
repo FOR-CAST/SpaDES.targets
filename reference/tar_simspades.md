@@ -19,6 +19,7 @@ tar_simspades(
   out_dir = NULL,
   clean_out_dir = TRUE,
   seed = NULL,
+  log_file = NULL,
   format = "rds",
   pattern = NULL,
   iteration = NULL,
@@ -83,6 +84,16 @@ tar_simspades(
   for a post-processing stage whose `out_dir` is the shared parent
   holding the per-replicate sub-directories it reads (e.g.
   `mode = "multi"` summaries).
+
+- log_file:
+
+  Passed to
+  [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md):
+  path to a per-run SpaDES debug log (plus sibling `*_warnings.txt` /
+  `*_traceback.txt`). Pass a **quoted** expression when it references
+  the branch variable, e.g.
+  `log_file = quote(file.path("outputs", "logs", sprintf("mainSim_rep%02d.log", rep_index)))`.
+  `NULL` (default) disables per-run logging.
 
 - format:
 

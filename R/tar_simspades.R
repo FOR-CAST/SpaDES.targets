@@ -38,6 +38,11 @@
 #'   (default) `out_dir` is wiped before the run. Set `FALSE` for a
 #'   post-processing stage whose `out_dir` is the shared parent holding the
 #'   per-replicate sub-directories it reads (e.g. `mode = "multi"` summaries).
+#' @param log_file Passed to [run_simspades()]: path to a per-run SpaDES debug
+#'   log (plus sibling `*_warnings.txt` / `*_traceback.txt`). Pass a **quoted**
+#'   expression when it references the branch variable, e.g. `log_file =
+#'   quote(file.path("outputs", "logs", sprintf("mainSim_rep%02d.log",
+#'   rep_index)))`. `NULL` (default) disables per-run logging.
 #' @param format `targets` storage format for the primary target (default
 #'   `"rds"`; use `"qs2"` if the `qs2` format is registered).
 #' @param pattern A **quoted** `targets` dynamic-branching pattern (e.g.
@@ -80,6 +85,7 @@ tar_simspades <- function(
   out_dir = NULL,
   clean_out_dir = TRUE,
   seed = NULL,
+  log_file = NULL,
   format = "rds",
   pattern = NULL,
   iteration = NULL,
@@ -104,6 +110,7 @@ tar_simspades <- function(
     out_dir = .(out_dir),
     clean_out_dir = .(clean_out_dir),
     seed = .(seed),
+    log_file = .(log_file),
     mem_workers = .(mem_workers),
     mem_frac = .(mem_frac),
     .options = .(.options)

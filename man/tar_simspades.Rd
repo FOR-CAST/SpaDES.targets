@@ -18,6 +18,7 @@ tar_simspades(
   out_dir = NULL,
   clean_out_dir = TRUE,
   seed = NULL,
+  log_file = NULL,
   format = "rds",
   pattern = NULL,
   iteration = NULL,
@@ -56,6 +57,10 @@ to \code{file.path("outputs", name)}.}
 (default) \code{out_dir} is wiped before the run. Set \code{FALSE} for a
 post-processing stage whose \code{out_dir} is the shared parent holding the
 per-replicate sub-directories it reads (e.g. \code{mode = "multi"} summaries).}
+
+\item{log_file}{Passed to \code{\link[=run_simspades]{run_simspades()}}: path to a per-run SpaDES debug
+log (plus sibling \verb{*_warnings.txt} / \verb{*_traceback.txt}). Pass a \strong{quoted}
+expression when it references the branch variable, e.g. \code{log_file = quote(file.path("outputs", "logs", sprintf("mainSim_rep\%02d.log", rep_index)))}. \code{NULL} (default) disables per-run logging.}
 
 \item{format}{\code{targets} storage format for the primary target (default
 \code{"rds"}; use \code{"qs2"} if the \code{qs2} format is registered).}

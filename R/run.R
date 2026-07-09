@@ -42,6 +42,14 @@
 #'   consumes. Such stages must instead overwrite their own outputs in place.
 #' @param seed Optional integer seed set before the run (for deterministic
 #'   replicates).
+#' @param log_file Optional path to a per-run SpaDES debug log. When set, the
+#'   SpaDES event trace is written there via `simInitAndSpades(debug = list(file
+#'   = ...))`, and — because base `warnings()`/`traceback()` miss `rlang`/`cli`
+#'   conditions and depend on `options(warn)` — every warning is captured as it
+#'   is signalled to a sibling `*_warnings.txt`, and an `rlang` backtrace at the
+#'   error site to a sibling `*_traceback.txt`. Stale logs from a prior run of the
+#'   stage are removed first (the log dir lives outside the cleaned `out_dir`).
+#'   `NULL` (default) disables per-run logging.
 #' @param scratch_retain_days Numeric. A successful run removes its `scratchPath`
 #'   subdir immediately; an R-level failure keeps it (renamed `*.FAILED`) for
 #'   inspection. Before each run, leftover subdirs from earlier failed or killed
@@ -73,6 +81,7 @@ run_simspades <- function(
   out_dir = ".",
   clean_out_dir = TRUE,
   seed = NULL,
+  log_file = NULL,
   scratch_retain_days = 7,
   mem_workers = NULL,
   mem_frac = 0.5,
@@ -143,11 +152,68 @@ run_simspades <- function(
     if (!is.null(loadOrder)) {
       args$loadOrder <- loadOrder
     }
-    sim <- do.call(SpaDES.core::simInitAndSpades, args)
-    extract_outputs(sim, plain = plain, base_dir = ".")
+    if (!is.null(log_file)) {
+      args$debug <- init_run_log(log_file)
+    }
+    run_one <- function() {
+      sim <- do.call(SpaDES.core::simInitAndSpades, args)
+      extract_outputs(sim, plain = plain, base_dir = ".")
+    }
+    if (is.null(log_file)) run_one() else with_run_logging(run_one, log_file)
   })
   ok <- TRUE
   result
+}
+
+# Per-run SpaDES logging (restores the pre-`targets` `development` behaviour). Returns the
+# `debug` list for `simInitAndSpades()` that directs the SpaDES event trace to `log_file`, after
+# removing any stale log + sibling capture files from an earlier run of this stage (the log dir
+# lives OUTSIDE the cleaned `out_dir`, so it would otherwise accumulate across re-runs) and
+# (re)creating the log directory.
+init_run_log <- function(log_file) {
+  unlink(unlist(run_log_siblings(log_file), use.names = FALSE))
+  fs::dir_create(dirname(log_file))
+  list(file = list(file = log_file, append = TRUE), debug = 1)
+}
+
+# The two capture files that sit beside a run's `.log`: warnings and an error backtrace.
+run_log_siblings <- function(log_file) {
+  list(
+    log = log_file,
+    warnings = sub("\\.log$", "_warnings.txt", log_file),
+    traceback = sub("\\.log$", "_traceback.txt", log_file)
+  )
+}
+
+# Run `fn()` while capturing conditions the SpaDES debug log alone would miss. `warnings()` is
+# unreliable here (it depends on `options(warn)`, caps at 50, and misses `rlang`/`cli` classed
+# warnings), so log EVERY warning as it is signalled via a calling handler -- without muffling,
+# so it still propagates to the SpaDES log + console. On error, capture an `rlang` backtrace at
+# the signal site (base `traceback()` needs `.Traceback`, unset inside handled calls) and let the
+# error propagate so the caller's scratch-finalize marks the run `.FAILED`.
+with_run_logging <- function(fn, log_file) {
+  sib <- run_log_siblings(log_file)
+  withCallingHandlers(
+    fn(),
+    warning = function(w) {
+      cat(
+        sprintf("[%s] %s\n", format(Sys.time()), conditionMessage(w)),
+        file = sib$warnings,
+        append = TRUE
+      )
+    },
+    error = function(e) {
+      tb <- tryCatch(
+        paste(format(rlang::trace_back()), collapse = "\n"),
+        error = function(.) paste(utils::capture.output(traceback()), collapse = "\n")
+      )
+      cat(
+        sprintf("[%s] ERROR: %s\n\n%s\n", format(Sys.time()), conditionMessage(e), tb),
+        file = sib$traceback,
+        append = FALSE
+      )
+    }
+  )
 }
 
 # Bound terra's per-process memory (`memmax`, GB) so that N crew workers sharing a

@@ -242,3 +242,93 @@ test_that("cap_terra_memory caps terra memmax at mem_frac * RAM / mem_workers", 
 test_that("cap_terra_memory is a no-op when mem_workers is NULL", {
   expect_null(cap_terra_memory(mem_workers = NULL))
 })
+
+test_that("run_simspades directs the SpaDES debug log to log_file when set", {
+  base <- withr::local_tempdir()
+  log_file <- file.path(base, "logs", "preamble.log")
+  seen <- NULL
+  testthat::local_mocked_bindings(
+    simInitAndSpades = function(..., paths) {
+      seen <<- list(...)$debug
+      list()
+    },
+    .package = "SpaDES.core"
+  )
+  testthat::local_mocked_bindings(extract_outputs = function(...) list())
+
+  run_simspades(modules = "m", out_dir = withr::local_tempdir(), log_file = log_file)
+
+  expect_equal(seen, list(file = list(file = log_file, append = TRUE), debug = 1))
+  expect_true(dir.exists(dirname(log_file))) # log dir created
+})
+
+test_that("run_simspades passes no debug when log_file is NULL", {
+  saw_debug <- "unset"
+  testthat::local_mocked_bindings(
+    simInitAndSpades = function(..., paths) {
+      saw_debug <<- "debug" %in% ...names()
+      list()
+    },
+    .package = "SpaDES.core"
+  )
+  testthat::local_mocked_bindings(extract_outputs = function(...) list())
+
+  run_simspades(modules = "m", out_dir = withr::local_tempdir())
+  expect_false(saw_debug)
+})
+
+test_that("run_simspades captures each warning signalled during the run to *_warnings.txt", {
+  base <- withr::local_tempdir()
+  log_file <- file.path(base, "logs", "s.log")
+  testthat::local_mocked_bindings(
+    simInitAndSpades = function(..., paths) {
+      warning("a deprecation happened") # base warning
+      rlang::warn("an rlang warning too") # classed rlang warning (inherits 'warning')
+      list()
+    },
+    .package = "SpaDES.core"
+  )
+  testthat::local_mocked_bindings(extract_outputs = function(...) list())
+
+  suppressWarnings(
+    run_simspades(modules = "m", out_dir = withr::local_tempdir(), log_file = log_file)
+  )
+
+  wf <- sub("\\.log$", "_warnings.txt", log_file)
+  expect_true(file.exists(wf))
+  captured <- paste(readLines(wf), collapse = "\n")
+  expect_match(captured, "a deprecation happened")
+  expect_match(captured, "an rlang warning too") # rlang/cli warnings captured, unlike warnings()
+})
+
+test_that("run_simspades writes a backtrace to *_traceback.txt on error and still errors", {
+  base <- withr::local_tempdir()
+  log_file <- file.path(base, "logs", "s.log")
+  testthat::local_mocked_bindings(
+    simInitAndSpades = function(..., paths) stop("kaboom"),
+    .package = "SpaDES.core"
+  )
+  testthat::local_mocked_bindings(extract_outputs = function(...) list())
+
+  expect_error(
+    run_simspades(modules = "m", out_dir = withr::local_tempdir(), log_file = log_file),
+    "kaboom"
+  )
+  tf <- sub("\\.log$", "_traceback.txt", log_file)
+  expect_true(file.exists(tf))
+  expect_match(paste(readLines(tf), collapse = "\n"), "kaboom")
+})
+
+test_that("init_run_log removes stale sibling captures and returns the debug list", {
+  base <- withr::local_tempdir()
+  log_file <- file.path(base, "logs", "s.log")
+  dir.create(dirname(log_file), recursive = TRUE)
+  writeLines("old", log_file)
+  writeLines("old", sub("\\.log$", "_warnings.txt", log_file))
+
+  dbg <- init_run_log(log_file)
+
+  expect_false(file.exists(sub("\\.log$", "_warnings.txt", log_file))) # stale removed
+  expect_true(dir.exists(dirname(log_file)))
+  expect_equal(dbg, list(file = list(file = log_file, append = TRUE), debug = 1))
+})

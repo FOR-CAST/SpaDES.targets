@@ -17,6 +17,7 @@ run_simspades(
   out_dir = ".",
   clean_out_dir = TRUE,
   seed = NULL,
+  log_file = NULL,
   scratch_retain_days = 7,
   mem_workers = NULL,
   mem_frac = 0.5,
@@ -71,6 +72,14 @@ consumes. Such stages must instead overwrite their own outputs in place.}
 
 \item{seed}{Optional integer seed set before the run (for deterministic
 replicates).}
+
+\item{log_file}{Optional path to a per-run SpaDES debug log. When set, the
+SpaDES event trace is written there via \code{simInitAndSpades(debug = list(file = ...))}, and — because base \code{warnings()}/\code{traceback()} miss \code{rlang}/\code{cli}
+conditions and depend on \code{options(warn)} — every warning is captured as it
+is signalled to a sibling \verb{*_warnings.txt}, and an \code{rlang} backtrace at the
+error site to a sibling \verb{*_traceback.txt}. Stale logs from a prior run of the
+stage are removed first (the log dir lives outside the cleaned \code{out_dir}).
+\code{NULL} (default) disables per-run logging.}
 
 \item{scratch_retain_days}{Numeric. A successful run removes its \code{scratchPath}
 subdir immediately; an R-level failure keeps it (renamed \verb{*.FAILED}) for

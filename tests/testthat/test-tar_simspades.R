@@ -110,3 +110,30 @@ test_that("tar_simspades reads the SpaDES.targets.mem_workers option as mem_work
   )
   expect_match(cmd, "mem_workers = 3")
 })
+
+test_that("tar_simspades bakes log_file into the run_simspades command (NULL by default)", {
+  cmd <- function(tl) paste(deparse(tl[[1]]$command$expr), collapse = " ")
+
+  expect_match(cmd(tar_simspades("preamble", modules = "LandWeb_preamble")), "log_file = NULL")
+  expect_match(
+    cmd(tar_simspades("preamble", modules = "LandWeb_preamble",
+                      log_file = "outputs/SprayLake/logs/preamble.log")),
+    "log_file = \"outputs/SprayLake/logs/preamble.log\""
+  )
+})
+
+test_that("tar_simspades splices a quoted (branched) log_file as a per-branch expression", {
+  cmd <- paste(
+    deparse(
+      tar_simspades(
+        "mainSim",
+        modules = "Biomass_core",
+        pattern = quote(map(rep_index)),
+        out_dir = quote(file.path("outputs", "mainSim", sprintf("rep%02d", rep_index))),
+        log_file = quote(file.path("outputs", "logs", sprintf("mainSim_rep%02d.log", rep_index)))
+      )[[1]]$command$expr
+    ),
+    collapse = " "
+  )
+  expect_match(cmd, "sprintf\\(\"mainSim_rep%02d.log\",\\s+rep_index\\)")
+})

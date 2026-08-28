@@ -351,3 +351,48 @@ test_that("run_simspades captures messages (the debug=1 event trace) to the log 
   expect_true(file.exists(log_file))
   expect_match(paste(readLines(log_file), collapse = "\n"), "frSprd:burn total elpsd")
 })
+
+test_that("run log paths are absolute, so a callee's setwd() cannot break logging", {
+  ## The bug this locks down: these files are written from calling handlers, which fire at the
+  ## SIGNAL site. `archive::archive_extract()` setwd()s to its destination for the whole
+  ## extraction and signals cli progress messages from inside that window, so a project-relative
+  ## log path resolved under the extraction dir and cat() died with "cannot open the connection"
+  ## -- from inside the message handler, which truncates the handler stack and takes out the
+  ## caller's own tryCatch() too. In LandWeb that left a 1.88 GB shapefile truncated.
+  sib <- run_log_siblings(file.path("outputs", "sa", "logs", "run.log"))
+
+  expect_true(fs::is_absolute_path(sib$log))
+  expect_true(fs::is_absolute_path(sib$warnings))
+  expect_true(fs::is_absolute_path(sib$traceback))
+  expect_match(sib$warnings, "_warnings\\.txt$")
+  expect_match(sib$traceback, "_traceback\\.txt$")
+})
+
+test_that("with_run_logging() still captures messages after the run changes directory", {
+  wd <- withr::local_tempdir()
+  withr::local_dir(wd)
+  elsewhere <- withr::local_tempdir()
+
+  log_file <- file.path("logs", "run.log") ## RELATIVE, as every _targets.R stage passes it
+  init_run_log(log_file)
+
+  ## emulate archive::archive_extract(): setwd() into another directory, signal a message from
+  ## inside that window, then restore. Before the fix the handler's cat() errored here.
+  expect_no_error(
+    with_run_logging(
+      function() {
+        old <- setwd(elsewhere)
+        on.exit(setwd(old), add = TRUE)
+        message("progress from inside the extraction directory")
+        "done"
+      },
+      log_file
+    )
+  )
+
+  expect_true(file.exists(file.path(wd, "logs", "run.log")))
+  expect_match(
+    paste(readLines(file.path(wd, "logs", "run.log")), collapse = "\n"),
+    "progress from inside the extraction directory"
+  )
+})

@@ -179,13 +179,28 @@ run_simspades <- function(
 # re-runs) and (re)create the log directory. The run itself is invoked with a SCALAR `debug = 1`
 # and its messages captured to the files by with_run_logging() -- see there.
 init_run_log <- function(log_file) {
-  unlink(unlist(run_log_siblings(log_file), use.names = FALSE))
-  fs::dir_create(dirname(log_file))
-  invisible(log_file)
+  sib <- run_log_siblings(log_file)
+  unlink(unlist(sib, use.names = FALSE))
+  fs::dir_create(dirname(sib$log))
+  invisible(sib$log)
 }
 
 # The two capture files that sit beside a run's `.log`: warnings and an error backtrace.
+#
+# Paths are resolved to ABSOLUTE here, once, and this is the only place any of the three is
+# constructed -- so no caller can reintroduce a relative one. These files are written from
+# `withCallingHandlers()` handlers, which fire at the SIGNAL site: wherever the run happens to be
+# standing when a condition is raised, not where the run started. `archive::archive_extract()`
+# `setwd()`s to its destination for the whole extraction (so does any `prepInputs()` that unpacks
+# an archive), and it drives a cli progress bar that signals a `message` from inside that window.
+# With a project-relative `log_file` the handler's `cat()` then resolves under the *extraction*
+# directory, fails with "cannot open the connection", and -- because the error is raised inside a
+# calling handler, which truncates the handler stack -- takes out the caller's own `tryCatch()`
+# with it. In LandWeb that killed the extraction mid-write and left a 1.88 GB shapefile truncated,
+# while the traceback write failed the same way and hid the cause. Resolving once, here, makes the
+# run logger immune to any callee's working directory. Same reasoning as `resolve_input_files()`.
 run_log_siblings <- function(log_file) {
+  log_file <- as.character(fs::path_abs(log_file))
   list(
     log = log_file,
     warnings = sub("\\.log$", "_warnings.txt", log_file),

@@ -15,7 +15,7 @@ in-memory objects). The simList itself is never returned or serialized."></head>
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9018</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9020</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,6 +68,7 @@ in-memory objects). The <code>simList</code> itself is never returned or seriali
 <span>  scratch_retain_days <span class="op">=</span> <span class="fl">7</span>,</span>
 <span>  mem_workers <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  mem_frac <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>  fingerprint <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  .options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -182,6 +183,12 @@ no cross-worker coordination). <code>NULL</code> (default) leaves terra at its d
 workers' terra memory may collectively use (default 0.5, leaving headroom for
 the OS, non-terra R memory, and co-tenant processes). Only used when
 <code>mem_workers</code> is set.</p></dd>
+
+
+<dt id="arg-fingerprint">fingerprint<a class="anchor" aria-label="anchor" href="#arg-fingerprint"></a></dt>
+<dd><p>Not used by the run. <code><a href="tar_simspades.html">tar_simspades()</a></code> places the stage's
+<code><a href="stage_fingerprint.html">stage_fingerprint()</a></code> here so that <code>targets</code>, which hashes the command, re-runs
+the stage when its module code or companion packages change.</p></dd>
 
 
 <dt id="arg--options">.options<a class="anchor" aria-label="anchor" href="#arg--options"></a></dt>

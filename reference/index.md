@@ -39,6 +39,9 @@
 - [`spades_safe_options()`](https://github.com/FOR-CAST/SpaDES.targets/reference/spades_safe_options.md)
   : Safe 'SpaDES'/'reproducible' options for targets-orchestrated runs
 
+- [`stage_fingerprint()`](https://github.com/FOR-CAST/SpaDES.targets/reference/stage_fingerprint.md)
+  : Code fingerprint for a SpaDES stage
+
 - [`tar_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/tar_simspades.md)
   :
 

@@ -2,6 +2,49 @@
 
 ## SpaDES.targets (development version)
 
+- new
+  [`stage_fingerprint()`](https://github.com/FOR-CAST/SpaDES.targets/reference/stage_fingerprint.md),
+  and a `fingerprint` argument to
+  [`tar_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/tar_simspades.md)
+  (off by default; `options(SpaDES.targets.fingerprint = TRUE)` enables
+  it pipeline-wide). A stage’s command names its modules only as
+  strings, alongside `params` and `paths`, so editing a module or
+  upgrading a package it uses never invalidated the stage, and a re-run
+  silently reused outputs built by the old code. With
+  `fingerprint = TRUE` the command carries each module’s git commit
+  (plus a hash of any uncommitted diff), or a hash of its `.R` files
+  when the module is not its own checkout, and the `Version@RemoteSha`
+  of every remote-installed package in the modules’ `reqdPkgs`
+  (`options(SpaDES.targets.fingerprint_packages = "all")` adds
+  repository packages by version). Package names come from parsing each
+  module’s `reqdPkgs`, so file-path parameter defaults and other
+  `a/b`-shaped metadata are never mistaken for packages. Opt-in because
+  enabling it changes every stage’s command once, invalidating all
+  existing stages on the next run.
+  [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
+  gains a matching `fingerprint` argument, which the run itself ignores.
+
+- [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
+  now resolves `log_file` (and its `*_warnings.txt` / `*_traceback.txt`
+  siblings) to an **absolute** path. These files are written from
+  [`withCallingHandlers()`](https://rdrr.io/r/base/conditions.html)
+  handlers, which fire at the signal site – wherever the run happens to
+  be standing, not where it started. `archive::archive_extract()`
+  [`setwd()`](https://rdrr.io/r/base/getwd.html)s to its destination for
+  the duration of an extraction (so does any `prepInputs()` that unpacks
+  an archive) and drives a cli progress bar that signals a `message`
+  from inside that window; with a project-relative `log_file` the
+  handler’s [`cat()`](https://rdrr.io/r/base/cat.html) then resolved
+  under the *extraction* directory and failed with “cannot open the
+  connection”. Because that error is raised inside a calling handler,
+  which truncates the handler stack, it also took out the caller’s own
+  [`tryCatch()`](https://rdrr.io/r/base/conditions.html) – in LandWeb
+  killing an extraction mid-write, leaving a 1.88 GB shapefile
+  truncated, while the traceback write failed identically and hid the
+  cause. Resolving once, at the single point where the three paths are
+  constructed, makes the run logger immune to any callee’s working
+  directory;
+
 - [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
   and
   [`tar_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/tar_simspades.md)

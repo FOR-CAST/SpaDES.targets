@@ -25,6 +25,7 @@ tar_simspades(
   iteration = NULL,
   mem_workers = getOption("SpaDES.targets.mem_workers", NULL),
   mem_frac = getOption("SpaDES.targets.mem_frac", 0.5),
+  fingerprint = getOption("SpaDES.targets.fingerprint", FALSE),
   .options = list()
 )
 ```
@@ -130,6 +131,21 @@ tar_simspades(
   pipeline can set it once for every stage; `NULL` leaves terra at its
   defaults. Resolved at pipeline definition time and baked into each
   stage's command.
+
+- fingerprint:
+
+  Whether to make the stage re-run when its code changes. `FALSE`
+  (default, via `getOption("SpaDES.targets.fingerprint", FALSE)`) leaves
+  the command exactly as before: it names its modules only as strings,
+  so editing a module or upgrading a package it uses does **not**
+  invalidate the stage. `TRUE` splices
+  [`stage_fingerprint()`](https://github.com/FOR-CAST/SpaDES.targets/reference/stage_fingerprint.md)
+  of `modules` into the command (reading modules from
+  `paths$modulePath`, default `"modules"`, and packages per
+  `getOption("SpaDES.targets.fingerprint_packages", "remote")`), so that
+  `targets` sees any change to that code. A character vector is spliced
+  as given. Opt-in because turning it on changes every stage's command
+  once, which invalidates all existing stages on the next run.
 
 ## Value
 

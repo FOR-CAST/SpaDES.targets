@@ -32,6 +32,7 @@ run_simspades(
   scratch_retain_days = 7,
   mem_workers = NULL,
   mem_frac = 0.5,
+  fingerprint = NULL,
   .options = list()
 )
 ```
@@ -153,6 +154,15 @@ run_simspades(
   workers' terra memory may collectively use (default 0.5, leaving
   headroom for the OS, non-terra R memory, and co-tenant processes).
   Only used when `mem_workers` is set.
+
+- fingerprint:
+
+  Not used by the run.
+  [`tar_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/tar_simspades.md)
+  places the stage's
+  [`stage_fingerprint()`](https://github.com/FOR-CAST/SpaDES.targets/reference/stage_fingerprint.md)
+  here so that `targets`, which hashes the command, re-runs the stage
+  when its module code or companion packages change.
 
 - .options:
 

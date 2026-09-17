@@ -63,6 +63,16 @@
 #'   `getOption("SpaDES.targets.mem_workers")` so a pipeline can set it once for
 #'   every stage; `NULL` leaves terra at its defaults. Resolved at pipeline
 #'   definition time and baked into each stage's command.
+#' @param fingerprint Whether to make the stage re-run when its code changes.
+#'   `FALSE` (default, via `getOption("SpaDES.targets.fingerprint", FALSE)`)
+#'   leaves the command exactly as before: it names its modules only as strings,
+#'   so editing a module or upgrading a package it uses does **not** invalidate
+#'   the stage. `TRUE` splices [stage_fingerprint()] of `modules` into the command
+#'   (reading modules from `paths$modulePath`, default `"modules"`, and packages
+#'   per `getOption("SpaDES.targets.fingerprint_packages", "remote")`), so that
+#'   `targets` sees any change to that code. A character vector is spliced as
+#'   given. Opt-in because turning it on changes every stage's command once,
+#'   which invalidates all existing stages on the next run.
 #' @return A `list` of two `tar_target` objects (the primary, then the companion
 #'   `format = "file"` target) — return it from `_targets.R` like any target
 #'   list.
@@ -91,6 +101,7 @@ tar_simspades <- function(
   iteration = NULL,
   mem_workers = getOption("SpaDES.targets.mem_workers", NULL),
   mem_frac = getOption("SpaDES.targets.mem_frac", 0.5),
+  fingerprint = getOption("SpaDES.targets.fingerprint", FALSE),
   .options = list()
 ) {
   stopifnot(is.character(name), length(name) == 1L)
@@ -115,6 +126,12 @@ tar_simspades <- function(
     mem_frac = .(mem_frac),
     .options = .(.options)
   ))
+  fp <- .resolve_fingerprint(fingerprint, modules, paths)
+  if (!is.null(fp)) {
+    ## Added only when enabled, so a stage without a fingerprint keeps a byte-identical
+    ## command (and cached targets stay valid).
+    command$fingerprint <- fp
+  }
   files_command <- bquote(.(as.symbol(name))[["files"]])
   if (is.null(pattern)) {
     ## Unbranched stage: emit exactly as before so an existing stage's command +
@@ -144,4 +161,23 @@ tar_simspades <- function(
     )
   }
   list(primary, files)
+}
+
+## NULL (no fingerprint) | stage_fingerprint() | a user-supplied character vector.
+.resolve_fingerprint <- function(fingerprint, modules, paths) {
+  if (is.null(fingerprint) || isFALSE(fingerprint)) {
+    return(NULL)
+  }
+  if (isTRUE(fingerprint)) {
+    modulePath <- if (is.list(paths) && !is.null(paths$modulePath)) paths$modulePath else "modules"
+    return(stage_fingerprint(
+      modules,
+      modulePath = modulePath,
+      packages = getOption("SpaDES.targets.fingerprint_packages", "remote")
+    ))
+  }
+  if (is.character(fingerprint)) {
+    return(fingerprint)
+  }
+  stop("`fingerprint` must be TRUE, FALSE, NULL, or a character vector.", call. = FALSE)
 }

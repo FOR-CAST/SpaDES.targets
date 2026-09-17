@@ -24,6 +24,7 @@ tar_simspades(
   iteration = NULL,
   mem_workers = getOption("SpaDES.targets.mem_workers", NULL),
   mem_frac = getOption("SpaDES.targets.mem_frac", 0.5),
+  fingerprint = getOption("SpaDES.targets.fingerprint", FALSE),
   .options = list()
 )
 }
@@ -84,6 +85,17 @@ it. \code{mem_workers} (the number of workers sharing a node) defaults to
 \code{getOption("SpaDES.targets.mem_workers")} so a pipeline can set it once for
 every stage; \code{NULL} leaves terra at its defaults. Resolved at pipeline
 definition time and baked into each stage's command.}
+
+\item{fingerprint}{Whether to make the stage re-run when its code changes.
+\code{FALSE} (default, via \code{getOption("SpaDES.targets.fingerprint", FALSE)})
+leaves the command exactly as before: it names its modules only as strings,
+so editing a module or upgrading a package it uses does \strong{not} invalidate
+the stage. \code{TRUE} splices \code{\link[=stage_fingerprint]{stage_fingerprint()}} of \code{modules} into the command
+(reading modules from \code{paths$modulePath}, default \code{"modules"}, and packages
+per \code{getOption("SpaDES.targets.fingerprint_packages", "remote")}), so that
+\code{targets} sees any change to that code. A character vector is spliced as
+given. Opt-in because turning it on changes every stage's command once,
+which invalidates all existing stages on the next run.}
 }
 \value{
 A \code{list} of two \code{tar_target} objects (the primary, then the companion

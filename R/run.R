@@ -67,6 +67,9 @@
 #'   workers' terra memory may collectively use (default 0.5, leaving headroom for
 #'   the OS, non-terra R memory, and co-tenant processes). Only used when
 #'   `mem_workers` is set.
+#' @param fingerprint Not used by the run. [tar_simspades()] places the stage's
+#'   [stage_fingerprint()] here so that `targets`, which hashes the command, re-runs
+#'   the stage when its module code or companion packages change.
 #' @param .options Extra options merged over [spades_safe_options()].
 #' @return The [extract_outputs()] result: a `list` with a `manifest`
 #'   `data.frame`, a `files` character vector, and any `plain` objects.
@@ -88,6 +91,7 @@ run_simspades <- function(
   scratch_retain_days = 7,
   mem_workers = NULL,
   mem_frac = 0.5,
+  fingerprint = NULL,
   .options = list()
 ) {
   rlang::check_installed("SpaDES.core")

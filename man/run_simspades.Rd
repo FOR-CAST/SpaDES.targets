@@ -21,6 +21,7 @@ run_simspades(
   scratch_retain_days = 7,
   mem_workers = NULL,
   mem_frac = 0.5,
+  fingerprint = NULL,
   .options = list()
 )
 }
@@ -100,6 +101,10 @@ no cross-worker coordination). \code{NULL} (default) leaves terra at its default
 workers' terra memory may collectively use (default 0.5, leaving headroom for
 the OS, non-terra R memory, and co-tenant processes). Only used when
 \code{mem_workers} is set.}
+
+\item{fingerprint}{Not used by the run. \code{\link[=tar_simspades]{tar_simspades()}} places the stage's
+\code{\link[=stage_fingerprint]{stage_fingerprint()}} here so that \code{targets}, which hashes the command, re-runs
+the stage when its module code or companion packages change.}
 
 \item{.options}{Extra options merged over \code{\link[=spades_safe_options]{spades_safe_options()}}.}
 }

@@ -13,7 +13,7 @@ that code changes."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9020</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9021</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,7 +72,12 @@ that code changes.</p>
 <code>"remote"</code> (default) for those installed from a remote such as GitHub,
 identified by <code>Version@RemoteSha</code> – the co-developed companion packages whose
 changes are most likely to change results; <code>"all"</code> to also include
-repository-installed packages by <code>Version</code>; <code>"none"</code> for modules only.</p></dd>
+repository-installed packages (such as from CRAN or Posit Package Manager)
+by <code>Version</code>; <code>"none"</code> for modules only. pak (including renv's pak backend)
+records a <code>RemoteSha</code> for repository installs too, set to the version, so
+these are recognised by their <code>RemoteType</code> rather than by having a
+<code>RemoteSha</code>. An r-universe install records its git commit and counts as
+remote.</p></dd>
 
 </dl></div>
     <div class="section level2">

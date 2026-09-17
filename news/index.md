@@ -2,6 +2,19 @@
 
 ## SpaDES.targets (development version)
 
+- `stage_fingerprint(packages = "remote")` (the default, and what
+  `tar_simspades(fingerprint = TRUE)` uses) now really includes only
+  remote-installed packages. A package counted as remote whenever it had
+  a `RemoteSha`, but pak, including renv’s pak backend, records
+  repository installs with a `RemoteSha` too, set to the version
+  (`RemoteType: standard`). So every CRAN or Posit Package Manager
+  package in a module’s `reqdPkgs` was fingerprinted as
+  `Version@Version`, and a routine CRAN upgrade re-ran every stage using
+  it. Repository installs are now recognised by `RemoteType` or by a
+  `RemoteSha` equal to the version; GitHub and r-universe installs,
+  which record a git commit, are unaffected. Pipelines that enabled
+  fingerprinting see each affected stage’s command change once.
+
 - new
   [`stage_fingerprint()`](https://github.com/FOR-CAST/SpaDES.targets/reference/stage_fingerprint.md),
   and a `fingerprint` argument to

@@ -32,7 +32,12 @@ stage_fingerprint(
   (default) for those installed from a remote such as GitHub, identified
   by `Version@RemoteSha` – the co-developed companion packages whose
   changes are most likely to change results; `"all"` to also include
-  repository-installed packages by `Version`; `"none"` for modules only.
+  repository-installed packages (such as from CRAN or Posit Package
+  Manager) by `Version`; `"none"` for modules only. pak (including
+  renv's pak backend) records a `RemoteSha` for repository installs too,
+  set to the version, so these are recognised by their `RemoteType`
+  rather than by having a `RemoteSha`. An r-universe install records its
+  git commit and counts as remote.
 
 ## Value
 

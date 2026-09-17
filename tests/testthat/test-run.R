@@ -331,7 +331,9 @@ test_that("init_run_log removes stale sibling captures and creates the log dir",
   expect_false(file.exists(sub("\\.log$", "_warnings.txt", log_file))) # stale removed
   expect_false(file.exists(log_file)) # stale log removed too
   expect_true(dir.exists(dirname(log_file)))
-  expect_identical(ret, log_file) # returns the path (invisibly); no debug list
+  ## returns the ABSOLUTE, tidied path (invisibly; no debug list) -- compare like with like: a raw
+  ## tempdir path has backslashes on Windows and a doubled `//` on macOS, which path_abs() tidies
+  expect_identical(ret, as.character(fs::path_abs(log_file)))
 })
 
 test_that("run_simspades captures messages (the debug=1 event trace) to the log file", {

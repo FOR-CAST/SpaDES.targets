@@ -19,7 +19,12 @@ stage_fingerprint(
 \code{"remote"} (default) for those installed from a remote such as GitHub,
 identified by \code{Version@RemoteSha} -- the co-developed companion packages whose
 changes are most likely to change results; \code{"all"} to also include
-repository-installed packages by \code{Version}; \code{"none"} for modules only.}
+repository-installed packages (such as from CRAN or Posit Package Manager)
+by \code{Version}; \code{"none"} for modules only. pak (including renv's pak backend)
+records a \code{RemoteSha} for repository installs too, set to the version, so
+these are recognised by their \code{RemoteType} rather than by having a
+\code{RemoteSha}. An r-universe install records its git commit and counts as
+remote.}
 }
 \value{
 A named character vector, sorted within each group:

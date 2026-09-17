@@ -17,7 +17,12 @@
 #'   `"remote"` (default) for those installed from a remote such as GitHub,
 #'   identified by `Version@RemoteSha` -- the co-developed companion packages whose
 #'   changes are most likely to change results; `"all"` to also include
-#'   repository-installed packages by `Version`; `"none"` for modules only.
+#'   repository-installed packages (such as from CRAN or Posit Package Manager)
+#'   by `Version`; `"none"` for modules only. pak (including renv's pak backend)
+#'   records a `RemoteSha` for repository installs too, set to the version, so
+#'   these are recognised by their `RemoteType` rather than by having a
+#'   `RemoteSha`. An r-universe install records its git commit and counts as
+#'   remote.
 #'
 #' @details
 #' Each module is identified by, in order of preference:
@@ -204,6 +209,10 @@ stage_fingerprint <- function(modules, modulePath = "modules",
 
 ## "Version@RemoteSha" for a remote install; "Version" for a repository install
 ## (NA when `remoteOnly`); NA when not installed.
+##
+## A `RemoteSha` alone does not make an install remote: pak (including renv's pak backend) records
+## repository installs too, as `RemoteType: standard` with `RemoteSha` set to the version.
+## r-universe installs carry a git `RemoteSha` and no `RemoteType`, and do count as remote.
 .package_fingerprint <- function(pkg, remoteOnly = TRUE,
                                  desc = suppressWarnings(utils::packageDescription(pkg))) {
   if (!inherits(desc, "packageDescription") && !is.list(desc)) {
@@ -211,8 +220,14 @@ stage_fingerprint <- function(modules, modulePath = "modules",
   }
   sha <- desc[["RemoteSha"]]
   if (is.null(sha) || !nzchar(sha)) sha <- desc[["GithubSHA1"]]
-  if (!is.null(sha) && nzchar(sha)) {
+  if (!is.null(sha) && nzchar(sha) && !.repository_install(desc, sha)) {
     return(paste0(desc[["Version"]], "@", sha))
   }
   if (remoteOnly) NA_character_ else desc[["Version"]]
+}
+
+.repository_install <- function(desc, sha) {
+  type <- desc[["RemoteType"]]
+  (!is.null(type) && tolower(type) %in% c("repository", "standard", "cran", "bioc")) ||
+    identical(sha, desc[["Version"]])
 }

@@ -108,6 +108,21 @@ test_that(".package_fingerprint() identifies remote installs by commit", {
   expect_identical(.package_fingerprint("x", TRUE, desc = NA), NA_character_) ## not installed
 })
 
+test_that(".package_fingerprint() does not count pak's repository installs as remote", {
+  ## as recorded for `curl` in a renv project library installed through pak
+  standard <- list(Version = "7.1.0", RemoteType = "standard", RemoteSha = "7.1.0")
+  expect_identical(.package_fingerprint("x", TRUE, desc = standard), NA_character_)
+  expect_identical(.package_fingerprint("x", FALSE, desc = standard), "7.1.0")
+  ## a SHA equal to the version is a repository install whatever the type says
+  untyped <- list(Version = "1.1-2", RemoteSha = "1.1-2")
+  expect_identical(.package_fingerprint("x", TRUE, desc = untyped), NA_character_)
+
+  github <- list(Version = "1.2.0.9007", RemoteType = "github", RemoteSha = "2cc304cf")
+  universe <- list(Version = "0.4.8", RemoteSha = "d1c0b5e9") ## r-universe: git SHA, no RemoteType
+  expect_identical(.package_fingerprint("x", TRUE, desc = github), "1.2.0.9007@2cc304cf")
+  expect_identical(.package_fingerprint("x", TRUE, desc = universe), "0.4.8@d1c0b5e9")
+})
+
 test_that("stage_fingerprint() combines modules and packages under stable names", {
   root <- withr::local_tempdir()
   write_module(root, "b")

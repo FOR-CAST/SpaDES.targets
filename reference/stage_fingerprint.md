@@ -54,10 +54,17 @@ silently reuses outputs built by the old code.
 
 Each module is identified by, in order of preference:
 
-- **its git commit**, when the module directory is itself a git working
-  tree (a standalone repository or a submodule). Uncommitted changes to
-  tracked files append `+dirty:<md5 of the diff>`, so local edits count
-  too;
+- **an md5 over the content of its tracked files, excluding
+  documentation**, when the module directory is itself a git working
+  tree (a standalone repository or a submodule). The working-tree
+  content is hashed, so uncommitted edits count, while untracked files
+  (such as downloaded data) do not. Documentation is excluded so that
+  commits which only rebuild a manual, edit a README or regenerate a
+  figure leave the fingerprint unchanged: files under `figures/`,
+  `tests/`, `docs/` and `.github/`; `.Rmd`, `.md`, `.qmd`, `.html`,
+  `.bib`, `.tex`, `.css` and image files; and `LICENSE`, `.gitignore`,
+  `.gitattributes`, `.Rbuildignore`, `.lintr` and `air.toml`. Every
+  other tracked file counts, including data tables a module reads;
 
 - **an md5 over its `.R` files** otherwise. Only R code is hashed:
   module directories often hold large downloaded data, which is not
@@ -75,8 +82,10 @@ taking the strings in its `reqdPkgs` argument, so specifications such as
 to hold `a/b`-shaped strings (such as file-path parameter defaults).
 
 Any change to the returned vector changes the stage's command, including
-a comment-only commit to a module. That is deliberate: a false re-run
-costs time, while a missed one costs correctness.
+a comment-only change to a module's code. That is deliberate: a false
+re-run costs time, while a missed one costs correctness. For the same
+reason the documentation exclusions above are a fixed list, and a file
+type not on it counts as code.
 
 ## See also
 

@@ -2,6 +2,22 @@
 
 ## SpaDES.targets (development version)
 
+- [`stage_fingerprint()`](https://github.com/FOR-CAST/SpaDES.targets/reference/stage_fingerprint.md)
+  now identifies a module that is its own git checkout by the content of
+  its tracked files, leaving out documentation, instead of by its
+  commit. Any commit changed the commit, so a CI job that only rebuilt a
+  module’s `.Rmd` manual re-ran every stage using that module. In
+  LandWeb, one such commit to the data-preparation module would have
+  re-run the whole pipeline. Files under `figures/`, `tests/`, `docs/`
+  and `.github/`, `.Rmd`/`.md`/`.qmd`/`.html`/`.bib`/`.tex`/`.css` and
+  image files, and a few repository config files are now left out; every
+  other tracked file still counts, including data tables a module reads.
+  Because the working-tree content is hashed, uncommitted code edits
+  still count, and a manual rendered locally no longer does. Modules
+  that are not their own checkout are hashed as before. Pipelines using
+  `fingerprint = TRUE` see every stage’s command change once
+  (0.0.0.9022).
+
 - `stage_fingerprint(packages = "remote")` (the default, and what
   `tar_simspades(fingerprint = TRUE)` uses) now really includes only
   remote-installed packages. A package counted as remote whenever it had

@@ -27,9 +27,16 @@
 #' @details
 #' Each module is identified by, in order of preference:
 #'
-#' * **its git commit**, when the module directory is itself a git working tree
-#'   (a standalone repository or a submodule). Uncommitted changes to tracked
-#'   files append `+dirty:<md5 of the diff>`, so local edits count too;
+#' * **an md5 over the content of its tracked files, excluding documentation**,
+#'   when the module directory is itself a git working tree (a standalone
+#'   repository or a submodule). The working-tree content is hashed, so
+#'   uncommitted edits count, while untracked files (such as downloaded data) do
+#'   not. Documentation is excluded so that commits which only rebuild a manual,
+#'   edit a README or regenerate a figure leave the fingerprint unchanged: files
+#'   under `figures/`, `tests/`, `docs/` and `.github/`; `.Rmd`, `.md`, `.qmd`,
+#'   `.html`, `.bib`, `.tex`, `.css` and image files; and `LICENSE`, `.gitignore`,
+#'   `.gitattributes`, `.Rbuildignore`, `.lintr` and `air.toml`. Every other
+#'   tracked file counts, including data tables a module reads;
 #' * **an md5 over its `.R` files** otherwise. Only R code is hashed: module
 #'   directories often hold large downloaded data, which is not code.
 #'
@@ -45,8 +52,10 @@
 #' `a/b`-shaped strings (such as file-path parameter defaults).
 #'
 #' Any change to the returned vector changes the stage's command, including a
-#' comment-only commit to a module. That is deliberate: a false re-run costs time,
-#' while a missed one costs correctness.
+#' comment-only change to a module's code. That is deliberate: a false re-run
+#' costs time, while a missed one costs correctness. For the same reason the
+#' documentation exclusions above are a fixed list, and a file type not on it
+#' counts as code.
 #'
 #' @return A named character vector, sorted within each group:
 #'   `module:<name>` entries, then `pkg:<name>` entries.
@@ -83,26 +92,39 @@ stage_fingerprint <- function(modules, modulePath = "modules",
   c(mods, pkgs[!is.na(pkgs)])
 }
 
-## git commit (+ dirty-diff md5) when `dir` is its own git working tree; otherwise
-## an md5 over its .R files.
+## an md5 over its tracked non-documentation files when `dir` is its own git working tree;
+## otherwise an md5 over its .R files.
 .module_fingerprint <- function(dir) {
   if (!dir.exists(dir)) {
     return("missing")
   }
-  sha <- .git_own_head(dir)
-  if (!is.na(sha)) {
-    dirty <- .git(dir, c("status", "--porcelain", "--untracked-files=no"))
-    if (length(dirty) && any(nzchar(dirty))) {
-      sha <- paste0(sha, "+dirty:", .md5_text(.git(dir, c("diff", "HEAD"))))
-    }
-    return(sha)
+  if (!is.na(.git_own_head(dir))) {
+    files <- .git(dir, c("-c", "core.quotePath=false", "ls-files", "--cached"))
+    return(paste0("code:", .files_md5(dir, files[!grepl(.doc_path_regex, files)])))
   }
-  files <- sort(list.files(dir, pattern = "\\.[Rr]$", recursive = TRUE))
+  files <- list.files(dir, pattern = "\\.[Rr]$", recursive = TRUE)
+  paste0("md5:", .files_md5(dir, files))
+}
+
+## Tracked paths that document a module rather than run it. A commit touching only these (a CI
+## "Re-build <module>.Rmd", a README edit, a regenerated figure) leaves the fingerprint unchanged.
+.doc_path_regex <- paste(
+  "(^|/)(figures|tests|docs|\\.github)/",
+  "\\.(Rmd|rmd|md|qmd|html|bib|tex|css|png|jpe?g|gif|svg|pdf)$",
+  "(^|/)(LICENSE|\\.gitignore|\\.gitattributes|\\.Rbuildignore|\\.lintr|air\\.toml)$",
+  sep = "|"
+)
+
+## md5 over `files` (relative to `dir`), each by path and content; a tracked file deleted from
+## the working tree counts by its path alone.
+.files_md5 <- function(dir, files) {
+  files <- sort(files)
   if (!length(files)) {
-    return("md5:empty")
+    return("empty")
   }
   sums <- unname(tools::md5sum(file.path(dir, files)))
-  paste0("md5:", .md5_text(paste(files, sums)))
+  sums[is.na(sums)] <- "deleted"
+  .md5_text(paste(files, sums))
 }
 
 ## HEAD of `dir` only if `dir` is the TOP of a git working tree; NA otherwise.

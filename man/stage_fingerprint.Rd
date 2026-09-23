@@ -45,9 +45,16 @@ built by the old code.
 
 Each module is identified by, in order of preference:
 \itemize{
-\item \strong{its git commit}, when the module directory is itself a git working tree
-(a standalone repository or a submodule). Uncommitted changes to tracked
-files append \verb{+dirty:<md5 of the diff>}, so local edits count too;
+\item \strong{an md5 over the content of its tracked files, excluding documentation},
+when the module directory is itself a git working tree (a standalone
+repository or a submodule). The working-tree content is hashed, so
+uncommitted edits count, while untracked files (such as downloaded data) do
+not. Documentation is excluded so that commits which only rebuild a manual,
+edit a README or regenerate a figure leave the fingerprint unchanged: files
+under \verb{figures/}, \verb{tests/}, \verb{docs/} and \verb{.github/}; \code{.Rmd}, \code{.md}, \code{.qmd},
+\code{.html}, \code{.bib}, \code{.tex}, \code{.css} and image files; and \code{LICENSE}, \code{.gitignore},
+\code{.gitattributes}, \code{.Rbuildignore}, \code{.lintr} and \code{air.toml}. Every other
+tracked file counts, including data tables a module reads;
 \item \strong{an md5 over its \code{.R} files} otherwise. Only R code is hashed: module
 directories often hold large downloaded data, which is not code.
 }
@@ -64,8 +71,10 @@ strings in its \code{reqdPkgs} argument, so specifications such as
 \code{a/b}-shaped strings (such as file-path parameter defaults).
 
 Any change to the returned vector changes the stage's command, including a
-comment-only commit to a module. That is deliberate: a false re-run costs time,
-while a missed one costs correctness.
+comment-only change to a module's code. That is deliberate: a false re-run
+costs time, while a missed one costs correctness. For the same reason the
+documentation exclusions above are a fixed list, and a file type not on it
+counts as code.
 }
 \examples{
 \dontrun{

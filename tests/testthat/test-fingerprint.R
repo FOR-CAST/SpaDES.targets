@@ -66,23 +66,72 @@ test_that("a module that is not its own git checkout is fingerprinted by its .R 
   expect_false(identical(.module_fingerprint(d), fp1))
 })
 
-test_that("a module in its own git checkout is fingerprinted by commit, plus any dirty diff", {
+test_that("a module in its own git checkout is fingerprinted by its tracked code, dirty or not", {
+  skip_if(!nzchar(Sys.which("git")), "git not available")
+  root <- withr::local_tempdir()
+  d <- write_module(root)
+  writeLines("a,b", file.path(d, "table.csv"))
+  git_init_commit(d)
+  fp1 <- .module_fingerprint(d)
+  expect_match(fp1, "^code:[0-9a-f]{32}$")
+
+  cat("# uncommitted\n", file = file.path(d, "m.R"), append = TRUE)
+  dirty <- .module_fingerprint(d)
+  expect_false(identical(dirty, fp1))
+
+  ## committing the same content does not change it again: the fingerprint is the content
+  expect_identical(git(d, "commit", "-q", "-am", "second"), 0L)
+  expect_identical(.module_fingerprint(d), dirty)
+
+  ## a tracked data table is read by the module, so it counts
+  writeLines("a,c", file.path(d, "table.csv"))
+  expect_false(identical(.module_fingerprint(d), dirty))
+})
+
+test_that("documentation-only commits leave a git module's fingerprint unchanged", {
   skip_if(!nzchar(Sys.which("git")), "git not available")
   root <- withr::local_tempdir()
   d <- write_module(root)
   git_init_commit(d)
-  head <- system2("git", c("-C", shQuote(d), "rev-parse", "HEAD"), stdout = TRUE)
+  fp <- .module_fingerprint(d)
 
-  expect_identical(.module_fingerprint(d), head)
+  dir.create(file.path(d, "figures"))
+  dir.create(file.path(d, "tests", "testthat"), recursive = TRUE)
+  writeLines("# m", file.path(d, "m.Rmd"))
+  writeLines("# m", file.path(d, "README.md"))
+  writeLines("png", file.path(d, "figures", "badge.png"))
+  writeLines("x <- 1", file.path(d, "figures", "plot.R")) ## under figures/, so a doc
+  writeLines("test_that()", file.path(d, "tests", "testthat", "test-m.R"))
+  writeLines("*.tif", file.path(d, ".gitignore"))
+  expect_identical(git(d, "add", "-A"), 0L)
+  expect_identical(git(d, "commit", "-q", "-m", "docs"), 0L)
+  expect_identical(.module_fingerprint(d), fp)
 
-  cat("# uncommitted\n", file = file.path(d, "m.R"), append = TRUE)
-  dirty <- .module_fingerprint(d)
-  expect_match(dirty, paste0("^", head, "\\+dirty:[0-9a-f]{32}$"))
+  ## a rebuilt manual left uncommitted, as a local render does, is ignored too
+  writeLines("# m, re-rendered", file.path(d, "m.Rmd"))
+  expect_identical(.module_fingerprint(d), fp)
 
-  expect_identical(git(d, "commit", "-q", "-am", "second"), 0L)
-  head2 <- system2("git", c("-C", shQuote(d), "rev-parse", "HEAD"), stdout = TRUE)
-  expect_identical(.module_fingerprint(d), head2)
-  expect_false(identical(head2, head))
+  ## an untracked file (downloaded data, say) is not code
+  writeLines("big", file.path(d, "data.tif"))
+  expect_identical(.module_fingerprint(d), fp)
+
+  ## a new R file outside the documentation paths is code
+  dir.create(file.path(d, "R"))
+  writeLines("f <- function() 1", file.path(d, "R", "f.R"))
+  expect_identical(git(d, "add", "-A"), 0L)
+  expect_false(identical(.module_fingerprint(d), fp))
+})
+
+test_that("deleting a tracked code file changes a git module's fingerprint", {
+  skip_if(!nzchar(Sys.which("git")), "git not available")
+  root <- withr::local_tempdir()
+  d <- write_module(root)
+  dir.create(file.path(d, "R"))
+  writeLines("f <- function() 1", file.path(d, "R", "f.R"))
+  git_init_commit(d)
+  fp <- .module_fingerprint(d)
+  unlink(file.path(d, "R", "f.R"))
+  expect_false(identical(.module_fingerprint(d), fp))
 })
 
 test_that("a plain module folder inside another repository is hashed, not given that repo's commit", {

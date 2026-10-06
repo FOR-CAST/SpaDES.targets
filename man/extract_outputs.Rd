@@ -10,8 +10,10 @@ extract_outputs(sim, plain = character(), base_dir = ".")
 \item{sim}{A completed \code{simList}.}
 
 \item{plain}{Optional character vector of in-memory object names to also
-return as-is. An escape hatch for small objects (vectors, data.tables,
-colour tables) you would rather pass directly than round-trip through disk.}
+return. An escape hatch for small objects (vectors, data.tables, colour
+tables) you would rather pass directly than round-trip through disk. Terra
+objects in them are packed with \code{\link[=pack_terra]{pack_terra()}}, since they would not
+survive \code{targets} storing the stage's value.}
 
 \item{base_dir}{Directory the manifest file paths are made relative to
 (default the working directory), so paths stay portable across hosts and
@@ -24,7 +26,7 @@ A named \code{list} with:
 \code{objectName}, \code{file}, \code{saveTime}, \code{fun}, \code{package};
 \item \code{files}: the \code{character} vector of saved file paths (the value a companion
 \code{format = "file"} target should yield); and
-\item any \code{plain} objects, each under its own name.
+\item any \code{plain} objects, each under its own name, with terra objects packed.
 }
 }
 \description{

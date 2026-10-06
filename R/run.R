@@ -9,6 +9,8 @@
 #' @param modules Character vector (or list) of module names.
 #' @param objects Named `list` of in-memory objects passed to
 #'   `simInitAndSpades(objects =)` (small upstream components passed directly).
+#'   Packed terra objects in it, such as an upstream stage's `plain` objects,
+#'   are unpacked first with [unpack_terra()].
 #' @param inputs A `data.frame` passed to `simInitAndSpades(inputs =)` so SpaDES
 #'   loads file-backed upstream outputs itself; typically built with
 #'   [sim_inputs()] from an upstream manifest. `NULL` for none.
@@ -28,8 +30,8 @@
 #'   `scratchPath`). `outputPath` is overridden to `out_dir`. When `scratchPath`
 #'   is set, the run uses a unique subdir beneath it so concurrent runs do not
 #'   collide; see `scratch_retain_days` for how that scratch is reclaimed.
-#' @param plain Character vector naming in-memory objects to also return as-is;
-#'   see [extract_outputs()].
+#' @param plain Character vector naming in-memory objects to also return, with
+#'   terra objects packed by [pack_terra()]; see [extract_outputs()].
 #' @param out_dir Directory for this stage's saved outputs and figures
 #'   (set as `paths$outputPath`).
 #' @param clean_out_dir Logical; when `TRUE` (default) the contents of `out_dir`
@@ -147,7 +149,7 @@ run_simspades <- function(
       times = times,
       params = params,
       modules = as.list(modules),
-      objects = objects,
+      objects = unpack_terra(objects),
       paths = paths
     )
     if (!is.null(inputs)) {

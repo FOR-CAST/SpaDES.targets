@@ -29,7 +29,9 @@ run_simspades(
 \item{modules}{Character vector (or list) of module names.}
 
 \item{objects}{Named \code{list} of in-memory objects passed to
-\code{simInitAndSpades(objects =)} (small upstream components passed directly).}
+\code{simInitAndSpades(objects =)} (small upstream components passed directly).
+Packed terra objects in it, such as an upstream stage's \code{plain} objects,
+are unpacked first with \code{\link[=unpack_terra]{unpack_terra()}}.}
 
 \item{inputs}{A \code{data.frame} passed to \code{simInitAndSpades(inputs =)} so SpaDES
 loads file-backed upstream outputs itself; typically built with
@@ -56,8 +58,8 @@ the stage).}
 is set, the run uses a unique subdir beneath it so concurrent runs do not
 collide; see \code{scratch_retain_days} for how that scratch is reclaimed.}
 
-\item{plain}{Character vector naming in-memory objects to also return as-is;
-see \code{\link[=extract_outputs]{extract_outputs()}}.}
+\item{plain}{Character vector naming in-memory objects to also return, with
+terra objects packed by \code{\link[=pack_terra]{pack_terra()}}; see \code{\link[=extract_outputs]{extract_outputs()}}.}
 
 \item{out_dir}{Directory for this stage's saved outputs and figures
 (set as \code{paths$outputPath}).}

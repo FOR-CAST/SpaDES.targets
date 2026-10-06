@@ -16,8 +16,10 @@
 #'
 #' @param sim A completed `simList`.
 #' @param plain Optional character vector of in-memory object names to also
-#'   return as-is. An escape hatch for small objects (vectors, data.tables,
-#'   colour tables) you would rather pass directly than round-trip through disk.
+#'   return. An escape hatch for small objects (vectors, data.tables, colour
+#'   tables) you would rather pass directly than round-trip through disk. Terra
+#'   objects in them are packed with [pack_terra()], since they would not
+#'   survive `targets` storing the stage's value.
 #' @param base_dir Directory the manifest file paths are made relative to
 #'   (default the working directory), so paths stay portable across hosts and
 #'   stable for `targets` file-content hashing.
@@ -26,7 +28,7 @@
 #'     `objectName`, `file`, `saveTime`, `fun`, `package`;
 #'   * `files`: the `character` vector of saved file paths (the value a companion
 #'     `format = "file"` target should yield); and
-#'   * any `plain` objects, each under its own name.
+#'   * any `plain` objects, each under its own name, with terra objects packed.
 #' @seealso [sim_inputs()] turns a manifest into a downstream `simInit(inputs=)`
 #'   table; [tar_simspades()] wires both into a pipeline.
 #' @export
@@ -34,7 +36,7 @@ extract_outputs <- function(sim, plain = character(), base_dir = ".") {
   manifest <- normalize_outputs(sim_outputs_table(sim), base_dir = base_dir)
   out <- list(manifest = manifest, files = manifest$file)
   for (nm in plain) {
-    out[[nm]] <- sim[[nm]]
+    out[[nm]] <- pack_terra(sim[[nm]])
   }
   out
 }

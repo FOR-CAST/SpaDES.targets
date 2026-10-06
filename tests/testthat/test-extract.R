@@ -73,3 +73,13 @@ test_that("extract_outputs re-relativizes a shared-storage path to the project r
 
   expect_identical(out$files, "outputs/preamble/rasterToMatch.tif")
 })
+
+test_that("extract_outputs packs terra objects in plain objects", {
+  local_mocked_bindings(sim_outputs_table = function(sim) NULL)
+  v <- terra::vect("POINT (0 0)", crs = "EPSG:3978")
+  sim <- list(disturbanceList = list(mining = list(claims = v)))
+
+  out <- extract_outputs(sim, plain = "disturbanceList")
+
+  expect_s4_class(out$disturbanceList$mining$claims, "PackedSpatVector")
+})

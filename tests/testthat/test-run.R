@@ -398,3 +398,24 @@ test_that("with_run_logging() still captures messages after the run changes dire
     "progress from inside the extraction directory"
   )
 })
+
+test_that("run_simspades unpacks terra objects passed in `objects`", {
+  got <- NULL
+  testthat::local_mocked_bindings(
+    simInitAndSpades = function(..., objects) {
+      got <<- objects
+      list()
+    },
+    .package = "SpaDES.core"
+  )
+  testthat::local_mocked_bindings(extract_outputs = function(...) list())
+  v <- terra::vect("POINT (0 0)", crs = "EPSG:3978")
+
+  run_simspades(
+    modules = "m",
+    objects = list(disturbanceList = list(mining = terra::wrap(v))),
+    out_dir = withr::local_tempdir()
+  )
+
+  expect_s4_class(got$disturbanceList$mining, "SpatVector")
+})

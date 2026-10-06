@@ -49,7 +49,9 @@ rely solely on module-side saving (\code{registerOutputs()} / \code{Plots()}).}
 a stage's automatic load-order inference is ambiguous or broken.}
 
 \item{plain}{Character vector naming in-memory objects the primary target
-should also return as-is.}
+should also return. Terra objects in them are packed with \code{\link[=pack_terra]{pack_terra()}}:
+downstream stages get them unpacked through \code{objects}, but \code{\link[targets:tar_read]{targets::tar_read()}}
+returns them packed (see \code{\link[=unpack_terra]{unpack_terra()}}).}
 
 \item{out_dir}{Directory for this stage's saved outputs and figures; defaults
 to \code{file.path("outputs", name)}.}

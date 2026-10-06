@@ -31,7 +31,9 @@
 #'   [run_simspades()]. Set `loadOrder` (a character vector of module names) when
 #'   a stage's automatic load-order inference is ambiguous or broken.
 #' @param plain Character vector naming in-memory objects the primary target
-#'   should also return as-is.
+#'   should also return. Terra objects in them are packed with [pack_terra()]:
+#'   downstream stages get them unpacked through `objects`, but [targets::tar_read()]
+#'   returns them packed (see [unpack_terra()]).
 #' @param out_dir Directory for this stage's saved outputs and figures; defaults
 #'   to `file.path("outputs", name)`.
 #' @param clean_out_dir Logical passed to [run_simspades()]; when `TRUE`

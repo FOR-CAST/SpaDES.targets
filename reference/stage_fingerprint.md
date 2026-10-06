@@ -24,7 +24,8 @@ stage_fingerprint(
 
 - modulePath:
 
-  Directory holding the modules.
+  Directory holding the modules, or several; as in SpaDES.core, each
+  module is taken from the first one that has its `<module>.R` file.
 
 - packages:
 

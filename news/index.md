@@ -2,6 +2,16 @@
 
 ## SpaDES.targets (development version)
 
+- [`stage_fingerprint()`](https://github.com/FOR-CAST/SpaDES.targets/reference/stage_fingerprint.md),
+  and so `tar_simspades(fingerprint = TRUE)`, accepts several module
+  paths, as SpaDES.core does: each module is taken from the first
+  `modulePath` entry that has its `<module>.R`. A stage whose
+  `paths$modulePath` had more than one entry, such as
+  `c("modules", "modules/scfm/modules")` for child modules kept inside a
+  parent module’s repository, failed with “the condition has length \>
+  1” when the pipeline was defined. Fingerprints for a single module
+  path are unchanged (0.0.0.9023).
+
 - [`stage_fingerprint()`](https://github.com/FOR-CAST/SpaDES.targets/reference/stage_fingerprint.md)
   now identifies a module that is its own git checkout by the content of
   its tracked files, leaving out documentation, instead of by its

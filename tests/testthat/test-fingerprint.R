@@ -185,6 +185,23 @@ test_that("stage_fingerprint() combines modules and packages under stable names"
   )
 })
 
+test_that("stage_fingerprint() finds each module in whichever modulePath entry holds it", {
+  ## SpaDES.core accepts several module paths, e.g. c("modules", "modules/scfm/modules")
+  root <- withr::local_tempdir()
+  one <- file.path(root, "one")
+  two <- file.path(root, "two")
+  write_module(one, "a")
+  write_module(two, "b")
+  fp <- stage_fingerprint(c("a", "b"), modulePath = c(one, two), packages = "all")
+  expect_identical(fp[["module:a"]], .module_fingerprint(file.path(one, "a")))
+  expect_identical(fp[["module:b"]], .module_fingerprint(file.path(two, "b")))
+  expect_true("pkg:terra" %in% names(fp)) ## reqdPkgs read from the module in `two`
+  expect_identical(
+    stage_fingerprint("nope", modulePath = c(one, two), packages = "none")[["module:nope"]],
+    "missing"
+  )
+})
+
 test_that("tar_simspades() leaves the command byte-identical when fingerprinting is off", {
   withr::local_options(SpaDES.targets.fingerprint = NULL)
   off <- tar_simspades("preamble", modules = "LandWeb_preamble")

@@ -13,7 +13,8 @@ stage_fingerprint(
 \arguments{
 \item{modules}{Character vector (or list) of module names.}
 
-\item{modulePath}{Directory holding the modules.}
+\item{modulePath}{Directory holding the modules, or several; as in SpaDES.core,
+each module is taken from the first one that has its \verb{<module>.R} file.}
 
 \item{packages}{Which packages from the modules' \code{reqdPkgs} to include:
 \code{"remote"} (default) for those installed from a remote such as GitHub,

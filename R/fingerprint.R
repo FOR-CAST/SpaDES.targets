@@ -12,7 +12,8 @@
 #' built by the old code.
 #'
 #' @param modules Character vector (or list) of module names.
-#' @param modulePath Directory holding the modules.
+#' @param modulePath Directory holding the modules, or several; as in SpaDES.core,
+#'   each module is taken from the first one that has its `<module>.R` file.
 #' @param packages Which packages from the modules' `reqdPkgs` to include:
 #'   `"remote"` (default) for those installed from a remote such as GitHub,
 #'   identified by `Version@RemoteSha` -- the co-developed companion packages whose
@@ -70,18 +71,15 @@ stage_fingerprint <- function(modules, modulePath = "modules",
   packages <- match.arg(packages)
   modules <- sort(unique(as.character(unlist(modules))))
 
-  mods <- vapply(
-    modules,
-    function(m) .module_fingerprint(file.path(modulePath, m)),
-    character(1)
-  )
+  dirs <- vapply(modules, .module_dir, character(1), modulePath = modulePath)
+  mods <- vapply(dirs, .module_fingerprint, character(1))
   names(mods) <- paste0("module:", modules)
   if (identical(packages, "none")) {
     return(mods)
   }
 
   pkgNames <- sort(unique(unlist(lapply(modules, function(m) {
-    .module_reqd_pkgs(file.path(modulePath, m, paste0(m, ".R")))
+    .module_reqd_pkgs(file.path(dirs[[m]], paste0(m, ".R")))
   }))))
   pkgs <- vapply(
     pkgNames,
@@ -90,6 +88,13 @@ stage_fingerprint <- function(modules, modulePath = "modules",
   )
   names(pkgs) <- paste0("pkg:", pkgNames)
   c(mods, pkgs[!is.na(pkgs)])
+}
+
+## The directory of module `m`: the first `modulePath` entry holding `<m>/<m>.R`, as SpaDES.core
+## resolves a module across several module paths; the first entry when none does.
+.module_dir <- function(m, modulePath) {
+  dirs <- file.path(modulePath, m)
+  dirs[c(which(file.exists(file.path(dirs, paste0(m, ".R")))), 1L)[1L]]
 }
 
 ## an md5 over its tracked non-documentation files when `dir` is its own git working tree;

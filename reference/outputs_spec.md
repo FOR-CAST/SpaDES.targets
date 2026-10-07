@@ -68,9 +68,11 @@ outputs_spec(
 
 ## Value
 
-A `data.frame` with `objectName`, `fun`, `package` (and `saveTime` when
-supplied), suitable as `SpaDES.core::simInit(outputs=)`. Filenames are
-left for `SpaDES.core` to derive (objectName + time + extension).
+A `data.frame` with `objectName`, `file`, `fun`, `package` (and
+`saveTime` when supplied), suitable as `SpaDES.core::simInit(outputs=)`.
+Vectors are named `<objectName>.gpkg`; other filenames are left `NA` for
+`SpaDES.core` to derive (objectName + time + extension). `SpaDES.core`
+adds the time to the `.gpkg` names too.
 
 ## Details
 
@@ -91,9 +93,9 @@ outputs_spec(
   raster = c("rasterToMatch", "rstLCC"),
   vect = c("studyArea", "studyAreaReporting")
 )
-#>           objectName         fun package
-#> 1      rasterToMatch writeRaster   terra
-#> 2             rstLCC writeRaster   terra
-#> 3          studyArea writeVector   terra
-#> 4 studyAreaReporting writeVector   terra
+#>           objectName                    file         fun package
+#> 1      rasterToMatch                    <NA> writeRaster   terra
+#> 2             rstLCC                    <NA> writeRaster   terra
+#> 3          studyArea          studyArea.gpkg writeVector   terra
+#> 4 studyAreaReporting studyAreaReporting.gpkg writeVector   terra
 ```

@@ -2,6 +2,14 @@
 
 ## SpaDES.targets (development version)
 
+- `outputs_spec(vect = )` now saves vectors as GeoPackage (`.gpkg`), as
+  documented. It left the file name to SpaDES.core, which saves a
+  `writeVector()` output as a shapefile: field names longer than 10
+  characters were cut (scfm’s `maxBurnCells` came back as `maxBurnCel`),
+  and the stage’s file list held the `.shp` but not the `.dbf`, `.shx`
+  and `.prj` files beside it. The returned table gains a `file` column,
+  `NA` except for vectors (0.0.0.9025).
+
 - [`extract_outputs()`](https://github.com/FOR-CAST/SpaDES.targets/reference/extract_outputs.md)
   packs the terra objects in a stage’s `plain` objects with the new
   [`pack_terra()`](https://github.com/FOR-CAST/SpaDES.targets/reference/pack_terra.md),

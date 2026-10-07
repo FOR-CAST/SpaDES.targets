@@ -26,9 +26,11 @@
 #' @param saveTime Optional numeric vector of save times; the rows are expanded
 #'   over every (object, time) combination. `NULL` (default) lets
 #'   `SpaDES.core` save once at `end(sim)`.
-#' @return A `data.frame` with `objectName`, `fun`, `package` (and `saveTime`
-#'   when supplied), suitable as `SpaDES.core::simInit(outputs=)`. Filenames are
-#'   left for `SpaDES.core` to derive (objectName + time + extension).
+#' @return A `data.frame` with `objectName`, `file`, `fun`, `package` (and
+#'   `saveTime` when supplied), suitable as `SpaDES.core::simInit(outputs=)`.
+#'   Vectors are named `<objectName>.gpkg`; other filenames are left `NA` for
+#'   `SpaDES.core` to derive (objectName + time + extension). `SpaDES.core` adds
+#'   the time to the `.gpkg` names too.
 #' @seealso [extract_outputs()], [sim_inputs()]
 #' @export
 #' @examples
@@ -46,7 +48,7 @@ outputs_spec <- function(
 ) {
   rows <- rbind(
     outputs_spec_rows(raster, "writeRaster", "terra"),
-    outputs_spec_rows(vect, "writeVector", "terra"),
+    outputs_spec_rows(vect, "writeVector", "terra", ext = "gpkg"),
     outputs_spec_rows(rds, "saveRDS", "base"),
     outputs_spec_rows(qs, "qs_save", "qs2"),
     outputs_spec_rows(csv, "fwrite", "data.table")
@@ -65,9 +67,12 @@ outputs_spec <- function(
   rows
 }
 
-outputs_spec_rows <- function(objs, fun, package) {
+## SpaDES.core names a writeVector() file .shp, which cuts field names to 10 characters and keeps its
+## attributes in .dbf/.shx/.prj files that a stage's file list leaves out, so name vectors .gpkg.
+outputs_spec_rows <- function(objs, fun, package, ext = NA_character_) {
   data.frame(
     objectName = objs,
+    file = if (is.na(ext)) rep(NA_character_, length(objs)) else sprintf("%s.%s", objs, ext),
     fun = if (length(objs)) fun else character(),
     package = if (length(objs)) package else character(),
     stringsAsFactors = FALSE

@@ -35,9 +35,11 @@ over every (object, time) combination. \code{NULL} (default) lets
 \code{SpaDES.core} save once at \code{end(sim)}.}
 }
 \value{
-A \code{data.frame} with \code{objectName}, \code{fun}, \code{package} (and \code{saveTime}
-when supplied), suitable as \code{SpaDES.core::simInit(outputs=)}. Filenames are
-left for \code{SpaDES.core} to derive (objectName + time + extension).
+A \code{data.frame} with \code{objectName}, \code{file}, \code{fun}, \code{package} (and
+\code{saveTime} when supplied), suitable as \code{SpaDES.core::simInit(outputs=)}.
+Vectors are named \verb{<objectName>.gpkg}; other filenames are left \code{NA} for
+\code{SpaDES.core} to derive (objectName + time + extension). \code{SpaDES.core} adds
+the time to the \code{.gpkg} names too.
 }
 \description{
 Convenience constructor for the \code{outputs} \code{data.frame} that

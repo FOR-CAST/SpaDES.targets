@@ -1,7 +1,7 @@
 Type: Package
 Package: SpaDES.targets
 Title: Orchestrate SpaDES Simulations with 'targets'
-Version: 0.0.0.9024
+Version: 0.0.0.9025
 Authors@R: c(
     person("Alex M", "Chubaty", , "achubaty@for-cast.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7146-8135"))
@@ -43,4 +43,4 @@ Config/testthat/edition: 3
 Encoding: UTF-8
 Language: en-CA
 Roxygen: list(markdown = TRUE)
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.1.0

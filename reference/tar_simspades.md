@@ -70,7 +70,12 @@ tar_simspades(
 - plain:
 
   Character vector naming in-memory objects the primary target should
-  also return as-is.
+  also return. Terra objects in them are packed with
+  [`pack_terra()`](https://github.com/FOR-CAST/SpaDES.targets/reference/pack_terra.md):
+  downstream stages get them unpacked through `objects`, but
+  [`targets::tar_read()`](https://docs.ropensci.org/targets/reference/tar_read.html)
+  returns them packed (see
+  [`unpack_terra()`](https://github.com/FOR-CAST/SpaDES.targets/reference/pack_terra.md)).
 
 - out_dir:
 

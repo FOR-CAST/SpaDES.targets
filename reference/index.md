@@ -13,6 +13,10 @@
 
   Build a `simInit(outputs=)` table for terra and RDS objects
 
+- [`pack_terra()`](https://github.com/FOR-CAST/SpaDES.targets/reference/pack_terra.md)
+  [`unpack_terra()`](https://github.com/FOR-CAST/SpaDES.targets/reference/pack_terra.md)
+  : Pack and unpack terra objects for storage
+
 - [`provenance_manifest()`](https://github.com/FOR-CAST/SpaDES.targets/reference/provenance_manifest.md)
   : Build a provenance manifest for a pipeline run
 

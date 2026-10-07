@@ -15,7 +15,7 @@ in-memory objects). The simList itself is never returned or serialized."></head>
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9023</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9024</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -83,7 +83,9 @@ in-memory objects). The <code>simList</code> itself is never returned or seriali
 
 <dt id="arg-objects">objects<a class="anchor" aria-label="anchor" href="#arg-objects"></a></dt>
 <dd><p>Named <code>list</code> of in-memory objects passed to
-<code>simInitAndSpades(objects =)</code> (small upstream components passed directly).</p></dd>
+<code>simInitAndSpades(objects =)</code> (small upstream components passed directly).
+Packed terra objects in it, such as an upstream stage's <code>plain</code> objects,
+are unpacked first with <code><a href="pack_terra.html">unpack_terra()</a></code>.</p></dd>
 
 
 <dt id="arg-inputs">inputs<a class="anchor" aria-label="anchor" href="#arg-inputs"></a></dt>
@@ -124,8 +126,8 @@ collide; see <code>scratch_retain_days</code> for how that scratch is reclaimed.
 
 
 <dt id="arg-plain">plain<a class="anchor" aria-label="anchor" href="#arg-plain"></a></dt>
-<dd><p>Character vector naming in-memory objects to also return as-is;
-see <code><a href="extract_outputs.html">extract_outputs()</a></code>.</p></dd>
+<dd><p>Character vector naming in-memory objects to also return, with
+terra objects packed by <code><a href="pack_terra.html">pack_terra()</a></code>; see <code><a href="extract_outputs.html">extract_outputs()</a></code>.</p></dd>
 
 
 <dt id="arg-out-dir">out_dir<a class="anchor" aria-label="anchor" href="#arg-out-dir"></a></dt>

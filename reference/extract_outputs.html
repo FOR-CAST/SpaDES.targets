@@ -17,7 +17,7 @@ at once:"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9023</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9024</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,8 +67,10 @@ at once:</p>
 
 <dt id="arg-plain">plain<a class="anchor" aria-label="anchor" href="#arg-plain"></a></dt>
 <dd><p>Optional character vector of in-memory object names to also
-return as-is. An escape hatch for small objects (vectors, data.tables,
-colour tables) you would rather pass directly than round-trip through disk.</p></dd>
+return. An escape hatch for small objects (vectors, data.tables, colour
+tables) you would rather pass directly than round-trip through disk. Terra
+objects in them are packed with <code><a href="pack_terra.html">pack_terra()</a></code>, since they would not
+survive <code>targets</code> storing the stage's value.</p></dd>
 
 
 <dt id="arg-base-dir">base_dir<a class="anchor" aria-label="anchor" href="#arg-base-dir"></a></dt>
@@ -83,7 +85,7 @@ stable for <code>targets</code> file-content hashing.</p></dd>
 <code>objectName</code>, <code>file</code>, <code>saveTime</code>, <code>fun</code>, <code>package</code>;</p></li>
 <li><p><code>files</code>: the <code>character</code> vector of saved file paths (the value a companion
 <code>format = "file"</code> target should yield); and</p></li>
-<li><p>any <code>plain</code> objects, each under its own name.</p></li>
+<li><p>any <code>plain</code> objects, each under its own name, with terra objects packed.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

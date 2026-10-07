@@ -47,7 +47,9 @@ run_simspades(
 
   Named `list` of in-memory objects passed to
   `simInitAndSpades(objects =)` (small upstream components passed
-  directly).
+  directly). Packed terra objects in it, such as an upstream stage's
+  `plain` objects, are unpacked first with
+  [`unpack_terra()`](https://github.com/FOR-CAST/SpaDES.targets/reference/pack_terra.md).
 
 - inputs:
 
@@ -89,7 +91,10 @@ run_simspades(
 
 - plain:
 
-  Character vector naming in-memory objects to also return as-is; see
+  Character vector naming in-memory objects to also return, with terra
+  objects packed by
+  [`pack_terra()`](https://github.com/FOR-CAST/SpaDES.targets/reference/pack_terra.md);
+  see
   [`extract_outputs()`](https://github.com/FOR-CAST/SpaDES.targets/reference/extract_outputs.md).
 
 - out_dir:

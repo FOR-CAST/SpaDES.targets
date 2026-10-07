@@ -21,9 +21,12 @@ extract_outputs(sim, plain = character(), base_dir = ".")
 
 - plain:
 
-  Optional character vector of in-memory object names to also return
-  as-is. An escape hatch for small objects (vectors, data.tables, colour
-  tables) you would rather pass directly than round-trip through disk.
+  Optional character vector of in-memory object names to also return. An
+  escape hatch for small objects (vectors, data.tables, colour tables)
+  you would rather pass directly than round-trip through disk. Terra
+  objects in them are packed with
+  [`pack_terra()`](https://github.com/FOR-CAST/SpaDES.targets/reference/pack_terra.md),
+  since they would not survive `targets` storing the stage's value.
 
 - base_dir:
 
@@ -41,7 +44,8 @@ A named `list` with:
 - `files`: the `character` vector of saved file paths (the value a
   companion `format = "file"` target should yield); and
 
-- any `plain` objects, each under its own name.
+- any `plain` objects, each under its own name, with terra objects
+  packed.
 
 ## Details
 

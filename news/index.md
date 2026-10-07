@@ -2,6 +2,24 @@
 
 ## SpaDES.targets (development version)
 
+- [`extract_outputs()`](https://github.com/FOR-CAST/SpaDES.targets/reference/extract_outputs.md)
+  packs the terra objects in a stage’s `plain` objects with the new
+  [`pack_terra()`](https://github.com/FOR-CAST/SpaDES.targets/reference/pack_terra.md),
+  and
+  [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
+  unpacks its `objects` with
+  [`unpack_terra()`](https://github.com/FOR-CAST/SpaDES.targets/reference/pack_terra.md).
+  A `SpatRaster` or `SpatVector` holds a pointer that does not survive
+  [`saveRDS()`](https://rdrr.io/r/base/readRDS.html), which is how
+  `targets` stores a stage’s value, so a terra object passed to the next
+  stage as a `plain` object (for example a list of disturbance layers)
+  failed there with “external pointer is not valid”. Read such objects
+  from a target with `unpack_terra(tar_read(...))`. Only plain
+  (unclassed) lists are walked, so data frames, dates and fitted models
+  pass through unchanged; a `SpatRaster` is packed by value, and
+  [`pack_terra()`](https://github.com/FOR-CAST/SpaDES.targets/reference/pack_terra.md)
+  stops if terra could only store a path to its file (0.0.0.9024).
+
 - [`stage_fingerprint()`](https://github.com/FOR-CAST/SpaDES.targets/reference/stage_fingerprint.md),
   and so `tar_simspades(fingerprint = TRUE)`, accepts several module
   paths, as SpaDES.core does: each module is taken from the first

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9023</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9024</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -101,7 +101,9 @@ a stage's automatic load-order inference is ambiguous or broken.</p></dd>
 
 <dt id="arg-plain">plain<a class="anchor" aria-label="anchor" href="#arg-plain"></a></dt>
 <dd><p>Character vector naming in-memory objects the primary target
-should also return as-is.</p></dd>
+should also return. Terra objects in them are packed with <code><a href="pack_terra.html">pack_terra()</a></code>:
+downstream stages get them unpacked through <code>objects</code>, but <code><a href="https://docs.ropensci.org/targets/reference/tar_read.html" class="external-link">targets::tar_read()</a></code>
+returns them packed (see <code><a href="pack_terra.html">unpack_terra()</a></code>).</p></dd>
 
 
 <dt id="arg-out-dir">out_dir<a class="anchor" aria-label="anchor" href="#arg-out-dir"></a></dt>

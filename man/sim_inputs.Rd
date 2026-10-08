@@ -36,6 +36,10 @@ process. The load function is left to \code{SpaDES.core} to deduce from each
 file's extension.
 }
 \details{
+Figures in the manifest -- the images \code{SpaDES.core::Plots()} saves with
+\code{ggplot2::ggsave()} or a graphics device -- are skipped: they are not objects,
+and \code{Plots()} often registers one under the name of the object it plots.
+
 Pass the companion \code{format = "file"} target (the \verb{<stage>_files} target from
 \code{\link[=tar_simspades]{tar_simspades()}}) as \code{files} so that the downstream target gains a
 file-content dependency on the upstream outputs (otherwise \code{targets} would

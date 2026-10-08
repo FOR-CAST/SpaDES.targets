@@ -7,6 +7,10 @@
 #' process. The load function is left to `SpaDES.core` to deduce from each
 #' file's extension.
 #'
+#' Figures in the manifest -- the images `SpaDES.core::Plots()` saves with
+#' `ggplot2::ggsave()` or a graphics device -- are skipped: they are not objects,
+#' and `Plots()` often registers one under the name of the object it plots.
+#'
 #' Pass the companion `format = "file"` target (the `<stage>_files` target from
 #' [tar_simspades()]) as `files` so that the downstream target gains a
 #' file-content dependency on the upstream outputs (otherwise `targets` would
@@ -68,7 +72,7 @@ sim_inputs <- function(manifest, objects = NULL, at = NULL, loadTime = NULL, fil
 #' Objects are loaded with the reader matching each manifest row's save function
 #' (`terra::rast` / `terra::vect` / `base::readRDS` / `qs2::qs_read` /
 #' `data.table::fread`). `terra` rasters/vectors load lazily, so this is cheap even
-#' for large layers.
+#' for large layers. Figures are skipped, as in [sim_inputs()].
 #'
 #' @inheritParams sim_inputs
 #' @return A named `list` mapping `objectName` to the loaded object, suitable to
@@ -109,13 +113,28 @@ translate_load_fun <- function(save_fun) {
   unname(map[as.character(save_fun)])
 }
 
-# Resolve a manifest (or a whole extract_outputs() result) and select rows: keep
-# only the requested `objects`, then the save at `at` (or the latest per object).
+# Whether each manifest row is a figure: saved by ggplot2::ggsave() or a grDevices
+# device, which is how SpaDES.core::Plots() registers the images it writes.
+is_figure <- function(save_fun) {
+  fun <- sub("^.*::", "", as.character(save_fun))
+  !is.na(fun) &
+    fun %in%
+      c("ggsave", "png", "jpeg", "bmp", "tiff", "pdf", "svg", "cairo_pdf", "cairo_ps", "postscript")
+}
+
+# Resolve a manifest (or a whole extract_outputs() result) and select rows: drop
+# figures, keep only the requested `objects`, then the save at `at` (or the latest
+# per object). Plots() registers a figure under its file name, which is often the
+# plotted object's name, so a figure saved after the data would otherwise be picked
+# as that object's latest save.
 select_manifest <- function(manifest, objects = NULL, at = NULL) {
   if (is.list(manifest) && !is.data.frame(manifest) && !is.null(manifest$manifest)) {
     manifest <- manifest$manifest
   }
   m <- manifest
+  if ("fun" %in% names(m)) {
+    m <- m[!is_figure(m$fun), , drop = FALSE]
+  }
   if (!is.null(objects)) {
     m <- m[m$objectName %in% objects, , drop = FALSE]
   }

@@ -98,3 +98,22 @@ test_that("sim_objects errors when a selected file is not tracked", {
   )
   expect_snapshot(error = TRUE, sim_objects(m, files = "outputs/p/other.rds"))
 })
+
+test_that("sim_objects and sim_inputs skip figures saved under an object's name", {
+  dir <- withr::local_tempdir()
+  terra::writeRaster(
+    terra::rast(nrows = 2, ncols = 2, vals = 1:4),
+    file.path(dir, "flammableMap.tif")
+  )
+  m <- data.frame(
+    objectName = c("flammableMap", "flammableMap", "burnMap"),
+    file = file.path(dir, c("flammableMap.tif", "flammableMap.png", "burnMap.pdf")),
+    saveTime = 1,
+    fun = c("writeRaster", "ggsave", "grDevices::pdf"),
+    stringsAsFactors = FALSE
+  )
+  out <- sim_objects(m)
+  expect_named(out, "flammableMap")
+  expect_s4_class(out$flammableMap, "SpatRaster")
+  expect_identical(sim_inputs(m)$file, file.path(dir, "flammableMap.tif"))
+})

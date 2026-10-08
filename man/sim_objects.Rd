@@ -38,7 +38,7 @@ handoff objects a downstream module touches in \code{.inputObjects()} (e.g.
 Objects are loaded with the reader matching each manifest row's save function
 (\code{terra::rast} / \code{terra::vect} / \code{base::readRDS} / \code{qs2::qs_read} /
 \code{data.table::fread}). \code{terra} rasters/vectors load lazily, so this is cheap even
-for large layers.
+for large layers. Figures are skipped, as in \code{\link[=sim_inputs]{sim_inputs()}}.
 }
 \seealso{
 \code{\link[=sim_inputs]{sim_inputs()}}, \code{\link[=extract_outputs]{extract_outputs()}}

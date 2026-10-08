@@ -51,6 +51,13 @@ when supplied), suitable as `SpaDES.core::simInit(inputs=)`.
 
 ## Details
 
+Figures in the manifest – the images
+[`SpaDES.core::Plots()`](https://spades-core.predictiveecology.org/reference/Plots.html)
+saves with
+[`ggplot2::ggsave()`](https://ggplot2.tidyverse.org/reference/ggsave.html)
+or a graphics device – are skipped: they are not objects, and `Plots()`
+often registers one under the name of the object it plots.
+
 Pass the companion `format = "file"` target (the `<stage>_files` target
 from
 [`tar_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/tar_simspades.md))

@@ -2,6 +2,21 @@
 
 ## SpaDES.targets (development version)
 
+- [`sim_objects()`](https://github.com/FOR-CAST/SpaDES.targets/reference/sim_objects.md)
+  and
+  [`sim_inputs()`](https://github.com/FOR-CAST/SpaDES.targets/reference/sim_inputs.md)
+  skip figures.
+  [`SpaDES.core::Plots()`](https://spades-core.predictiveecology.org/reference/Plots.html)
+  registers each image it saves as an output named after the file, often
+  the plotted object’s name, so a figure saved after the data was taken
+  as that object’s latest save: scfmDataPrep’s `flammableMap.png`
+  replaced `flammableMap.tif`, and
+  [`sim_objects()`](https://github.com/FOR-CAST/SpaDES.targets/reference/sim_objects.md)
+  stopped with “No reader is known for save function ggsave”. Rows saved
+  by
+  [`ggplot2::ggsave()`](https://ggplot2.tidyverse.org/reference/ggsave.html)
+  or a graphics device are now left out (0.0.0.9026).
+
 - `outputs_spec(vect = )` now saves vectors as GeoPackage (`.gpkg`), as
   documented. It left the file name to SpaDES.core, which saves a
   `writeVector()` output as a shapefile: field names longer than 10

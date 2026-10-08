@@ -58,7 +58,8 @@ function
 [`qs2::qs_read`](https://rdrr.io/pkg/qs2/man/qs_read.html) /
 [`data.table::fread`](https://rdrr.io/pkg/data.table/man/fread.html)).
 `terra` rasters/vectors load lazily, so this is cheap even for large
-layers.
+layers. Figures are skipped, as in
+[`sim_inputs()`](https://github.com/FOR-CAST/SpaDES.targets/reference/sim_inputs.md).
 
 ## See also
 

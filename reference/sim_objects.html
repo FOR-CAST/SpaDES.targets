@@ -21,7 +21,7 @@ sim_inputs() for objects a module needs only once events run."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9025</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9026</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -98,7 +98,7 @@ splice into <code>SpaDES.core::simInit(objects=)</code>.</p>
     <p>Objects are loaded with the reader matching each manifest row's save function
 (<code><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">terra::rast</a></code> / <code><a href="https://rspatial.github.io/terra/reference/vect.html" class="external-link">terra::vect</a></code> / <code><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">base::readRDS</a></code> / <code><a href="https://rdrr.io/pkg/qs2/man/qs_read.html" class="external-link">qs2::qs_read</a></code> /
 <code><a href="https://rdrr.io/pkg/data.table/man/fread.html" class="external-link">data.table::fread</a></code>). <code>terra</code> rasters/vectors load lazily, so this is cheap even
-for large layers.</p>
+for large layers. Figures are skipped, as in <code><a href="sim_inputs.html">sim_inputs()</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

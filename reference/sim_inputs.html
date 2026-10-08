@@ -17,7 +17,7 @@ file's extension."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9025</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9026</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -94,7 +94,10 @@ when supplied), suitable as <code>SpaDES.core::simInit(inputs=)</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Pass the companion <code>format = "file"</code> target (the <code>&lt;stage&gt;_files</code> target from
+    <p>Figures in the manifest – the images <code><a href="https://spades-core.predictiveecology.org/reference/Plots.html" class="external-link">SpaDES.core::Plots()</a></code> saves with
+<code><a href="https://ggplot2.tidyverse.org/reference/ggsave.html" class="external-link">ggplot2::ggsave()</a></code> or a graphics device – are skipped: they are not objects,
+and <code>Plots()</code> often registers one under the name of the object it plots.</p>
+<p>Pass the companion <code>format = "file"</code> target (the <code>&lt;stage&gt;_files</code> target from
 <code><a href="tar_simspades.html">tar_simspades()</a></code>) as <code>files</code> so that the downstream target gains a
 file-content dependency on the upstream outputs (otherwise <code>targets</code> would
 only see the manifest paths, not their contents) and so that the requested

@@ -7,7 +7,8 @@
 stage_fingerprint(
   modules,
   modulePath = "modules",
-  packages = c("remote", "all", "none")
+  packages = c("remote", "all", "none"),
+  extra_modules = NULL
 )
 }
 \arguments{
@@ -26,6 +27,12 @@ records a \code{RemoteSha} for repository installs too, set to the version, so
 these are recognised by their \code{RemoteType} rather than by having a
 \code{RemoteSha}. An r-universe install records its git commit and counts as
 remote.}
+
+\item{extra_modules}{Character vector of further modules to fingerprint, such
+as modules that one of \code{modules} runs nested inside it. They are fingerprinted
+like \code{modules}, packages in their \code{reqdPkgs} included; a module named in both
+counts once. Unlike a module in \code{modules}, which is reported as \code{"missing"},
+each must have its \verb{<module>.R} file in \code{modulePath}, or this stops.}
 }
 \value{
 A named character vector, sorted within each group:

@@ -24,6 +24,11 @@
 #'   these are recognised by their `RemoteType` rather than by having a
 #'   `RemoteSha`. An r-universe install records its git commit and counts as
 #'   remote.
+#' @param extra_modules Character vector of further modules to fingerprint, such
+#'   as modules that one of `modules` runs nested inside it. They are fingerprinted
+#'   like `modules`, packages in their `reqdPkgs` included; a module named in both
+#'   counts once. Unlike a module in `modules`, which is reported as `"missing"`,
+#'   each must have its `<module>.R` file in `modulePath`, or this stops.
 #'
 #' @details
 #' Each module is identified by, in order of preference:
@@ -67,9 +72,12 @@
 #' stage_fingerprint("LandWeb_preamble", modulePath = "modules")
 #' }
 stage_fingerprint <- function(modules, modulePath = "modules",
-                              packages = c("remote", "all", "none")) {
+                              packages = c("remote", "all", "none"),
+                              extra_modules = NULL) {
   packages <- match.arg(packages)
-  modules <- sort(unique(as.character(unlist(modules))))
+  extra_modules <- unique(as.character(unlist(extra_modules)))
+  .check_modules_found(extra_modules, modulePath)
+  modules <- sort(unique(c(as.character(unlist(modules)), extra_modules)))
 
   dirs <- vapply(modules, .module_dir, character(1), modulePath = modulePath)
   mods <- vapply(dirs, .module_fingerprint, character(1))
@@ -95,6 +103,23 @@ stage_fingerprint <- function(modules, modulePath = "modules",
 .module_dir <- function(m, modulePath) {
   dirs <- file.path(modulePath, m)
   dirs[c(which(file.exists(file.path(dirs, paste0(m, ".R")))), 1L)[1L]]
+}
+
+## Stop unless each of `modules` has its `<module>.R` in `modulePath`. A module named only to be
+## fingerprinted must exist: reported as "missing", a misspelt name would never change.
+.check_modules_found <- function(modules, modulePath, call = rlang::caller_env()) {
+  dirs <- vapply(modules, .module_dir, character(1), modulePath = modulePath)
+  absent <- modules[!file.exists(file.path(dirs, paste0(modules, ".R")))]
+  if (length(absent)) {
+    cli::cli_abort(
+      c(
+        "Can't fingerprint module{?s} {.val {absent}}: no {.file <module>/<module>.R} found.",
+        "i" = "Searched {.arg modulePath}: {.path {modulePath}}."
+      ),
+      call = call
+    )
+  }
+  invisible()
 }
 
 ## an md5 over its tracked non-documentation files when `dir` is its own git working tree;

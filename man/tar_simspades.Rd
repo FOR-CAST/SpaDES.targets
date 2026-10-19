@@ -25,6 +25,7 @@ tar_simspades(
   mem_workers = getOption("SpaDES.targets.mem_workers", NULL),
   mem_frac = getOption("SpaDES.targets.mem_frac", 0.5),
   fingerprint = getOption("SpaDES.targets.fingerprint", FALSE),
+  fingerprint_modules = NULL,
   .options = list()
 )
 }
@@ -98,6 +99,18 @@ per \code{getOption("SpaDES.targets.fingerprint_packages", "remote")}), so that
 \code{targets} sees any change to that code. A character vector is spliced as
 given. Opt-in because turning it on changes every stage's command once,
 which invalidates all existing stages on the next run.}
+
+\item{fingerprint_modules}{Character vector of further modules whose code
+the stage depends on without running them itself: modules that one of
+\code{modules} runs nested inside it, from the same \code{paths$modulePath} (for
+example a data-preparation module that runs \code{Biomass_core} internally).
+With \code{fingerprint = TRUE} they are added to the stage's fingerprint, packages
+in their \code{reqdPkgs} included, so a change to their code re-runs the stage.
+They are not passed to \code{\link[=run_simspades]{run_simspades()}}. Each must be found in
+\code{paths$modulePath}, or defining the pipeline stops (see
+\code{\link[=stage_fingerprint]{stage_fingerprint()}}'s \code{extra_modules}). Ignored when \code{fingerprint} is
+\code{FALSE}; an error beside a supplied \code{fingerprint} vector. \code{NULL} (default)
+leaves the command exactly as before.}
 }
 \value{
 A \code{list} of two \code{tar_target} objects (the primary, then the companion

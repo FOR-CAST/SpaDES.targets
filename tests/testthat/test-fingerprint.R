@@ -233,3 +233,126 @@ test_that("tar_simspades() honours the fingerprint option and a supplied vector"
   expect_match(paste(deparse(given[[1]]$command$expr), collapse = " "), "code = \"v1\"")
   expect_snapshot(error = TRUE, tar_simspades("s", modules = "m", fingerprint = 1))
 })
+
+test_that("stage_fingerprint() adds extra_modules' code and packages", {
+  root <- withr::local_tempdir()
+  write_module(root, "a")
+  ## a module run nested inside `a`: its own reqdPkgs (here withr) count too
+  write_module(root, "core", extra = "defineModule(sim, list(reqdPkgs = list(\"withr\")))")
+  base <- stage_fingerprint("a", modulePath = root, packages = "all")
+  fp <- stage_fingerprint("a", modulePath = root, packages = "all", extra_modules = "core")
+  expect_identical(fp[["module:core"]], .module_fingerprint(file.path(root, "core")))
+  expect_false("pkg:withr" %in% names(base))
+  expect_true("pkg:withr" %in% names(fp))
+  expect_identical(fp[names(base)], base)
+
+  cat("# edited\n", file = file.path(root, "core", "core.R"), append = TRUE)
+  edited <- stage_fingerprint("a", modulePath = root, packages = "all", extra_modules = "core")
+  expect_false(identical(edited[["module:core"]], fp[["module:core"]]))
+  expect_identical(stage_fingerprint("a", modulePath = root, packages = "all"), base)
+})
+
+test_that("stage_fingerprint() counts a module named in both modules and extra_modules once", {
+  root <- withr::local_tempdir()
+  write_module(root, "a")
+  write_module(root, "b")
+  expect_identical(
+    stage_fingerprint("a", modulePath = root, extra_modules = c("a", "b", "b")),
+    stage_fingerprint(c("a", "b"), modulePath = root)
+  )
+  expect_identical(
+    stage_fingerprint("a", modulePath = root, extra_modules = "a"),
+    stage_fingerprint("a", modulePath = root)
+  )
+})
+
+test_that("stage_fingerprint() stops when an extra module is not in modulePath", {
+  withr::local_dir(withr::local_tempdir())
+  write_module("modules", "a")
+  expect_snapshot(
+    error = TRUE,
+    stage_fingerprint("a", modulePath = "modules", extra_modules = c("nope", "nada"))
+  )
+  ## a stage's own module is still reported as missing, as before
+  expect_identical(
+    stage_fingerprint("nope", modulePath = "modules", packages = "none")[["module:nope"]],
+    "missing"
+  )
+})
+
+test_that("tar_simspades() fingerprints fingerprint_modules without running them", {
+  root <- withr::local_tempdir()
+  write_module(root, "m")
+  write_module(root, "core")
+  paths <- list(modulePath = root)
+  stage <- function(...) tar_simspades("s", modules = "m", paths = paths, fingerprint = TRUE, ...)
+  cmd <- function(tl) paste(deparse(tl[[1]]$command$expr), collapse = " ")
+  own <- stage()
+  nested <- stage(fingerprint_modules = "core")
+  expect_match(cmd(nested), "module:core", fixed = TRUE)
+  expect_match(cmd(nested), "run_simspades(modules = \"m\",", fixed = TRUE) ## runs only `m`
+  expect_false(identical(own[[1]]$command$hash, nested[[1]]$command$hash))
+
+  ## editing the nested module re-hashes the stage that names it, and only that one
+  cat("# edited\n", file = file.path(root, "core", "core.R"), append = TRUE)
+  expect_identical(stage()[[1]]$command$hash, own[[1]]$command$hash)
+  expect_false(identical(
+    stage(fingerprint_modules = "core")[[1]]$command$hash,
+    nested[[1]]$command$hash
+  ))
+
+  expect_error(stage(fingerprint_modules = "nope"), "nope")
+})
+
+test_that("fingerprint_modules = NULL leaves the stage command byte-identical", {
+  root <- withr::local_tempdir()
+  write_module(root, "m")
+  paths <- list(modulePath = root)
+  for (fp in list(FALSE, TRUE)) {
+    absent <- tar_simspades("s", modules = "m", paths = paths, fingerprint = fp)
+    null <- tar_simspades(
+      "s",
+      modules = "m",
+      paths = paths,
+      fingerprint = fp,
+      fingerprint_modules = NULL
+    )
+    expect_identical(deparse(null[[1]]$command$expr), deparse(absent[[1]]$command$expr))
+    expect_identical(null[[1]]$command$hash, absent[[1]]$command$hash)
+  }
+  ## fingerprint = TRUE splices exactly stage_fingerprint(modules): nothing else is added
+  given <- tar_simspades(
+    "s",
+    modules = "m",
+    paths = paths,
+    fingerprint = stage_fingerprint("m", modulePath = root)
+  )
+  expect_identical(absent[[1]]$command$hash, given[[1]]$command$hash)
+
+  ## ignored while fingerprinting is off; refused beside a supplied vector it would not join
+  off <- tar_simspades("s", modules = "m", paths = paths, fingerprint = FALSE)
+  off_named <- tar_simspades(
+    "s",
+    modules = "m",
+    paths = paths,
+    fingerprint = FALSE,
+    fingerprint_modules = "core"
+  )
+  expect_identical(off_named[[1]]$command$hash, off[[1]]$command$hash)
+  expect_error(
+    tar_simspades("s", modules = "m", fingerprint = c(code = "v1"), fingerprint_modules = "core"),
+    "fingerprint_modules"
+  )
+})
+
+test_that("a fingerprinted stage's command is unchanged from 0.0.0.9026", {
+  ## Recorded before fingerprint_modules existed. A stage whose command changes re-runs, so a
+  ## new argument must leave the command of every stage that does not use it as it was.
+  ## Windows writes CRLF, which changes the module md5 in the command.
+  skip_on_os("windows")
+  withr::local_dir(withr::local_tempdir())
+  withr::local_options(SpaDES.targets.fingerprint_packages = "none")
+  write_module("modules", "m")
+  tl <- tar_simspades("s", modules = "m", paths = list(modulePath = "modules"), fingerprint = TRUE)
+  expect_snapshot(writeLines(deparse(tl[[1]]$command$expr)))
+})

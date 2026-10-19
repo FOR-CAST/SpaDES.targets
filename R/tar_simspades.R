@@ -75,6 +75,17 @@
 #'   `targets` sees any change to that code. A character vector is spliced as
 #'   given. Opt-in because turning it on changes every stage's command once,
 #'   which invalidates all existing stages on the next run.
+#' @param fingerprint_modules Character vector of further modules whose code
+#'   the stage depends on without running them itself: modules that one of
+#'   `modules` runs nested inside it, from the same `paths$modulePath` (for
+#'   example a data-preparation module that runs `Biomass_core` internally).
+#'   With `fingerprint = TRUE` they are added to the stage's fingerprint, packages
+#'   in their `reqdPkgs` included, so a change to their code re-runs the stage.
+#'   They are not passed to [run_simspades()]. Each must be found in
+#'   `paths$modulePath`, or defining the pipeline stops (see
+#'   [stage_fingerprint()]'s `extra_modules`). Ignored when `fingerprint` is
+#'   `FALSE`; an error beside a supplied `fingerprint` vector. `NULL` (default)
+#'   leaves the command exactly as before.
 #' @return A `list` of two `tar_target` objects (the primary, then the companion
 #'   `format = "file"` target) — return it from `_targets.R` like any target
 #'   list.
@@ -104,6 +115,7 @@ tar_simspades <- function(
   mem_workers = getOption("SpaDES.targets.mem_workers", NULL),
   mem_frac = getOption("SpaDES.targets.mem_frac", 0.5),
   fingerprint = getOption("SpaDES.targets.fingerprint", FALSE),
+  fingerprint_modules = NULL,
   .options = list()
 ) {
   stopifnot(is.character(name), length(name) == 1L)
@@ -128,7 +140,7 @@ tar_simspades <- function(
     mem_frac = .(mem_frac),
     .options = .(.options)
   ))
-  fp <- .resolve_fingerprint(fingerprint, modules, paths)
+  fp <- .resolve_fingerprint(fingerprint, modules, paths, fingerprint_modules)
   if (!is.null(fp)) {
     ## Added only when enabled, so a stage without a fingerprint keeps a byte-identical
     ## command (and cached targets stay valid).
@@ -166,7 +178,7 @@ tar_simspades <- function(
 }
 
 ## NULL (no fingerprint) | stage_fingerprint() | a user-supplied character vector.
-.resolve_fingerprint <- function(fingerprint, modules, paths) {
+.resolve_fingerprint <- function(fingerprint, modules, paths, fingerprint_modules = NULL) {
   if (is.null(fingerprint) || isFALSE(fingerprint)) {
     return(NULL)
   }
@@ -175,10 +187,18 @@ tar_simspades <- function(
     return(stage_fingerprint(
       modules,
       modulePath = modulePath,
-      packages = getOption("SpaDES.targets.fingerprint_packages", "remote")
+      packages = getOption("SpaDES.targets.fingerprint_packages", "remote"),
+      extra_modules = fingerprint_modules
     ))
   }
   if (is.character(fingerprint)) {
+    if (!is.null(fingerprint_modules)) {
+      stop(
+        "`fingerprint_modules` needs `fingerprint = TRUE`; a supplied `fingerprint` vector is ",
+        "spliced as given.",
+        call. = FALSE
+      )
+    }
     return(fingerprint)
   }
   stop("`fingerprint` must be TRUE, FALSE, NULL, or a character vector.", call. = FALSE)

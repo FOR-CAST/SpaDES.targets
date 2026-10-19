@@ -18,7 +18,10 @@ outputs_spec(
 \code{terra::writeRaster()} (\code{.tif}).}
 
 \item{vect}{Character vector of object names to save with
-\code{terra::writeVector()} (\code{.gpkg}).}
+\code{terra::writeVector()} (\code{.gpkg}). The GeoPackage's key column is named
+\code{fid_gpkg} rather than GDAL's default \code{fid}, so that a field named \code{FID}
+(such as the one a shapefile written with no fields carries) is kept as an
+ordinary field, whatever its type.}
 
 \item{rds}{Character vector of object names to save with \code{saveRDS()}
 (\code{.rds}).}
@@ -36,7 +39,8 @@ over every (object, time) combination. \code{NULL} (default) lets
 }
 \value{
 A \code{data.frame} with \code{objectName}, \code{file}, \code{fun}, \code{package} (and
-\code{saveTime} when supplied), suitable as \code{SpaDES.core::simInit(outputs=)}.
+\code{saveTime} when supplied, and \code{arguments} when there are vectors, holding
+the \code{writeVector()} options), suitable as \code{SpaDES.core::simInit(outputs=)}.
 Vectors are named \verb{<objectName>.gpkg}; other filenames are left \code{NA} for
 \code{SpaDES.core} to derive (objectName + time + extension). \code{SpaDES.core} adds
 the time to the \code{.gpkg} names too.

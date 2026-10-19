@@ -15,7 +15,10 @@
 #' @param raster Character vector of object names to save with
 #'   `terra::writeRaster()` (`.tif`).
 #' @param vect Character vector of object names to save with
-#'   `terra::writeVector()` (`.gpkg`).
+#'   `terra::writeVector()` (`.gpkg`). The GeoPackage's key column is named
+#'   `fid_gpkg` rather than GDAL's default `fid`, so that a field named `FID`
+#'   (such as the one a shapefile written with no fields carries) is kept as an
+#'   ordinary field, whatever its type.
 #' @param rds Character vector of object names to save with `saveRDS()`
 #'   (`.rds`).
 #' @param qs Character vector of object names to save with `qs2::qs_save()`
@@ -27,7 +30,8 @@
 #'   over every (object, time) combination. `NULL` (default) lets
 #'   `SpaDES.core` save once at `end(sim)`.
 #' @return A `data.frame` with `objectName`, `file`, `fun`, `package` (and
-#'   `saveTime` when supplied), suitable as `SpaDES.core::simInit(outputs=)`.
+#'   `saveTime` when supplied, and `arguments` when there are vectors, holding
+#'   the `writeVector()` options), suitable as `SpaDES.core::simInit(outputs=)`.
 #'   Vectors are named `<objectName>.gpkg`; other filenames are left `NA` for
 #'   `SpaDES.core` to derive (objectName + time + extension). `SpaDES.core` adds
 #'   the time to the `.gpkg` names too.
@@ -63,6 +67,12 @@ outputs_spec <- function(
         cbind(rows, saveTime = t, stringsAsFactors = FALSE)
       })
     )
+  }
+  if (length(vect)) {
+    ## SpaDES.core passes each row's `arguments` to its save function
+    rows$arguments <- I(lapply(rows$fun, function(f) {
+      if (identical(f, "writeVector")) list(options = gpkg_layer_options)
+    }))
   }
   rows
 }

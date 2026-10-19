@@ -14,6 +14,16 @@ test_that("write_spatial / read_spatial round-trips a SpatVector", {
   expect_equal(terra::geomtype(back), "polygons")
 })
 
+test_that("write_spatial keeps a numeric FID field in a GeoPackage", {
+  ## GDAL refuses a non-integer field named like GeoPackage's default key column, `fid`
+  v <- terra::vect("POLYGON ((0 0, 0 1, 1 1, 1 0, 0 0))", crs = "EPSG:3978")
+  v$FID <- 0
+  path <- write_spatial(v, withr::local_tempfile(fileext = ".gpkg"))
+  expect_identical(read_spatial(path)$FID, 0)
+  ## the key column option is for GeoPackage only
+  expect_no_warning(write_spatial(v, withr::local_tempfile(fileext = ".shp")))
+})
+
 test_that("is_spatial recognises terra objects but not plain ones", {
   expect_identical(is_spatial(terra::rast(nrows = 1, ncols = 1)), TRUE)
   expect_identical(is_spatial(data.frame(a = 1)), FALSE)

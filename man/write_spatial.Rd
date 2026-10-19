@@ -21,7 +21,9 @@ Writes a \code{terra} \code{SpatRaster} (default extension \code{.tif}) or \code
 (default \code{.gpkg}) and returns \code{path}. \code{sf}/\code{sfc} inputs are coerced to
 \code{SpatVector} first (the project prefers \code{terra} over \code{sf}, and \code{geotargets}
 has no \code{sf} path). The returned path is what a \code{targets} \code{format = "file"}
-target should yield so that \code{targets} hashes the file's contents.
+target should yield so that \code{targets} hashes the file's contents. A
+GeoPackage's key column is named \code{fid_gpkg}, as in \code{\link[=outputs_spec]{outputs_spec()}}, so that
+a field named \code{FID} is kept as it is.
 }
 \seealso{
 \code{\link[=read_spatial]{read_spatial()}}

@@ -40,15 +40,21 @@ A named `list` of options suitable for
 - guards against a non-interactive worker hanging on
   [`browser()`](https://rdrr.io/r/base/browser.html)
   (`spades.browserOnError = FALSE`) or on a blocking download prompt
-  (`reproducible.interactiveOnDownloadFail = FALSE`).
+  (`reproducible.interactiveOnDownloadFail = FALSE`);
+
+- keeps `SpaDES.tools`' `spread()` and `spread2()` on their R
+  implementation (`spades.useSpreadCpp = FALSE`). Their C++ path returns
+  every cell as `"inactive"`, so a spread a module resumes from its
+  `"activeSource"` cells, as scfm's fire spread does, would stop without
+  an error.
 
 This is the single place that encodes the option "firewall" – the one
 adapter that absorbs upstream option renames/removals (e.g. the
 dev-version renames `spades.allowSequentialCaching` -\>
 `spades.cacheChaining` and `reproducible.useTerra` -\>
 `reproducible.rasterRead`, both handled here). Audited against
-`SpaDES.core` 3.1.2.9016 / `reproducible` 3.1.1.9062; audit it again on
-each dev bump.
+`SpaDES.core` 3.2.1.9043 / `reproducible` 3.2.1.9073 / `SpaDES.tools`
+2.1.3.9014; audit it again on each dev bump.
 
 Not set here (left to the caller / per run): `reproducible.leaveOnDisk`
 (keep its `TRUE` default, but pin terra scratch + `memfrac` and always
@@ -61,7 +67,7 @@ the Google Drive download knobs (`reproducible.gdriveNoAuth` /
 
 ``` r
 str(spades_safe_options())
-#> List of 21
+#> List of 22
 #>  $ Require.install                       : logi FALSE
 #>  $ spades.useRequire                     : logi FALSE
 #>  $ spades.cacheChaining                  : logi FALSE
@@ -76,6 +82,7 @@ str(spades_safe_options())
 #>  $ spades.browserOnError                 : logi FALSE
 #>  $ reproducible.interactiveOnDownloadFail: logi FALSE
 #>  $ reproducible.objSize                  : logi FALSE
+#>  $ spades.useSpreadCpp                   : logi FALSE
 #>  $ reproducible.useTerra                 : logi TRUE
 #>  $ reproducible.rasterRead               : chr "terra::rast"
 #>  $ reproducible.shapefileRead            : chr "terra::vect"
@@ -84,7 +91,7 @@ str(spades_safe_options())
 #>  $ spades.testMemoryLeaks                : logi FALSE
 #>  $ spades.keepCompleted                  : logi FALSE
 str(spades_safe_options(strict = TRUE))
-#> List of 21
+#> List of 22
 #>  $ Require.install                       : logi FALSE
 #>  $ spades.useRequire                     : logi FALSE
 #>  $ spades.cacheChaining                  : logi FALSE
@@ -99,6 +106,7 @@ str(spades_safe_options(strict = TRUE))
 #>  $ spades.browserOnError                 : logi FALSE
 #>  $ reproducible.interactiveOnDownloadFail: logi FALSE
 #>  $ reproducible.objSize                  : logi FALSE
+#>  $ spades.useSpreadCpp                   : logi FALSE
 #>  $ reproducible.useTerra                 : logi TRUE
 #>  $ reproducible.rasterRead               : chr "terra::rast"
 #>  $ reproducible.shapefileRead            : chr "terra::vect"

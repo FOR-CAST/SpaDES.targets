@@ -2,6 +2,16 @@
 
 ## SpaDES.targets (development version)
 
+- [`spades_safe_options()`](https://github.com/FOR-CAST/SpaDES.targets/reference/spades_safe_options.md)
+  sets `spades.useSpreadCpp = FALSE`, so `SpaDES.tools`’ `spread()` and
+  `spread2()` stay on their R implementation. `SpaDES.tools` 2.1.3.9014
+  added the option (off by default) to hand those calls to
+  `spreadCpp()`, whose result marks every cell `"inactive"`; scfm’s fire
+  spread resumes from the `"activeSource"` cells its escape step
+  returns, so with the option on, escaped fires would stop spreading
+  without an error. Stage commands do not change, so no targets re-run
+  (0.0.0.9029).
+
 - `outputs_spec(vect = )` and
   [`write_spatial()`](https://github.com/FOR-CAST/SpaDES.targets/reference/write_spatial.md)
   name a GeoPackage’s key column `fid_gpkg` instead of GDAL’s default

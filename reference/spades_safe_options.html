@@ -11,7 +11,7 @@ behaviours. In particular it:"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9028</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9029</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,13 +75,17 @@ for speed/memory. Use during development to validate modules.</p></dd>
 <code>reproducible.shapefileRead</code>);</p></li>
 <li><p>guards against a non-interactive worker hanging on <code><a href="https://rdrr.io/r/base/browser.html" class="external-link">browser()</a></code>
 (<code>spades.browserOnError = FALSE</code>) or on a blocking download prompt
-(<code>reproducible.interactiveOnDownloadFail = FALSE</code>).</p></li>
+(<code>reproducible.interactiveOnDownloadFail = FALSE</code>);</p></li>
+<li><p>keeps <code>SpaDES.tools</code>' <code>spread()</code> and <code>spread2()</code> on their R implementation
+(<code>spades.useSpreadCpp = FALSE</code>). Their C++ path returns every cell as
+<code>"inactive"</code>, so a spread a module resumes from its <code>"activeSource"</code> cells,
+as scfm's fire spread does, would stop without an error.</p></li>
 </ul><p>This is the single place that encodes the option "firewall" – the one
 adapter that absorbs upstream option renames/removals (e.g. the dev-version
 renames <code>spades.allowSequentialCaching</code> -&gt; <code>spades.cacheChaining</code> and
 <code>reproducible.useTerra</code> -&gt; <code>reproducible.rasterRead</code>, both handled here).
-Audited against <code>SpaDES.core</code> 3.1.2.9016 / <code>reproducible</code> 3.1.1.9062; audit it
-again on each dev bump.</p>
+Audited against <code>SpaDES.core</code> 3.2.1.9043 / <code>reproducible</code> 3.2.1.9073 /
+<code>SpaDES.tools</code> 2.1.3.9014; audit it again on each dev bump.</p>
 <p>Not set here (left to the caller / per run): <code>reproducible.leaveOnDisk</code>
 (keep its <code>TRUE</code> default, but pin terra scratch + <code>memfrac</code> and always
 <code><a href="write_spatial.html">write_spatial()</a></code> before a process/target boundary so file-backed rasters
@@ -93,7 +97,7 @@ per-project and asset-specific.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="fu">spades_safe_options</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> List of 21</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> List of 22</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ Require.install                       : logi FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ spades.useRequire                     : logi FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ spades.cacheChaining                  : logi FALSE</span>
@@ -108,6 +112,7 @@ per-project and asset-specific.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ spades.browserOnError                 : logi FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ reproducible.interactiveOnDownloadFail: logi FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ reproducible.objSize                  : logi FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ spades.useSpreadCpp                   : logi FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ reproducible.useTerra                 : logi TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ reproducible.rasterRead               : chr "terra::rast"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ reproducible.shapefileRead            : chr "terra::vect"</span>
@@ -116,7 +121,7 @@ per-project and asset-specific.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ spades.testMemoryLeaks                : logi FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ spades.keepCompleted                  : logi FALSE</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="fu">spades_safe_options</span><span class="op">(</span>strict <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> List of 21</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> List of 22</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ Require.install                       : logi FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ spades.useRequire                     : logi FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ spades.cacheChaining                  : logi FALSE</span>
@@ -131,6 +136,7 @@ per-project and asset-specific.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ spades.browserOnError                 : logi FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ reproducible.interactiveOnDownloadFail: logi FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ reproducible.objSize                  : logi FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ spades.useSpreadCpp                   : logi FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ reproducible.useTerra                 : logi TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ reproducible.rasterRead               : chr "terra::rast"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ reproducible.shapefileRead            : chr "terra::vect"</span>

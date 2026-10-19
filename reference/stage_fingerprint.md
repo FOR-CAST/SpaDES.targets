@@ -12,7 +12,8 @@ splices it into the stage's command when `fingerprint = TRUE`, so
 stage_fingerprint(
   modules,
   modulePath = "modules",
-  packages = c("remote", "all", "none")
+  packages = c("remote", "all", "none"),
+  extra_modules = NULL
 )
 ```
 
@@ -39,6 +40,15 @@ stage_fingerprint(
   set to the version, so these are recognised by their `RemoteType`
   rather than by having a `RemoteSha`. An r-universe install records its
   git commit and counts as remote.
+
+- extra_modules:
+
+  Character vector of further modules to fingerprint, such as modules
+  that one of `modules` runs nested inside it. They are fingerprinted
+  like `modules`, packages in their `reqdPkgs` included; a module named
+  in both counts once. Unlike a module in `modules`, which is reported
+  as `"missing"`, each must have its `<module>.R` file in `modulePath`,
+  or this stops.
 
 ## Value
 

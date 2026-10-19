@@ -37,7 +37,10 @@ outputs_spec(
 
   Character vector of object names to save with
   [`terra::writeVector()`](https://rspatial.github.io/terra/reference/writeVector.html)
-  (`.gpkg`).
+  (`.gpkg`). The GeoPackage's key column is named `fid_gpkg` rather than
+  GDAL's default `fid`, so that a field named `FID` (such as the one a
+  shapefile written with no fields carries) is kept as an ordinary
+  field, whatever its type.
 
 - rds:
 
@@ -69,10 +72,11 @@ outputs_spec(
 ## Value
 
 A `data.frame` with `objectName`, `file`, `fun`, `package` (and
-`saveTime` when supplied), suitable as `SpaDES.core::simInit(outputs=)`.
-Vectors are named `<objectName>.gpkg`; other filenames are left `NA` for
-`SpaDES.core` to derive (objectName + time + extension). `SpaDES.core`
-adds the time to the `.gpkg` names too.
+`saveTime` when supplied, and `arguments` when there are vectors,
+holding the `writeVector()` options), suitable as
+`SpaDES.core::simInit(outputs=)`. Vectors are named `<objectName>.gpkg`;
+other filenames are left `NA` for `SpaDES.core` to derive (objectName +
+time + extension). `SpaDES.core` adds the time to the `.gpkg` names too.
 
 ## Details
 
@@ -93,9 +97,9 @@ outputs_spec(
   raster = c("rasterToMatch", "rstLCC"),
   vect = c("studyArea", "studyAreaReporting")
 )
-#>           objectName                    file         fun package
-#> 1      rasterToMatch                    <NA> writeRaster   terra
-#> 2             rstLCC                    <NA> writeRaster   terra
-#> 3          studyArea          studyArea.gpkg writeVector   terra
-#> 4 studyAreaReporting studyAreaReporting.gpkg writeVector   terra
+#>           objectName                    file         fun package    arguments
+#> 1      rasterToMatch                    <NA> writeRaster   terra             
+#> 2             rstLCC                    <NA> writeRaster   terra             
+#> 3          studyArea          studyArea.gpkg writeVector   terra FID=fid_gpkg
+#> 4 studyAreaReporting studyAreaReporting.gpkg writeVector   terra FID=fid_gpkg
 ```

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9026</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9028</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,6 +60,7 @@
 <span>  mem_workers <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"SpaDES.targets.mem_workers"</span>, <span class="cn">NULL</span><span class="op">)</span>,</span>
 <span>  mem_frac <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"SpaDES.targets.mem_frac"</span>, <span class="fl">0.5</span><span class="op">)</span>,</span>
 <span>  fingerprint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"SpaDES.targets.fingerprint"</span>, <span class="cn">FALSE</span><span class="op">)</span>,</span>
+<span>  fingerprint_modules <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  .options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -166,6 +167,20 @@ per <code>getOption("SpaDES.targets.fingerprint_packages", "remote")</code>), so
 <code>targets</code> sees any change to that code. A character vector is spliced as
 given. Opt-in because turning it on changes every stage's command once,
 which invalidates all existing stages on the next run.</p></dd>
+
+
+<dt id="arg-fingerprint-modules">fingerprint_modules<a class="anchor" aria-label="anchor" href="#arg-fingerprint-modules"></a></dt>
+<dd><p>Character vector of further modules whose code
+the stage depends on without running them itself: modules that one of
+<code>modules</code> runs nested inside it, from the same <code>paths$modulePath</code> (for
+example a data-preparation module that runs <code>Biomass_core</code> internally).
+With <code>fingerprint = TRUE</code> they are added to the stage's fingerprint, packages
+in their <code>reqdPkgs</code> included, so a change to their code re-runs the stage.
+They are not passed to <code><a href="run_simspades.html">run_simspades()</a></code>. Each must be found in
+<code>paths$modulePath</code>, or defining the pipeline stops (see
+<code><a href="stage_fingerprint.html">stage_fingerprint()</a></code>'s <code>extra_modules</code>). Ignored when <code>fingerprint</code> is
+<code>FALSE</code>; an error beside a supplied <code>fingerprint</code> vector. <code>NULL</code> (default)
+leaves the command exactly as before.</p></dd>
 
 </dl></div>
     <div class="section level2">

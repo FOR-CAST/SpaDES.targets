@@ -26,6 +26,7 @@ tar_simspades(
   mem_workers = getOption("SpaDES.targets.mem_workers", NULL),
   mem_frac = getOption("SpaDES.targets.mem_frac", 0.5),
   fingerprint = getOption("SpaDES.targets.fingerprint", FALSE),
+  fingerprint_modules = NULL,
   .options = list()
 )
 ```
@@ -151,6 +152,23 @@ tar_simspades(
   `targets` sees any change to that code. A character vector is spliced
   as given. Opt-in because turning it on changes every stage's command
   once, which invalidates all existing stages on the next run.
+
+- fingerprint_modules:
+
+  Character vector of further modules whose code the stage depends on
+  without running them itself: modules that one of `modules` runs nested
+  inside it, from the same `paths$modulePath` (for example a
+  data-preparation module that runs `Biomass_core` internally). With
+  `fingerprint = TRUE` they are added to the stage's fingerprint,
+  packages in their `reqdPkgs` included, so a change to their code
+  re-runs the stage. They are not passed to
+  [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md).
+  Each must be found in `paths$modulePath`, or defining the pipeline
+  stops (see
+  [`stage_fingerprint()`](https://github.com/FOR-CAST/SpaDES.targets/reference/stage_fingerprint.md)'s
+  `extra_modules`). Ignored when `fingerprint` is `FALSE`; an error
+  beside a supplied `fingerprint` vector. `NULL` (default) leaves the
+  command exactly as before.
 
 ## Value
 

@@ -3,11 +3,15 @@
 (default .gpkg) and returns path. sf/sfc inputs are coerced to
 SpatVector first (the project prefers terra over sf, and geotargets
 has no sf path). The returned path is what a targets format = &quot;file&quot;
-target should yield so that targets hashes the file's contents."><meta property="og:description" content="Writes a terra SpatRaster (default extension .tif) or SpatVector
+target should yield so that targets hashes the file's contents. A
+GeoPackage's key column is named fid_gpkg, as in outputs_spec(), so that
+a field named FID is kept as it is."><meta property="og:description" content="Writes a terra SpatRaster (default extension .tif) or SpatVector
 (default .gpkg) and returns path. sf/sfc inputs are coerced to
 SpatVector first (the project prefers terra over sf, and geotargets
 has no sf path). The returned path is what a targets format = &quot;file&quot;
-target should yield so that targets hashes the file's contents."></head><body>
+target should yield so that targets hashes the file's contents. A
+GeoPackage's key column is named fid_gpkg, as in outputs_spec(), so that
+a field named FID is kept as it is."></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -15,7 +19,7 @@ target should yield so that targets hashes the file's contents."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9026</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9028</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,7 +50,9 @@ target should yield so that targets hashes the file's contents."></head><body>
 (default <code>.gpkg</code>) and returns <code>path</code>. <code>sf</code>/<code>sfc</code> inputs are coerced to
 <code>SpatVector</code> first (the project prefers <code>terra</code> over <code>sf</code>, and <code>geotargets</code>
 has no <code>sf</code> path). The returned path is what a <code>targets</code> <code>format = "file"</code>
-target should yield so that <code>targets</code> hashes the file's contents.</p>
+target should yield so that <code>targets</code> hashes the file's contents. A
+GeoPackage's key column is named <code>fid_gpkg</code>, as in <code><a href="outputs_spec.html">outputs_spec()</a></code>, so that
+a field named <code>FID</code> is kept as it is.</p>
     </div>
 
     <div class="section level2">

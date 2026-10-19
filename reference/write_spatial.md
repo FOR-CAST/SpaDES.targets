@@ -5,7 +5,9 @@ Writes a `terra` `SpatRaster` (default extension `.tif`) or `SpatVector`
 `SpatVector` first (the project prefers `terra` over `sf`, and
 `geotargets` has no `sf` path). The returned path is what a `targets`
 `format = "file"` target should yield so that `targets` hashes the
-file's contents.
+file's contents. A GeoPackage's key column is named `fid_gpkg`, as in
+[`outputs_spec()`](https://github.com/FOR-CAST/SpaDES.targets/reference/outputs_spec.md),
+so that a field named `FID` is kept as it is.
 
 ## Usage
 

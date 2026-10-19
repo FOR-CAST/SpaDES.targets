@@ -2,6 +2,34 @@
 
 ## SpaDES.targets (development version)
 
+- `outputs_spec(vect = )` and
+  [`write_spatial()`](https://github.com/FOR-CAST/SpaDES.targets/reference/write_spatial.md)
+  name a GeoPackage’s key column `fid_gpkg` instead of GDAL’s default
+  `fid`. With the key column named `fid`, GDAL refuses a non-integer
+  field named `FID` (in any case), so saving such a vector stopped with
+  “Field creation failed for: FID”; an integer `FID` field was taken as
+  the key, dropped from the fields, and failed on repeated values. A
+  shapefile written with no fields carries a dummy `FID` field that
+  terra reads back as numeric. In LandWeb, the data-preparation stage
+  reads the study area from the preamble’s earlier shapefile output, and
+  would have stopped when saving it as a GeoPackage. A field named `FID`
+  is now kept as it was (0.0.0.9028).
+
+- [`tar_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/tar_simspades.md)
+  gains `fingerprint_modules`, and
+  [`stage_fingerprint()`](https://github.com/FOR-CAST/SpaDES.targets/reference/stage_fingerprint.md)
+  `extra_modules`: modules whose code a stage depends on without running
+  them itself, such as a module that one of the stage’s modules runs
+  nested inside it. With `fingerprint = TRUE`, their code and the
+  packages in their `reqdPkgs` join the stage’s fingerprint. In LandWeb,
+  the `Biomass_speciesFactorial` and `Biomass_borealDataPrep` stages
+  each run `Biomass_core` internally, so a change to `Biomass_core`
+  alone left both stages up to date with results from the old code. Each
+  module named this way must be found in the module path, so a misspelt
+  name stops the pipeline from being defined rather than never changing.
+  Stages that do not use the argument keep the same command
+  (0.0.0.9027).
+
 - [`sim_objects()`](https://github.com/FOR-CAST/SpaDES.targets/reference/sim_objects.md)
   and
   [`sim_inputs()`](https://github.com/FOR-CAST/SpaDES.targets/reference/sim_inputs.md)

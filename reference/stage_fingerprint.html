@@ -13,7 +13,7 @@ that code changes."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9026</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9028</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,7 +51,8 @@ that code changes.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">stage_fingerprint</span><span class="op">(</span></span>
 <span>  <span class="va">modules</span>,</span>
 <span>  modulePath <span class="op">=</span> <span class="st">"modules"</span>,</span>
-<span>  packages <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"remote"</span>, <span class="st">"all"</span>, <span class="st">"none"</span><span class="op">)</span></span>
+<span>  packages <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"remote"</span>, <span class="st">"all"</span>, <span class="st">"none"</span><span class="op">)</span>,</span>
+<span>  extra_modules <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -79,6 +80,14 @@ records a <code>RemoteSha</code> for repository installs too, set to the version
 these are recognised by their <code>RemoteType</code> rather than by having a
 <code>RemoteSha</code>. An r-universe install records its git commit and counts as
 remote.</p></dd>
+
+
+<dt id="arg-extra-modules">extra_modules<a class="anchor" aria-label="anchor" href="#arg-extra-modules"></a></dt>
+<dd><p>Character vector of further modules to fingerprint, such
+as modules that one of <code>modules</code> runs nested inside it. They are fingerprinted
+like <code>modules</code>, packages in their <code>reqdPkgs</code> included; a module named in both
+counts once. Unlike a module in <code>modules</code>, which is reported as <code>"missing"</code>,
+each must have its <code>&lt;module&gt;.R</code> file in <code>modulePath</code>, or this stops.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -31,15 +31,19 @@ behaviours. In particular it:
 \code{reproducible.shapefileRead});
 \item guards against a non-interactive worker hanging on \code{browser()}
 (\code{spades.browserOnError = FALSE}) or on a blocking download prompt
-(\code{reproducible.interactiveOnDownloadFail = FALSE}).
+(\code{reproducible.interactiveOnDownloadFail = FALSE});
+\item keeps \code{SpaDES.tools}' \code{spread()} and \code{spread2()} on their R implementation
+(\code{spades.useSpreadCpp = FALSE}). Their C++ path returns every cell as
+\code{"inactive"}, so a spread a module resumes from its \code{"activeSource"} cells,
+as scfm's fire spread does, would stop without an error.
 }
 
 This is the single place that encodes the option "firewall" -- the one
 adapter that absorbs upstream option renames/removals (e.g. the dev-version
 renames \code{spades.allowSequentialCaching} -> \code{spades.cacheChaining} and
 \code{reproducible.useTerra} -> \code{reproducible.rasterRead}, both handled here).
-Audited against \code{SpaDES.core} 3.1.2.9016 / \code{reproducible} 3.1.1.9062; audit it
-again on each dev bump.
+Audited against \code{SpaDES.core} 3.2.1.9043 / \code{reproducible} 3.2.1.9073 /
+\code{SpaDES.tools} 2.1.3.9014; audit it again on each dev bump.
 
 Not set here (left to the caller / per run): \code{reproducible.leaveOnDisk}
 (keep its \code{TRUE} default, but pin terra scratch + \code{memfrac} and always

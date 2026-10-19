@@ -8,6 +8,15 @@ test_that("spades_safe_options disables the destructive/unsafe behaviours", {
   expect_identical(opts$spades.recoveryMode, FALSE) # dev default is ON
 })
 
+test_that("spades_safe_options keeps spread() and spread2() on the R implementation", {
+  expect_identical(spades_safe_options()$spades.useSpreadCpp, FALSE)
+  expect_identical(spades_safe_options(strict = TRUE)$spades.useSpreadCpp, FALSE)
+  withr::with_options(list(spades.useSpreadCpp = TRUE), {
+    with_spades_safe_options(expect_identical(getOption("spades.useSpreadCpp"), FALSE))
+    expect_identical(getOption("spades.useSpreadCpp"), TRUE)
+  })
+})
+
 test_that("spades_safe_options keeps spatial reads terra-first (live option names)", {
   opts <- spades_safe_options()
   expect_identical(opts$reproducible.rasterRead, "terra::rast") # live successor of useTerra

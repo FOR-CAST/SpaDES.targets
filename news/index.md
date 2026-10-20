@@ -2,6 +2,12 @@
 
 ## SpaDES.targets (development version)
 
+- SpaDES.targets requires workflowtools (\>= 0.0.21), the first version
+  with `project_relative_path()`. With an older workflowtools installed,
+  it loaded without complaint and then every
+  [`tar_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/tar_simspades.md)
+  stage failed after its simulation, in `normalize_outputs()`.
+
 - [`extract_outputs()`](https://github.com/FOR-CAST/SpaDES.targets/reference/extract_outputs.md)
   maps a saved file back through the project’s own symlinks, with
   workflowtools’ `project_relative_path()`. The copy it carried kept the

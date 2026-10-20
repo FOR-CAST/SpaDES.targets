@@ -74,6 +74,34 @@ test_that("extract_outputs re-relativizes a shared-storage path to the project r
   expect_identical(out$files, "outputs/preamble/rasterToMatch.tif")
 })
 
+test_that("extract_outputs maps a path back through the project's outputs symlink", {
+  skip_on_os("windows")
+  # `outputs` links to a sibling whose name starts with the project's: matching folder
+  # names alone returned `proj-out/...`, which does not resolve from the project.
+  root <- withr::local_tempdir()
+  proj <- file.path(root, "work", "proj")
+  share <- file.path(root, "work", "proj-out")
+  dir.create(proj, recursive = TRUE)
+  dir.create(file.path(share, "prep"), recursive = TRUE)
+  file.symlink(share, file.path(proj, "outputs"))
+  saved <- file.path(share, "prep", "speciesLayers.tif")
+  file.create(saved)
+  om <- data.frame(
+    objectName = "speciesLayers",
+    file = normalizePath(saved),
+    saveTime = NA_real_,
+    fun = "writeRaster",
+    package = "terra",
+    saved = TRUE,
+    stringsAsFactors = FALSE
+  )
+  local_mocked_bindings(sim_outputs_table = function(sim) om)
+
+  out <- extract_outputs(list(), base_dir = proj)
+
+  expect_identical(out$files, "outputs/prep/speciesLayers.tif")
+})
+
 test_that("extract_outputs packs terra objects in plain objects", {
   local_mocked_bindings(sim_outputs_table = function(sim) NULL)
   v <- terra::vect("POINT (0 0)", crs = "EPSG:3978")

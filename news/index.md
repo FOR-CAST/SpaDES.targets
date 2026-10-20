@@ -2,6 +2,15 @@
 
 ## SpaDES.targets (development version)
 
+- [`extract_outputs()`](https://github.com/FOR-CAST/SpaDES.targets/reference/extract_outputs.md)
+  maps a saved file back through the project’s own symlinks, with
+  workflowtools’ `project_relative_path()`. The copy it carried kept the
+  path after the deepest folder name the file’s path shared with the
+  project’s, so an `outputs` symlink whose target did not contain the
+  project’s name gave a path that did not resolve (e.g. `proj-out/...`
+  for an `outputs` link to a sibling `proj-out`). SpaDES.targets now
+  imports workflowtools.
+
 - [`spades_safe_options()`](https://github.com/FOR-CAST/SpaDES.targets/reference/spades_safe_options.md)
   sets `spades.useSpreadCpp = FALSE`, so `SpaDES.tools`’ `spread()` and
   `spread2()` stay on their R implementation. `SpaDES.tools` 2.1.3.9014
@@ -147,7 +156,8 @@
   siblings) to an **absolute** path. These files are written from
   [`withCallingHandlers()`](https://rdrr.io/r/base/conditions.html)
   handlers, which fire at the signal site – wherever the run happens to
-  be standing, not where it started. `archive::archive_extract()`
+  be standing, not where it started.
+  [`archive::archive_extract()`](https://archive.r-lib.org/reference/archive_extract.html)
   [`setwd()`](https://rdrr.io/r/base/getwd.html)s to its destination for
   the duration of an extraction (so does any `prepInputs()` that unpacks
   an archive) and drives a cli progress bar that signals a `message`

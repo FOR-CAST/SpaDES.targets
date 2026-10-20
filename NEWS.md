@@ -1,5 +1,7 @@
 # SpaDES.targets (development version)
 
+* SpaDES.targets requires workflowtools (>= 0.0.21), the first version with `project_relative_path()`. With an older workflowtools installed, it loaded without complaint and then every `tar_simspades()` stage failed after its simulation, in `normalize_outputs()`.
+
 * `extract_outputs()` maps a saved file back through the project's own symlinks, with workflowtools' `project_relative_path()`. The copy it carried kept the path after the deepest folder name the file's path shared with the project's, so an `outputs` symlink whose target did not contain the project's name gave a path that did not resolve (e.g. `proj-out/...` for an `outputs` link to a sibling `proj-out`). SpaDES.targets now imports workflowtools.
 
 * `spades_safe_options()` sets `spades.useSpreadCpp = FALSE`, so `SpaDES.tools`' `spread()` and `spread2()` stay on their R implementation. `SpaDES.tools` 2.1.3.9014 added the option (off by default) to hand those calls to `spreadCpp()`, whose result marks every cell `"inactive"`; scfm's fire spread resumes from the `"activeSource"` cells its escape step returns, so with the option on, escaped fires would stop spreading without an error. Stage commands do not change, so no targets re-run (0.0.0.9029).

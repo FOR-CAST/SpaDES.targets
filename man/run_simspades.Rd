@@ -52,7 +52,7 @@ the stage).}
 \item{params}{A \code{list} of module parameters. Every module whose \code{.useCache} is not set
 gets \code{.useCache = FALSE}, so caching stays off as \code{\link[=spades_safe_options]{spades_safe_options()}} intend: a
 module default that names events (e.g. \code{c(".inputObjects", "init")}) makes \code{simInit()}
-fail on SpaDES.core >= 3.2.1.9041 with caching switched off
+fail on SpaDES.core >= 3.2.1.9040 with caching switched off
 (PredictiveEcology/SpaDES.core#506). A value the caller set is kept.}
 
 \item{times}{A \code{list} with \code{start} and \code{end}.}

@@ -221,6 +221,49 @@ test_that("run_simspades passes loadOrder through to simInitAndSpades, omitting 
   expect_false("loadOrder" %in% names(seen))
 })
 
+test_that("run_simspades sets .useCache = FALSE for each module that does not set it", {
+  seen <- list()
+  testthat::local_mocked_bindings(
+    simInitAndSpades = function(..., paths) {
+      seen <<- list(...)
+      list()
+    },
+    .package = "SpaDES.core"
+  )
+  testthat::local_mocked_bindings(extract_outputs = function(...) list())
+
+  run_simspades(
+    modules = c("a", "b", "c"), out_dir = withr::local_tempdir(),
+    params = list(a = list(x = 1), b = list(.useCache = "init"))
+  )
+  expect_identical(seen$params$a, list(x = 1, .useCache = FALSE))
+  expect_identical(seen$params$b$.useCache, "init")
+  expect_identical(seen$params$c, list(.useCache = FALSE))
+})
+
+test_that("run_simspades runs a module whose .useCache default names events", {
+  ## PredictiveEcology/SpaDES.core#506: without the guard, simInit() stops with "argument is of
+  ## length zero" on SpaDES.core >= 3.2.1.9041 under reproducible.useCache = FALSE
+  skip_if_not_installed("SpaDES.core")
+  d <- withr::local_tempdir()
+  dir.create(file.path(d, "tiny"))
+  writeLines(c(
+    "defineModule(sim, list(name = 'tiny', description = '', keywords = '', authors = person('a', 'b'),",
+    "  childModules = character(0), version = list(tiny = '0.0.1'), timeframe = as.POSIXlt(c(NA, NA)),",
+    "  timeunit = 'year', citation = list(), documentation = list(), reqdPkgs = list(),",
+    "  parameters = rbind(defineParameter('.useCache', 'character', c('.inputObjects', 'init'), NA, NA, 'x')),",
+    "  inputObjects = bindrows(expectsInput('a', 'numeric', 'x')),",
+    "  outputObjects = bindrows(createsOutput('b', 'numeric', 'x'))))",
+    "doEvent.tiny <- function(sim, eventTime, eventType) { if (eventType == 'init') sim$b <- 1; invisible(sim) }",
+    ".inputObjects <- function(sim) { if (!suppliedElsewhere('a', sim)) sim$a <- 2; invisible(sim) }"
+  ), file.path(d, "tiny", "tiny.R"))
+  res <- run_simspades(
+    modules = "tiny", out_dir = withr::local_tempdir(), plain = "b",
+    paths = list(modulePath = d, inputPath = withr::local_tempdir(), cachePath = withr::local_tempdir())
+  )
+  expect_identical(res$b, 1)
+})
+
 test_that("node_ram_gb returns positive RAM (or NA off Linux)", {
   gb <- node_ram_gb()
   if (!is.na(gb)) {

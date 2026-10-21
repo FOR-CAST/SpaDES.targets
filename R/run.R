@@ -24,7 +24,11 @@
 #'   dependencies; set it when inference is ambiguous or broken (e.g. a stage
 #'   whose modules carry `loadOrder` metadata referencing modules absent from
 #'   the stage).
-#' @param params A `list` of module parameters.
+#' @param params A `list` of module parameters. Every module whose `.useCache` is not set
+#'   gets `.useCache = FALSE`, so caching stays off as [spades_safe_options()] intend: a
+#'   module default that names events (e.g. `c(".inputObjects", "init")`) makes `simInit()`
+#'   fail on SpaDES.core >= 3.2.1.9041 with caching switched off
+#'   (PredictiveEcology/SpaDES.core#506). A value the caller set is kept.
 #' @param times A `list` with `start` and `end`.
 #' @param paths A `list` of SpaDES paths (e.g. `modulePath`, `inputPath`,
 #'   `scratchPath`). `outputPath` is overridden to `out_dir`. When `scratchPath`
@@ -141,6 +145,7 @@ run_simspades <- function(
   )
   ok <- FALSE
   on.exit(finalize_scratch(scratch_run, ok), add = TRUE)
+  params <- no_module_cache(params, modules)
   result <- with_spades_safe_options(.options = .options, {
     if (!is.null(seed)) {
       set.seed(seed)
@@ -178,6 +183,27 @@ run_simspades <- function(
   })
   ok <- TRUE
   result
+}
+
+# Turn caching off for every module of the stage that does not set `.useCache`. The safe options
+# switch reproducible's cache off, but SpaDES.core decides whether an event is cached from the
+# module's own `.useCache`, whose default often names events (`c(".inputObjects", "init")`). With
+# reproducible.useCache = FALSE that makes simInit() fail on SpaDES.core >= 3.2.1.9041
+# (PredictiveEcology/SpaDES.core#506), and even before it fails the event goes through the
+# cache-chaining setup. A module whose `.useCache` the caller set keeps its value.
+no_module_cache <- function(params, modules) {
+  if (is.null(params)) {
+    params <- list()
+  }
+  for (m in unlist(modules)) {
+    if (is.null(params[[m]])) {
+      params[[m]] <- list()
+    }
+    if (is.null(params[[m]][[".useCache"]])) {
+      params[[m]][[".useCache"]] <- FALSE
+    }
+  }
+  params
 }
 
 # Prepare a per-run log: remove any stale log + sibling capture files from an earlier run of this

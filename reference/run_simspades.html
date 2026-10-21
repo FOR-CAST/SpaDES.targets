@@ -15,7 +15,7 @@ in-memory objects). The simList itself is never returned or serialized."></head>
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9031</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9032</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -111,7 +111,11 @@ the stage).</p></dd>
 
 
 <dt id="arg-params">params<a class="anchor" aria-label="anchor" href="#arg-params"></a></dt>
-<dd><p>A <code>list</code> of module parameters.</p></dd>
+<dd><p>A <code>list</code> of module parameters. Every module whose <code>.useCache</code> is not set
+gets <code>.useCache = FALSE</code>, so caching stays off as <code><a href="spades_safe_options.html">spades_safe_options()</a></code> intend: a
+module default that names events (e.g. <code>c(".inputObjects", "init")</code>) makes <code>simInit()</code>
+fail on SpaDES.core &gt;= 3.2.1.9040 with caching switched off
+(PredictiveEcology/SpaDES.core#506). A value the caller set is kept.</p></dd>
 
 
 <dt id="arg-times">times<a class="anchor" aria-label="anchor" href="#arg-times"></a></dt>

@@ -75,7 +75,13 @@ run_simspades(
 
 - params:
 
-  A `list` of module parameters.
+  A `list` of module parameters. Every module whose `.useCache` is not
+  set gets `.useCache = FALSE`, so caching stays off as
+  [`spades_safe_options()`](https://github.com/FOR-CAST/SpaDES.targets/reference/spades_safe_options.md)
+  intend: a module default that names events (e.g.
+  `c(".inputObjects", "init")`) makes `simInit()` fail on SpaDES.core
+  \>= 3.2.1.9040 with caching switched off
+  (PredictiveEcology/SpaDES.core#506). A value the caller set is kept.
 
 - times:
 

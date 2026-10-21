@@ -24,14 +24,25 @@
 #' @return `x`, with its terra objects packed or unpacked.
 #' @export
 pack_terra <- function(x) {
+  pack_walk(x, pack_raster)
+}
+
+## For an R subprocess on this machine, which reads `x` while this process waits: a raster whose
+## values are in a file goes as a reference to that file, so the subprocess reads it from disk as
+## this process would instead of receiving a copy of every value.
+pack_for_subprocess <- function(x) {
+  pack_walk(x, function(r) terra::wrap(r, proxy = TRUE))
+}
+
+pack_walk <- function(x, pack_raster_fun) {
   if (inherits(x, "SpatRaster")) {
-    return(pack_raster(x))
+    return(pack_raster_fun(x))
   }
   if (inherits(x, c("SpatVector", "SpatRasterDataset", "SpatRasterCollection", "SpatExtent"))) {
     return(terra::wrap(x))
   }
   if (is.list(x) && !is.object(x) && length(x)) {
-    x[] <- lapply(x, pack_terra)
+    x[] <- lapply(x, pack_walk, pack_raster_fun = pack_raster_fun)
   }
   x
 }

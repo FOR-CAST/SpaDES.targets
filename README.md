@@ -7,7 +7,8 @@
 Run [`SpaDES`](https://spades.predictiveecology.org/) simulations as stages of a
 [`targets`](https://docs.ropensci.org/targets/) pipeline.
 
-Each stage runs `simInitAndSpades()` **in-process** and returns only the discrete
+Each stage runs `simInitAndSpades()` **in-process** (or, with `launcher = "callr"`,
+in an R subprocess that can use its own renv profile) and returns only the discrete
 components the next stage needs — plain objects as ordinary targets and spatial
 (`terra`) objects as `format = "file"` targets — so a whole `simList` is **never
 serialized** across a target boundary (avoiding the recursive-environment bloat

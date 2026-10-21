@@ -1,10 +1,11 @@
 #' Run one SpaDES stage and return its output manifest
 #'
 #' The worker behind [tar_simspades()]. Runs `SpaDES.core::simInitAndSpades()`
-#' in-process under the safe options ([with_spades_safe_options()]), with this
-#' stage's saved outputs (and figures) directed to `out_dir`, then returns the
-#' manifest of files it wrote via [extract_outputs()] (plus any `plain`
-#' in-memory objects). The `simList` itself is never returned or serialized.
+#' under the safe options ([with_spades_safe_options()]), in this process or in
+#' an R subprocess (`launcher`), with this stage's saved outputs (and figures)
+#' directed to `out_dir`, then returns the manifest of files it wrote via
+#' [extract_outputs()] (plus any `plain` in-memory objects). The `simList`
+#' itself is never returned or serialized.
 #'
 #' @param modules Character vector (or list) of module names.
 #' @param objects Named `list` of in-memory objects passed to
@@ -77,6 +78,24 @@
 #'   [stage_fingerprint()] here so that `targets`, which hashes the command, re-runs
 #'   the stage when its module code or companion packages change.
 #' @param .options Extra options merged over [spades_safe_options()].
+#' @param setup A function, or `NULL`, called with no arguments in the process
+#'   that runs the simulation, after the safe options are set and before the
+#'   seed and `simInit()`. For session state that cannot be passed as an object,
+#'   such as logging in to a web service the modules download from. With
+#'   `launcher = "callr"` it is serialized to the subprocess: call package
+#'   functions with `::`, and do not rely on objects in the global environment.
+#' @param launcher Where the simulation runs: `"in_process"` (default), or
+#'   `"callr"`, a new R process started with [callr::r()]. Use `"callr"` when the
+#'   simulation's packages must not load into this process, for example when
+#'   they are installed only in a separate renv profile. The arguments go to the
+#'   subprocess through a file and only the manifest comes back. A `SpatRaster`
+#'   in `objects` whose values are in a file crosses as a reference to that
+#'   file, so the subprocess reads it from disk as this process would.
+#' @param renv_profile With `launcher = "callr"`, the renv profile the
+#'   subprocess activates before it loads anything: it sets `RENV_PROFILE` and
+#'   sources `renv/activate.R` from the working directory. SpaDES.targets must
+#'   be installed in that profile's library. `NULL` (default) leaves the
+#'   subprocess on this process's library paths.
 #' @return The [extract_outputs()] result: a `list` with a `manifest`
 #'   `data.frame`, a `files` character vector, and any `plain` objects.
 #' @export
@@ -98,8 +117,42 @@ run_simspades <- function(
   mem_workers = NULL,
   mem_frac = 0.5,
   fingerprint = NULL,
-  .options = list()
+  .options = list(),
+  setup = NULL,
+  launcher = c("in_process", "callr"),
+  renv_profile = NULL
 ) {
+  launcher <- match.arg(launcher)
+  if (!is.null(setup) && !is.function(setup)) {
+    stop("`setup` must be a function or NULL.", call. = FALSE)
+  }
+  if (identical(launcher, "callr")) {
+    ## every argument but these three, which do not apply to the run itself
+    args <- list(
+      modules = modules,
+      objects = pack_for_subprocess(objects),
+      inputs = inputs,
+      outputs = outputs,
+      loadOrder = loadOrder,
+      params = params,
+      times = times,
+      paths = paths,
+      plain = plain,
+      out_dir = out_dir,
+      clean_out_dir = clean_out_dir,
+      seed = seed,
+      log_file = log_file,
+      scratch_retain_days = scratch_retain_days,
+      mem_workers = mem_workers,
+      mem_frac = mem_frac,
+      .options = .options,
+      setup = setup
+    )
+    return(run_in_subprocess(args, renv_profile = renv_profile))
+  }
+  if (!is.null(renv_profile)) {
+    stop("`renv_profile` needs `launcher = \"callr\"`.", call. = FALSE)
+  }
   rlang::check_installed("SpaDES.core")
   ## This stage's saved outputs and figures land in its own directory, which the
   ## companion `format = "file"` target hashes. Clear it first so a re-run (after
@@ -147,6 +200,9 @@ run_simspades <- function(
   on.exit(finalize_scratch(scratch_run, ok), add = TRUE)
   params <- no_module_cache(params, modules)
   result <- with_spades_safe_options(.options = .options, {
+    if (!is.null(setup)) {
+      setup()
+    }
     if (!is.null(seed)) {
       set.seed(seed)
     }
@@ -183,6 +239,47 @@ run_simspades <- function(
   })
   ok <- TRUE
   result
+}
+
+# Run the stage in a new R process (`launcher = "callr"`). The arguments go through a file, and
+# the subprocess activates `renv_profile` before reading it: reading packed terra objects can load
+# terra, which must then come from that profile's library. callr would otherwise reset the
+# subprocess to this process's library paths after the project's .Rprofile has activated renv,
+# which is why `renv/activate.R` is sourced again inside it.
+run_in_subprocess <- function(args, renv_profile = NULL) {
+  rlang::check_installed("callr")
+  activate <- !is.null(renv_profile)
+  if (activate && !file.exists(file.path("renv", "activate.R"))) {
+    stop(
+      "`renv_profile` needs renv/activate.R in the working directory, ",
+      getwd(),
+      ".",
+      call. = FALSE
+    )
+  }
+  args_file <- tempfile("run_simspades_", fileext = ".rds")
+  on.exit(unlink(args_file), add = TRUE)
+  saveRDS(args, args_file)
+  env <- callr::rcmd_safe_env()
+  if (activate) {
+    env[["RENV_PROFILE"]] <- renv_profile
+  }
+  callr::r(
+    subprocess_run,
+    args = list(args_file = args_file, activate = activate),
+    env = env,
+    show = TRUE,
+    stderr = "2>&1"
+  )
+}
+
+# The subprocess's side. callr runs it with the global environment as its enclosure, so it names
+# every function it uses with `::`.
+subprocess_run <- function(args_file, activate) {
+  if (activate) {
+    source(file.path("renv", "activate.R"))
+  }
+  do.call(SpaDES.targets::run_simspades, readRDS(args_file))
 }
 
 # Turn caching off for every module of the stage that does not set `.useCache`. The safe options
@@ -265,10 +362,9 @@ with_run_logging <- function(fn, log_file) {
       )
     },
     error = function(e) {
-      tb <- tryCatch(
-        paste(format(rlang::trace_back()), collapse = "\n"),
-        error = function(.) paste(utils::capture.output(traceback()), collapse = "\n")
-      )
+      tb <- tryCatch(paste(format(rlang::trace_back()), collapse = "\n"), error = function(.) {
+        paste(utils::capture.output(traceback()), collapse = "\n")
+      })
       cat(
         sprintf("[%s] ERROR: %s\n\n%s\n", format(Sys.time()), conditionMessage(e), tb),
         file = sib$traceback,

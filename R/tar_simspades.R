@@ -16,6 +16,9 @@
 #' `files` dependency), feeding them to their own `simInit` through `inputs`.
 #' No `simList` ever crosses a target boundary.
 #'
+#' `setup`, `launcher` and `renv_profile` enter the command only when set, so a
+#' stage that leaves them at their defaults keeps the same command.
+#'
 #' @param name Character scalar; the primary target's name.
 #' @param modules Character vector (or list) of module names for this stage.
 #' @param objects A **quoted** expression giving the small in-memory upstream
@@ -73,8 +76,11 @@
 #'   (reading modules from `paths$modulePath`, default `"modules"`, and packages
 #'   per `getOption("SpaDES.targets.fingerprint_packages", "remote")`), so that
 #'   `targets` sees any change to that code. A character vector is spliced as
-#'   given. Opt-in because turning it on changes every stage's command once,
-#'   which invalidates all existing stages on the next run.
+#'   given. A quoted expression, e.g. `quote(stage_code)` naming another target,
+#'   is spliced as code, so the stage depends on that target: use it with
+#'   `renv_profile`, where `TRUE` would read package versions from the wrong
+#'   library and is an error. Opt-in because turning it on changes every
+#'   stage's command once, which invalidates all existing stages on the next run.
 #' @param fingerprint_modules Character vector of further modules whose code
 #'   the stage depends on without running them itself: modules that one of
 #'   `modules` runs nested inside it, from the same `paths$modulePath` (for
@@ -86,6 +92,16 @@
 #'   [stage_fingerprint()]'s `extra_modules`). Ignored when `fingerprint` is
 #'   `FALSE`; an error beside a supplied `fingerprint` vector. `NULL` (default)
 #'   leaves the command exactly as before.
+#' @param setup A **quoted** expression giving the function [run_simspades()]
+#'   calls before `simInit()` (see there), e.g. `quote(drive_login)`, so the
+#'   stage depends on it. `NULL` (default) for none.
+#' @param launcher,renv_profile Passed to [run_simspades()]: `launcher =
+#'   "callr"` runs the stage in an R subprocess, and `renv_profile` names the
+#'   renv profile that subprocess activates. Then only the target command needs
+#'   SpaDES.targets in the pipeline's own library; SpaDES.core and the modules'
+#'   packages need only be in the profile.
+#' @param ... Further arguments to [targets::tar_target_raw()] for the primary
+#'   target, such as `resources`, `deployment` or `cue`.
 #' @return A `list` of two `tar_target` objects (the primary, then the companion
 #'   `format = "file"` target) — return it from `_targets.R` like any target
 #'   list.
@@ -116,9 +132,17 @@ tar_simspades <- function(
   mem_frac = getOption("SpaDES.targets.mem_frac", 0.5),
   fingerprint = getOption("SpaDES.targets.fingerprint", FALSE),
   fingerprint_modules = NULL,
-  .options = list()
+  .options = list(),
+  setup = NULL,
+  launcher = c("in_process", "callr"),
+  renv_profile = NULL,
+  ...
 ) {
   stopifnot(is.character(name), length(name) == 1L)
+  launcher <- match.arg(launcher)
+  if (!is.null(setup) && !is.language(setup)) {
+    stop("`setup` must be a quoted expression giving a function, or NULL.", call. = FALSE)
+  }
   if (is.null(out_dir)) {
     out_dir <- file.path("outputs", name)
   }
@@ -140,17 +164,27 @@ tar_simspades <- function(
     mem_frac = .(mem_frac),
     .options = .(.options)
   ))
-  fp <- .resolve_fingerprint(fingerprint, modules, paths, fingerprint_modules)
+  fp <- .resolve_fingerprint(fingerprint, modules, paths, fingerprint_modules, renv_profile)
   if (!is.null(fp)) {
     ## Added only when enabled, so a stage without a fingerprint keeps a byte-identical
     ## command (and cached targets stay valid).
     command$fingerprint <- fp
   }
+  ## Likewise added only when set, so existing stages' commands do not change.
+  if (!is.null(setup)) {
+    command$setup <- setup
+  }
+  if (!identical(launcher, "in_process")) {
+    command$launcher <- launcher
+  }
+  if (!is.null(renv_profile)) {
+    command$renv_profile <- renv_profile
+  }
   files_command <- bquote(.(as.symbol(name))[["files"]])
   if (is.null(pattern)) {
     ## Unbranched stage: emit exactly as before so an existing stage's command +
     ## settings hash are unchanged and cached upstream targets stay valid.
-    primary <- targets::tar_target_raw(name, command, format = format)
+    primary <- targets::tar_target_raw(name, command, format = format, ...)
     files <- targets::tar_target_raw(paste0(name, "_files"), files_command, format = "file")
   } else {
     ## Branched stage (e.g. `pattern = quote(map(rep_index))`): the primary must
@@ -165,7 +199,8 @@ tar_simspades <- function(
       command,
       format = format,
       pattern = pattern,
-      iteration = if (is.null(iteration)) "list" else iteration
+      iteration = if (is.null(iteration)) "list" else iteration,
+      ...
     )
     files <- targets::tar_target_raw(
       paste0(name, "_files"),
@@ -177,12 +212,40 @@ tar_simspades <- function(
   list(primary, files)
 }
 
-## NULL (no fingerprint) | stage_fingerprint() | a user-supplied character vector.
-.resolve_fingerprint <- function(fingerprint, modules, paths, fingerprint_modules = NULL) {
+## NULL (no fingerprint) | stage_fingerprint() | a user-supplied character vector | a quoted
+## expression, spliced as code.
+.resolve_fingerprint <- function(
+  fingerprint,
+  modules,
+  paths,
+  fingerprint_modules = NULL,
+  renv_profile = NULL
+) {
   if (is.null(fingerprint) || isFALSE(fingerprint)) {
     return(NULL)
   }
+  if (is.language(fingerprint)) {
+    if (!is.null(fingerprint_modules)) {
+      stop(
+        "`fingerprint_modules` needs `fingerprint = TRUE`; a quoted `fingerprint` is spliced as ",
+        "given.",
+        call. = FALSE
+      )
+    }
+    return(fingerprint)
+  }
   if (isTRUE(fingerprint)) {
+    ## stage_fingerprint() reads package versions from THIS session's library
+    if (!is.null(renv_profile)) {
+      stop(
+        "`fingerprint = TRUE` reads package versions from this session's library, not from renv ",
+        "profile \"",
+        renv_profile,
+        "\", where the stage runs. Pass a quoted expression naming a target that fingerprints ",
+        "that profile instead.",
+        call. = FALSE
+      )
+    }
     modulePath <- if (is.list(paths) && !is.null(paths$modulePath)) paths$modulePath else "modules"
     return(stage_fingerprint(
       modules,
@@ -201,5 +264,8 @@ tar_simspades <- function(
     }
     return(fingerprint)
   }
-  stop("`fingerprint` must be TRUE, FALSE, NULL, or a character vector.", call. = FALSE)
+  stop(
+    "`fingerprint` must be TRUE, FALSE, NULL, a character vector, or a quoted expression.",
+    call. = FALSE
+  )
 }

@@ -56,3 +56,17 @@ test_that("pack_terra() refuses a raster it could only pack as a file path", {
   r <- terra::rast(f)
   expect_snapshot(check_packed_values(terra::wrap(r, proxy = TRUE), r), error = TRUE)
 })
+
+test_that("pack_for_subprocess() sends a disk-backed raster as its file, an in-memory one by value", {
+  f <- withr::local_tempfile(fileext = ".tif")
+  terra::writeRaster(terra::rast(nrows = 2, ncols = 2, vals = 1:4), f, datatype = "INT2U")
+  mem <- terra::rast(nrows = 2, ncols = 2, vals = 5:8)
+  rds <- withr::local_tempfile(fileext = ".rds")
+  saveRDS(pack_for_subprocess(list(a = list(disk = terra::rast(f)), mem = mem)), rds)
+  y <- unpack_terra(readRDS(rds))
+
+  ## read from its file, as the calling process would, so its stored data type is kept
+  expect_identical(terra::sources(y$a$disk), terra::sources(terra::rast(f)))
+  expect_identical(terra::datatype(y$a$disk), "INT2U")
+  expect_equal(terra::values(y$mem, mat = FALSE), 5:8)
+})

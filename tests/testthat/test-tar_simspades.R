@@ -116,8 +116,11 @@ test_that("tar_simspades bakes log_file into the run_simspades command (NULL by 
 
   expect_match(cmd(tar_simspades("preamble", modules = "LandWeb_preamble")), "log_file = NULL")
   expect_match(
-    cmd(tar_simspades("preamble", modules = "LandWeb_preamble",
-                      log_file = "outputs/SprayLake/logs/preamble.log")),
+    cmd(tar_simspades(
+      "preamble",
+      modules = "LandWeb_preamble",
+      log_file = "outputs/SprayLake/logs/preamble.log"
+    )),
     "log_file = \"outputs/SprayLake/logs/preamble.log\""
   )
 })
@@ -136,4 +139,54 @@ test_that("tar_simspades splices a quoted (branched) log_file as a per-branch ex
     collapse = " "
   )
   expect_match(cmd, "sprintf\\(\"mainSim_rep%02d.log\",\\s+rep_index\\)")
+})
+
+test_that("setup, launcher and renv_profile stay out of the command at their defaults", {
+  cmd <- paste(
+    deparse(tar_simspades("preamble", modules = "LandWeb_preamble")[[1]]$command$expr),
+    collapse = " "
+  )
+  expect_no_match(cmd, "setup|launcher|renv_profile")
+})
+
+test_that("setup, launcher and renv_profile are spliced into the command when set", {
+  tl <- tar_simspades(
+    "dataprep",
+    modules = "Biomass_borealDataPrep",
+    setup = quote(drive_login),
+    launcher = "callr",
+    renv_profile = "landr"
+  )
+  cmd <- paste(deparse(tl[[1]]$command$expr), collapse = " ")
+  expect_match(cmd, "setup = drive_login")
+  expect_match(cmd, "launcher = \"callr\"")
+  expect_match(cmd, "renv_profile = \"landr\"")
+  expect_true("drive_login" %in% tl[[1]]$deps)
+})
+
+test_that("setup must be quoted", {
+  expect_error(tar_simspades("s", modules = "m", setup = function() NULL), "quoted")
+})
+
+test_that("a quoted fingerprint is spliced as code, so the stage depends on that target", {
+  tl <- tar_simspades("dataprep", modules = "m", fingerprint = quote(stage_code))
+  expect_match(paste(deparse(tl[[1]]$command$expr), collapse = " "), "fingerprint = stage_code")
+  expect_true("stage_code" %in% tl[[1]]$deps)
+})
+
+test_that("fingerprint = TRUE with renv_profile is an error", {
+  ## stage_fingerprint() would read package versions from this session's library
+  expect_error(
+    tar_simspades("dataprep", modules = "m", fingerprint = TRUE, renv_profile = "landr"),
+    "renv profile"
+  )
+})
+
+test_that("... reaches the primary target only, branched or not", {
+  tl <- tar_simspades("s", modules = "m", deployment = "main")
+  expect_identical(tl[[1]]$settings$deployment, "main")
+  expect_identical(tl[[2]]$settings$deployment, "worker")
+
+  tl <- tar_simspades("s", modules = "m", pattern = quote(map(rep_index)), deployment = "main")
+  expect_identical(tl[[1]]$settings$deployment, "main")
 })

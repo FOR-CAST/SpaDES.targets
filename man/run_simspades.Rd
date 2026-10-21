@@ -22,7 +22,10 @@ run_simspades(
   mem_workers = NULL,
   mem_frac = 0.5,
   fingerprint = NULL,
-  .options = list()
+  .options = list(),
+  setup = NULL,
+  launcher = c("in_process", "callr"),
+  renv_profile = NULL
 )
 }
 \arguments{
@@ -113,6 +116,27 @@ the OS, non-terra R memory, and co-tenant processes). Only used when
 the stage when its module code or companion packages change.}
 
 \item{.options}{Extra options merged over \code{\link[=spades_safe_options]{spades_safe_options()}}.}
+
+\item{setup}{A function, or \code{NULL}, called with no arguments in the process
+that runs the simulation, after the safe options are set and before the
+seed and \code{simInit()}. For session state that cannot be passed as an object,
+such as logging in to a web service the modules download from. With
+\code{launcher = "callr"} it is serialized to the subprocess: call package
+functions with \code{::}, and do not rely on objects in the global environment.}
+
+\item{launcher}{Where the simulation runs: \code{"in_process"} (default), or
+\code{"callr"}, a new R process started with \code{\link[callr:r]{callr::r()}}. Use \code{"callr"} when the
+simulation's packages must not load into this process, for example when
+they are installed only in a separate renv profile. The arguments go to the
+subprocess through a file and only the manifest comes back. A \code{SpatRaster}
+in \code{objects} whose values are in a file crosses as a reference to that
+file, so the subprocess reads it from disk as this process would.}
+
+\item{renv_profile}{With \code{launcher = "callr"}, the renv profile the
+subprocess activates before it loads anything: it sets \code{RENV_PROFILE} and
+sources \code{renv/activate.R} from the working directory. SpaDES.targets must
+be installed in that profile's library. \code{NULL} (default) leaves the
+subprocess on this process's library paths.}
 }
 \value{
 The \code{\link[=extract_outputs]{extract_outputs()}} result: a \code{list} with a \code{manifest}
@@ -120,8 +144,9 @@ The \code{\link[=extract_outputs]{extract_outputs()}} result: a \code{list} with
 }
 \description{
 The worker behind \code{\link[=tar_simspades]{tar_simspades()}}. Runs \code{SpaDES.core::simInitAndSpades()}
-in-process under the safe options (\code{\link[=with_spades_safe_options]{with_spades_safe_options()}}), with this
-stage's saved outputs (and figures) directed to \code{out_dir}, then returns the
-manifest of files it wrote via \code{\link[=extract_outputs]{extract_outputs()}} (plus any \code{plain}
-in-memory objects). The \code{simList} itself is never returned or serialized.
+under the safe options (\code{\link[=with_spades_safe_options]{with_spades_safe_options()}}), in this process or in
+an R subprocess (\code{launcher}), with this stage's saved outputs (and figures)
+directed to \code{out_dir}, then returns the manifest of files it wrote via
+\code{\link[=extract_outputs]{extract_outputs()}} (plus any \code{plain} in-memory objects). The \code{simList}
+itself is never returned or serialized.
 }

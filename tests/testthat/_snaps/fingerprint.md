@@ -4,7 +4,7 @@
       tar_simspades("s", modules = "m", fingerprint = 1)
     Condition
       Error:
-      ! `fingerprint` must be TRUE, FALSE, NULL, or a character vector.
+      ! `fingerprint` must be TRUE, FALSE, NULL, a character vector, or a quoted expression.
 
 # stage_fingerprint() stops when an extra module is not in modulePath
 

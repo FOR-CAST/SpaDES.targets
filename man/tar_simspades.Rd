@@ -26,7 +26,11 @@ tar_simspades(
   mem_frac = getOption("SpaDES.targets.mem_frac", 0.5),
   fingerprint = getOption("SpaDES.targets.fingerprint", FALSE),
   fingerprint_modules = NULL,
-  .options = list()
+  .options = list(),
+  setup = NULL,
+  launcher = c("in_process", "callr"),
+  renv_profile = NULL,
+  ...
 )
 }
 \arguments{
@@ -97,8 +101,11 @@ the stage. \code{TRUE} splices \code{\link[=stage_fingerprint]{stage_fingerprint
 (reading modules from \code{paths$modulePath}, default \code{"modules"}, and packages
 per \code{getOption("SpaDES.targets.fingerprint_packages", "remote")}), so that
 \code{targets} sees any change to that code. A character vector is spliced as
-given. Opt-in because turning it on changes every stage's command once,
-which invalidates all existing stages on the next run.}
+given. A quoted expression, e.g. \code{quote(stage_code)} naming another target,
+is spliced as code, so the stage depends on that target: use it with
+\code{renv_profile}, where \code{TRUE} would read package versions from the wrong
+library and is an error. Opt-in because turning it on changes every
+stage's command once, which invalidates all existing stages on the next run.}
 
 \item{fingerprint_modules}{Character vector of further modules whose code
 the stage depends on without running them itself: modules that one of
@@ -111,6 +118,18 @@ They are not passed to \code{\link[=run_simspades]{run_simspades()}}. Each must 
 \code{\link[=stage_fingerprint]{stage_fingerprint()}}'s \code{extra_modules}). Ignored when \code{fingerprint} is
 \code{FALSE}; an error beside a supplied \code{fingerprint} vector. \code{NULL} (default)
 leaves the command exactly as before.}
+
+\item{setup}{A \strong{quoted} expression giving the function \code{\link[=run_simspades]{run_simspades()}}
+calls before \code{simInit()} (see there), e.g. \code{quote(drive_login)}, so the
+stage depends on it. \code{NULL} (default) for none.}
+
+\item{launcher, renv_profile}{Passed to \code{\link[=run_simspades]{run_simspades()}}: \code{launcher = "callr"} runs the stage in an R subprocess, and \code{renv_profile} names the
+renv profile that subprocess activates. Then only the target command needs
+SpaDES.targets in the pipeline's own library; SpaDES.core and the modules'
+packages need only be in the profile.}
+
+\item{...}{Further arguments to \code{\link[targets:tar_target_raw]{targets::tar_target_raw()}} for the primary
+target, such as \code{resources}, \code{deployment} or \code{cue}.}
 }
 \value{
 A \code{list} of two \code{tar_target} objects (the primary, then the companion
@@ -136,6 +155,9 @@ Downstream stages consume the plain components as \verb{name$<obj>} and the save
 files via \code{\link[=sim_inputs]{sim_inputs()}} on \code{name$manifest} (passing \code{name_files} as the
 \code{files} dependency), feeding them to their own \code{simInit} through \code{inputs}.
 No \code{simList} ever crosses a target boundary.
+
+\code{setup}, \code{launcher} and \code{renv_profile} enter the command only when set, so a
+stage that leaves them at their defaults keeps the same command.
 }
 \examples{
 tl <- tar_simspades("preamble", modules = "LandWeb_preamble")

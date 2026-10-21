@@ -233,7 +233,8 @@ test_that("run_simspades sets .useCache = FALSE for each module that does not se
   testthat::local_mocked_bindings(extract_outputs = function(...) list())
 
   run_simspades(
-    modules = c("a", "b", "c"), out_dir = withr::local_tempdir(),
+    modules = c("a", "b", "c"),
+    out_dir = withr::local_tempdir(),
     params = list(a = list(x = 1), b = list(.useCache = "init"))
   )
   expect_identical(seen$params$a, list(x = 1, .useCache = FALSE))
@@ -247,19 +248,28 @@ test_that("run_simspades runs a module whose .useCache default names events", {
   skip_if_not_installed("SpaDES.core")
   d <- withr::local_tempdir()
   dir.create(file.path(d, "tiny"))
-  writeLines(c(
-    "defineModule(sim, list(name = 'tiny', description = '', keywords = '', authors = person('a', 'b'),",
-    "  childModules = character(0), version = list(tiny = '0.0.1'), timeframe = as.POSIXlt(c(NA, NA)),",
-    "  timeunit = 'year', citation = list(), documentation = list(), reqdPkgs = list(),",
-    "  parameters = rbind(defineParameter('.useCache', 'character', c('.inputObjects', 'init'), NA, NA, 'x')),",
-    "  inputObjects = bindrows(expectsInput('a', 'numeric', 'x')),",
-    "  outputObjects = bindrows(createsOutput('b', 'numeric', 'x'))))",
-    "doEvent.tiny <- function(sim, eventTime, eventType) { if (eventType == 'init') sim$b <- 1; invisible(sim) }",
-    ".inputObjects <- function(sim) { if (!suppliedElsewhere('a', sim)) sim$a <- 2; invisible(sim) }"
-  ), file.path(d, "tiny", "tiny.R"))
+  writeLines(
+    c(
+      "defineModule(sim, list(name = 'tiny', description = '', keywords = '', authors = person('a', 'b'),",
+      "  childModules = character(0), version = list(tiny = '0.0.1'), timeframe = as.POSIXlt(c(NA, NA)),",
+      "  timeunit = 'year', citation = list(), documentation = list(), reqdPkgs = list(),",
+      "  parameters = rbind(defineParameter('.useCache', 'character', c('.inputObjects', 'init'), NA, NA, 'x')),",
+      "  inputObjects = bindrows(expectsInput('a', 'numeric', 'x')),",
+      "  outputObjects = bindrows(createsOutput('b', 'numeric', 'x'))))",
+      "doEvent.tiny <- function(sim, eventTime, eventType) { if (eventType == 'init') sim$b <- 1; invisible(sim) }",
+      ".inputObjects <- function(sim) { if (!suppliedElsewhere('a', sim)) sim$a <- 2; invisible(sim) }"
+    ),
+    file.path(d, "tiny", "tiny.R")
+  )
   res <- run_simspades(
-    modules = "tiny", out_dir = withr::local_tempdir(), plain = "b",
-    paths = list(modulePath = d, inputPath = withr::local_tempdir(), cachePath = withr::local_tempdir())
+    modules = "tiny",
+    out_dir = withr::local_tempdir(),
+    plain = "b",
+    paths = list(
+      modulePath = d,
+      inputPath = withr::local_tempdir(),
+      cachePath = withr::local_tempdir()
+    )
   )
   expect_identical(res$b, 1)
 })
@@ -333,9 +343,11 @@ test_that("run_simspades captures each warning signalled during the run to *_war
   )
   testthat::local_mocked_bindings(extract_outputs = function(...) list())
 
-  suppressWarnings(
-    run_simspades(modules = "m", out_dir = withr::local_tempdir(), log_file = log_file)
-  )
+  suppressWarnings(run_simspades(
+    modules = "m",
+    out_dir = withr::local_tempdir(),
+    log_file = log_file
+  ))
 
   wf <- sub("\\.log$", "_warnings.txt", log_file)
   expect_true(file.exists(wf))
@@ -423,17 +435,15 @@ test_that("with_run_logging() still captures messages after the run changes dire
 
   ## emulate archive::archive_extract(): setwd() into another directory, signal a message from
   ## inside that window, then restore. Before the fix the handler's cat() errored here.
-  expect_no_error(
-    with_run_logging(
-      function() {
-        old <- setwd(elsewhere)
-        on.exit(setwd(old), add = TRUE)
-        message("progress from inside the extraction directory")
-        "done"
-      },
-      log_file
-    )
-  )
+  expect_no_error(with_run_logging(
+    function() {
+      old <- setwd(elsewhere)
+      on.exit(setwd(old), add = TRUE)
+      message("progress from inside the extraction directory")
+      "done"
+    },
+    log_file
+  ))
 
   expect_true(file.exists(file.path(wd, "logs", "run.log")))
   expect_match(
@@ -461,4 +471,151 @@ test_that("run_simspades unpacks terra objects passed in `objects`", {
   )
 
   expect_s4_class(got$disturbanceList$mining, "SpatVector")
+})
+
+test_that("launcher = 'callr' hands every run argument to the subprocess", {
+  seen <- NULL
+  testthat::local_mocked_bindings(run_in_subprocess = function(args, renv_profile) {
+    seen <<- list(args = args, renv_profile = renv_profile)
+    "manifest"
+  })
+
+  res <- run_simspades(
+    modules = "m",
+    out_dir = "o",
+    seed = 1L,
+    launcher = "callr",
+    renv_profile = "landr"
+  )
+
+  expect_identical(res, "manifest")
+  expect_identical(seen$renv_profile, "landr")
+  expect_identical(seen$args$seed, 1L)
+  ## an argument added to run_simspades() but not to this list would be dropped in a subprocess
+  expect_setequal(
+    names(seen$args),
+    setdiff(names(formals(run_simspades)), c("fingerprint", "launcher", "renv_profile"))
+  )
+})
+
+test_that("renv_profile needs the callr launcher, and setup must be a function", {
+  expect_error(run_simspades(modules = "m", renv_profile = "landr"), "launcher")
+  expect_error(run_simspades(modules = "m", setup = "login"), "function")
+})
+
+test_that("setup runs under the safe options, before the seed is set", {
+  withr::local_preserve_seed()
+  seen <- list()
+  testthat::local_mocked_bindings(
+    simInitAndSpades = function(...) {
+      seen$draw <<- stats::runif(1)
+      list()
+    },
+    .package = "SpaDES.core"
+  )
+  testthat::local_mocked_bindings(extract_outputs = function(...) list())
+
+  run_simspades(modules = "m", out_dir = withr::local_tempdir(), seed = 42L, setup = function() {
+    seen$use_cache <<- getOption("reproducible.useCache")
+    stats::runif(5) ## must not move the run's random-number stream
+  })
+
+  set.seed(42L)
+  expect_identical(seen$draw, stats::runif(1))
+  expect_false(seen$use_cache)
+})
+
+test_that("run_in_subprocess sets the renv profile and passes the arguments through a file", {
+  skip_if_not_installed("callr")
+  withr::local_dir(withr::local_tempdir())
+  dir.create("renv")
+  writeLines("", file.path("renv", "activate.R"))
+  seen <- NULL
+  testthat::local_mocked_bindings(
+    r = function(func, args, env, ...) {
+      seen <<- list(args = args, env = env, saved = readRDS(args$args_file))
+      "manifest"
+    },
+    .package = "callr"
+  )
+
+  res <- run_in_subprocess(list(modules = "m"), renv_profile = "landr")
+
+  expect_identical(res, "manifest")
+  expect_identical(seen$env[["RENV_PROFILE"]], "landr")
+  expect_true(seen$args$activate)
+  expect_identical(seen$saved, list(modules = "m"))
+  expect_false(file.exists(seen$args$args_file)) # removed once the subprocess returns
+})
+
+test_that("run_in_subprocess refuses a profile it has no renv/activate.R for", {
+  skip_if_not_installed("callr")
+  withr::local_dir(withr::local_tempdir())
+  expect_error(run_in_subprocess(list(), renv_profile = "landr"), "activate.R")
+})
+
+test_that("subprocess_run activates renv, then runs the stage with the saved arguments", {
+  withr::local_dir(withr::local_tempdir())
+  dir.create("renv")
+  writeLines("options(SpaDES.targets.test_activated = TRUE)", file.path("renv", "activate.R"))
+  withr::local_options(SpaDES.targets.test_activated = NULL)
+  f <- withr::local_tempfile(fileext = ".rds")
+  saveRDS(list(modules = "m", seed = 2L), f)
+  seen <- NULL
+  testthat::local_mocked_bindings(run_simspades = function(...) {
+    seen <<- list(args = list(...), activated = getOption("SpaDES.targets.test_activated"))
+    "manifest"
+  })
+
+  expect_identical(subprocess_run(f, activate = TRUE), "manifest")
+  expect_true(seen$activated)
+  expect_identical(seen$args, list(modules = "m", seed = 2L))
+})
+
+test_that("launcher = 'callr' runs the stage, and setup, in another R process", {
+  skip_if_not_installed("SpaDES.core")
+  skip_if_not_installed("callr")
+  ## the subprocess loads SpaDES.targets from the library, so this needs the package installed
+  skip_if(!nzchar(Sys.getenv("_R_CHECK_PACKAGE_NAME_")), "needs the installed package")
+  d <- withr::local_tempdir()
+  dir.create(file.path(d, "where"))
+  writeLines(
+    c(
+      "defineModule(sim, list(name = 'where', description = '', keywords = '', authors = person('a', 'b'),",
+      "  childModules = character(0), version = list(where = '0.0.1'), timeframe = as.POSIXlt(c(NA, NA)),",
+      "  timeunit = 'year', citation = list(), documentation = list(), reqdPkgs = list(),",
+      "  parameters = rbind(defineParameter('.useCache', 'logical', FALSE, NA, NA, 'x')),",
+      "  inputObjects = bindrows(expectsInput('r', 'SpatRaster', 'x')),",
+      "  outputObjects = bindrows(createsOutput('pids', 'integer', 'x'),",
+      "                           createsOutput('src', 'character', 'x'))))",
+      "doEvent.where <- function(sim, eventTime, eventType) {",
+      "  if (eventType == 'init') {",
+      "    sim$pids <- c(sim = Sys.getpid(), setup = as.integer(Sys.getenv('SPADES_TARGETS_SETUP_PID')))",
+      "    sim$src <- terra::sources(sim$r)",
+      "  }",
+      "  invisible(sim)",
+      "}"
+    ),
+    file.path(d, "where", "where.R")
+  )
+  tif <- withr::local_tempfile(fileext = ".tif")
+  terra::writeRaster(terra::rast(nrows = 2, ncols = 2, vals = 1:4), tif)
+
+  res <- run_simspades(
+    modules = "where",
+    objects = list(r = terra::rast(tif)),
+    plain = c("pids", "src"),
+    out_dir = withr::local_tempdir(),
+    paths = list(
+      modulePath = d,
+      inputPath = withr::local_tempdir(),
+      cachePath = withr::local_tempdir()
+    ),
+    setup = function() Sys.setenv(SPADES_TARGETS_SETUP_PID = Sys.getpid()),
+    launcher = "callr"
+  )
+
+  expect_false(res$pids[["sim"]] == Sys.getpid())
+  expect_identical(res$pids[["setup"]], res$pids[["sim"]])
+  expect_identical(res$src, terra::sources(terra::rast(tif))) # read from its file, not copied
 })

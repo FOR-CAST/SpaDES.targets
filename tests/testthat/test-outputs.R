@@ -82,3 +82,64 @@ test_that("outputs_spec vectors keep a field named FID, whatever its type", {
   expect_identical(back$int$FID, c(3L, 3L))
   expect_identical(back$low$fid, 1.5)
 })
+
+test_that("outputs_spec names qs and csv files itself", {
+  spec <- outputs_spec(raster = "pixelGroupMap", qs = "cohortData", csv = "species")
+  expect_identical(spec$file, c(NA, "cohortData.qs", "species.csv"))
+})
+
+test_that("outputs_spec passes per-object arguments to the save function", {
+  spec <- outputs_spec(
+    raster = c("pixelGroupMap", "biomassMap"),
+    vect = "studyArea",
+    arguments = list(pixelGroupMap = list(datatype = "INT4U"))
+  )
+  expect_identical(
+    spec$arguments,
+    I(list(list(datatype = "INT4U"), NULL, list(options = "FID=fid_gpkg")))
+  )
+})
+
+test_that("outputs_spec refuses arguments for objects it does not save", {
+  expect_error(
+    outputs_spec(
+      raster = "pixelGroupMap",
+      arguments = list(pixelGroupmap = list(datatype = "INT4U"))
+    ),
+    "pixelGroupmap"
+  )
+  expect_error(
+    outputs_spec(raster = "pixelGroupMap", arguments = list(list(datatype = "INT4U"))),
+    "named list"
+  )
+})
+
+test_that("outputs_spec qs, csv and typed raster saves run through SpaDES.core", {
+  ## SpaDES.core has no file extension for fwrite(), so an unnamed csv row stopped simInit() with
+  ## "no file extension"; and it names qs_save() files .qs2
+  skip_if_not_installed("SpaDES.core")
+  skip_if_not_installed("qs2")
+  skip_if_not_installed("data.table")
+  r <- terra::rast(nrows = 2, ncols = 2, vals = c(1, 2, 3, 70000), crs = "EPSG:3978")
+  tbl <- data.frame(speciesCode = c("Pice_gla", "Pinu_con"), longevity = c(250L, 300L))
+  sim <- SpaDES.core::simInitAndSpades(
+    times = list(start = 1, end = 1),
+    paths = list(outputPath = withr::local_tempdir()),
+    objects = list(pixelGroupMap = r, cohortData = tbl, species = tbl),
+    outputs = outputs_spec(
+      raster = "pixelGroupMap",
+      qs = "cohortData",
+      csv = "species",
+      arguments = list(pixelGroupMap = list(datatype = "INT4U"))
+    )
+  )
+  out <- SpaDES.core::outputs(sim)
+  f <- stats::setNames(out$file, out$objectName)
+  expect_identical(
+    basename(unname(f[c("pixelGroupMap", "cohortData", "species")])),
+    c("pixelGroupMap_year1.tif", "cohortData_year1.qs", "species_year1.csv")
+  )
+  expect_identical(terra::datatype(terra::rast(f[["pixelGroupMap"]])), "INT4U")
+  expect_identical(qs2::qs_read(f[["cohortData"]]), tbl)
+  expect_identical(as.data.frame(data.table::fread(f[["species"]])), tbl)
+})

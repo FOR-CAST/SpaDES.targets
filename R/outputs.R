@@ -9,8 +9,8 @@
 #' picked up by [extract_outputs()].
 #'
 #' This covers the common inter-stage handoff and timeseries cases; for anything
-#' more exotic (per-object save `arguments`, mixed save functions for one
-#' object) build the `data.frame` directly -- see `?SpaDES.core::outputs`.
+#' more exotic (mixed save functions for one object) build the `data.frame`
+#' directly -- see `?SpaDES.core::outputs`.
 #'
 #' @param raster Character vector of object names to save with
 #'   `terra::writeRaster()` (`.tif`).
@@ -29,12 +29,17 @@
 #' @param saveTime Optional numeric vector of save times; the rows are expanded
 #'   over every (object, time) combination. `NULL` (default) lets
 #'   `SpaDES.core` save once at `end(sim)`.
+#' @param arguments A named `list` of further arguments to an object's save
+#'   function, one element per object, e.g.
+#'   `list(pixelGroupMap = list(datatype = "INT4U"))` to keep a raster of codes
+#'   as integers. Each name must be one of the objects above.
 #' @return A `data.frame` with `objectName`, `file`, `fun`, `package` (and
-#'   `saveTime` when supplied, and `arguments` when there are vectors, holding
-#'   the `writeVector()` options), suitable as `SpaDES.core::simInit(outputs=)`.
-#'   Vectors are named `<objectName>.gpkg`; other filenames are left `NA` for
-#'   `SpaDES.core` to derive (objectName + time + extension). `SpaDES.core` adds
-#'   the time to the `.gpkg` names too.
+#'   `saveTime` when supplied, and `arguments` when there are vectors or
+#'   `arguments`, holding each row's save arguments), suitable as
+#'   `SpaDES.core::simInit(outputs=)`. Vectors, `qs` and `csv` objects are named
+#'   `<objectName>.gpkg`, `.qs` and `.csv`; raster and RDS filenames are left
+#'   `NA` for `SpaDES.core` to derive (objectName + time + extension).
+#'   `SpaDES.core` adds the time to every name, e.g. `species_year1.csv`.
 #' @seealso [extract_outputs()], [sim_inputs()]
 #' @export
 #' @examples
@@ -48,15 +53,27 @@ outputs_spec <- function(
   rds = character(),
   qs = character(),
   csv = character(),
-  saveTime = NULL
+  saveTime = NULL,
+  arguments = list()
 ) {
   rows <- rbind(
     outputs_spec_rows(raster, "writeRaster", "terra"),
     outputs_spec_rows(vect, "writeVector", "terra", ext = "gpkg"),
     outputs_spec_rows(rds, "saveRDS", "base"),
-    outputs_spec_rows(qs, "qs_save", "qs2"),
-    outputs_spec_rows(csv, "fwrite", "data.table")
+    outputs_spec_rows(qs, "qs_save", "qs2", ext = "qs"),
+    outputs_spec_rows(csv, "fwrite", "data.table", ext = "csv")
   )
+  if (length(arguments) && (is.null(names(arguments)) || !all(nzchar(names(arguments))))) {
+    stop("`arguments` must be a named list, one element per object.", call. = FALSE)
+  }
+  unknown <- setdiff(names(arguments), rows$objectName)
+  if (length(unknown)) {
+    stop(
+      "`arguments` names objects that are not saved: ",
+      paste(unknown, collapse = ", "),
+      call. = FALSE
+    )
+  }
   if (nrow(rows) == 0L) {
     return(rows)
   }
@@ -68,17 +85,24 @@ outputs_spec <- function(
       })
     )
   }
-  if (length(vect)) {
+  if (length(vect) || length(arguments)) {
     ## SpaDES.core passes each row's `arguments` to its save function
-    rows$arguments <- I(lapply(rows$fun, function(f) {
-      if (identical(f, "writeVector")) list(options = gpkg_layer_options)
-    }))
+    rows$arguments <- I(Map(
+      function(obj, f) {
+        c(if (identical(f, "writeVector")) list(options = gpkg_layer_options), arguments[[obj]])
+      },
+      rows$objectName,
+      rows$fun,
+      USE.NAMES = FALSE
+    ))
   }
   rows
 }
 
 ## SpaDES.core names a writeVector() file .shp, which cuts field names to 10 characters and keeps its
 ## attributes in .dbf/.shx/.prj files that a stage's file list leaves out, so name vectors .gpkg.
+## qs and csv are named too: SpaDES.core's extension table has no entry for fwrite(), so it stops
+## with "no file extension", and gives qs_save() files .qs2 rather than .qs.
 outputs_spec_rows <- function(objs, fun, package, ext = NA_character_) {
   data.frame(
     objectName = objs,

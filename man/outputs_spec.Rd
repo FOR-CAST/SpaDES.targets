@@ -10,7 +10,8 @@ outputs_spec(
   rds = character(),
   qs = character(),
   csv = character(),
-  saveTime = NULL
+  saveTime = NULL,
+  arguments = list()
 )
 }
 \arguments{
@@ -36,14 +37,20 @@ LANDIS-II inputs). \code{fwrite} writes no row names, unlike \code{utils::write.
 \item{saveTime}{Optional numeric vector of save times; the rows are expanded
 over every (object, time) combination. \code{NULL} (default) lets
 \code{SpaDES.core} save once at \code{end(sim)}.}
+
+\item{arguments}{A named \code{list} of further arguments to an object's save
+function, one element per object, e.g.
+\code{list(pixelGroupMap = list(datatype = "INT4U"))} to keep a raster of codes
+as integers. Each name must be one of the objects above.}
 }
 \value{
 A \code{data.frame} with \code{objectName}, \code{file}, \code{fun}, \code{package} (and
-\code{saveTime} when supplied, and \code{arguments} when there are vectors, holding
-the \code{writeVector()} options), suitable as \code{SpaDES.core::simInit(outputs=)}.
-Vectors are named \verb{<objectName>.gpkg}; other filenames are left \code{NA} for
-\code{SpaDES.core} to derive (objectName + time + extension). \code{SpaDES.core} adds
-the time to the \code{.gpkg} names too.
+\code{saveTime} when supplied, and \code{arguments} when there are vectors or
+\code{arguments}, holding each row's save arguments), suitable as
+\code{SpaDES.core::simInit(outputs=)}. Vectors, \code{qs} and \code{csv} objects are named
+\verb{<objectName>.gpkg}, \code{.qs} and \code{.csv}; raster and RDS filenames are left
+\code{NA} for \code{SpaDES.core} to derive (objectName + time + extension).
+\code{SpaDES.core} adds the time to every name, e.g. \code{species_year1.csv}.
 }
 \description{
 Convenience constructor for the \code{outputs} \code{data.frame} that
@@ -56,8 +63,8 @@ picked up by \code{\link[=extract_outputs]{extract_outputs()}}.
 }
 \details{
 This covers the common inter-stage handoff and timeseries cases; for anything
-more exotic (per-object save \code{arguments}, mixed save functions for one
-object) build the \code{data.frame} directly -- see \code{?SpaDES.core::outputs}.
+more exotic (mixed save functions for one object) build the \code{data.frame}
+directly -- see \code{?SpaDES.core::outputs}.
 }
 \examples{
 outputs_spec(

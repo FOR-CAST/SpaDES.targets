@@ -21,8 +21,8 @@
 #'   ordinary field, whatever its type.
 #' @param rds Character vector of object names to save with `saveRDS()`
 #'   (`.rds`).
-#' @param qs Character vector of object names to save with `qs2::qs_save()`
-#'   (`.qs`); read back with `qs2::qs_read()` (see [sim_inputs()]).
+#' @param qs2 Character vector of object names to save with `qs2::qs_save()`
+#'   (`.qs2`); read back with `qs2::qs_read()` (see [sim_inputs()]).
 #' @param csv Character vector of object names to save with
 #'   `data.table::fwrite()` (`.csv`) -- for flat tables consumed downstream (e.g.
 #'   LANDIS-II inputs). `fwrite` writes no row names, unlike `utils::write.csv()`.
@@ -36,8 +36,8 @@
 #' @return A `data.frame` with `objectName`, `file`, `fun`, `package` (and
 #'   `saveTime` when supplied, and `arguments` when there are vectors or
 #'   `arguments`, holding each row's save arguments), suitable as
-#'   `SpaDES.core::simInit(outputs=)`. Vectors, `qs` and `csv` objects are named
-#'   `<objectName>.gpkg`, `.qs` and `.csv`; raster and RDS filenames are left
+#'   `SpaDES.core::simInit(outputs=)`. Vectors, `qs2` and `csv` objects are named
+#'   `<objectName>.gpkg`, `.qs2` and `.csv`; raster and RDS filenames are left
 #'   `NA` for `SpaDES.core` to derive (objectName + time + extension).
 #'   `SpaDES.core` adds the time to every name, e.g. `species_year1.csv`.
 #' @seealso [extract_outputs()], [sim_inputs()]
@@ -51,7 +51,7 @@ outputs_spec <- function(
   raster = character(),
   vect = character(),
   rds = character(),
-  qs = character(),
+  qs2 = character(),
   csv = character(),
   saveTime = NULL,
   arguments = list()
@@ -60,7 +60,7 @@ outputs_spec <- function(
     outputs_spec_rows(raster, "writeRaster", "terra"),
     outputs_spec_rows(vect, "writeVector", "terra", ext = "gpkg"),
     outputs_spec_rows(rds, "saveRDS", "base"),
-    outputs_spec_rows(qs, "qs_save", "qs2", ext = "qs"),
+    outputs_spec_rows(qs2, "qs_save", "qs2", ext = "qs2"),
     outputs_spec_rows(csv, "fwrite", "data.table", ext = "csv")
   )
   if (length(arguments) && (is.null(names(arguments)) || !all(nzchar(names(arguments))))) {
@@ -101,8 +101,8 @@ outputs_spec <- function(
 
 ## SpaDES.core names a writeVector() file .shp, which cuts field names to 10 characters and keeps its
 ## attributes in .dbf/.shx/.prj files that a stage's file list leaves out, so name vectors .gpkg.
-## qs and csv are named too: SpaDES.core's extension table has no entry for fwrite(), so it stops
-## with "no file extension", and gives qs_save() files .qs2 rather than .qs.
+## qs2 and csv are named too: SpaDES.core's extension table has no entry for fwrite(), so it stops
+## with "no file extension"; naming .qs2 here keeps it off the table for qs_save() as well.
 outputs_spec_rows <- function(objs, fun, package, ext = NA_character_) {
   data.frame(
     objectName = objs,

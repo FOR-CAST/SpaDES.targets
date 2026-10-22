@@ -8,7 +8,7 @@ outputs_spec(
   raster = character(),
   vect = character(),
   rds = character(),
-  qs = character(),
+  qs2 = character(),
   csv = character(),
   saveTime = NULL,
   arguments = list()
@@ -27,8 +27,8 @@ ordinary field, whatever its type.}
 \item{rds}{Character vector of object names to save with \code{saveRDS()}
 (\code{.rds}).}
 
-\item{qs}{Character vector of object names to save with \code{qs2::qs_save()}
-(\code{.qs}); read back with \code{qs2::qs_read()} (see \code{\link[=sim_inputs]{sim_inputs()}}).}
+\item{qs2}{Character vector of object names to save with \code{qs2::qs_save()}
+(\code{.qs2}); read back with \code{qs2::qs_read()} (see \code{\link[=sim_inputs]{sim_inputs()}}).}
 
 \item{csv}{Character vector of object names to save with
 \code{data.table::fwrite()} (\code{.csv}) -- for flat tables consumed downstream (e.g.
@@ -47,8 +47,8 @@ as integers. Each name must be one of the objects above.}
 A \code{data.frame} with \code{objectName}, \code{file}, \code{fun}, \code{package} (and
 \code{saveTime} when supplied, and \code{arguments} when there are vectors or
 \code{arguments}, holding each row's save arguments), suitable as
-\code{SpaDES.core::simInit(outputs=)}. Vectors, \code{qs} and \code{csv} objects are named
-\verb{<objectName>.gpkg}, \code{.qs} and \code{.csv}; raster and RDS filenames are left
+\code{SpaDES.core::simInit(outputs=)}. Vectors, \code{qs2} and \code{csv} objects are named
+\verb{<objectName>.gpkg}, \code{.qs2} and \code{.csv}; raster and RDS filenames are left
 \code{NA} for \code{SpaDES.core} to derive (objectName + time + extension).
 \code{SpaDES.core} adds the time to every name, e.g. \code{species_year1.csv}.
 }

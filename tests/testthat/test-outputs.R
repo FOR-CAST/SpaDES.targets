@@ -17,8 +17,12 @@ test_that("outputs_spec expands over saveTime", {
   expect_identical(spec$objectName, c("vegTypeMap", "vegTypeMap"))
 })
 
-test_that("outputs_spec adds qs and csv groups", {
-  spec <- outputs_spec(raster = "pixelGroupMap", qs = "cohortData", csv = c("species", "ecoregion"))
+test_that("outputs_spec adds qs2 and csv groups", {
+  spec <- outputs_spec(
+    raster = "pixelGroupMap",
+    qs2 = "cohortData",
+    csv = c("species", "ecoregion")
+  )
   expect_identical(spec$objectName, c("pixelGroupMap", "cohortData", "species", "ecoregion"))
   expect_identical(spec$fun, c("writeRaster", "qs_save", "fwrite", "fwrite"))
   expect_identical(spec$package, c("terra", "qs2", "data.table", "data.table"))
@@ -83,9 +87,9 @@ test_that("outputs_spec vectors keep a field named FID, whatever its type", {
   expect_identical(back$low$fid, 1.5)
 })
 
-test_that("outputs_spec names qs and csv files itself", {
-  spec <- outputs_spec(raster = "pixelGroupMap", qs = "cohortData", csv = "species")
-  expect_identical(spec$file, c(NA, "cohortData.qs", "species.csv"))
+test_that("outputs_spec names qs2 and csv files itself", {
+  spec <- outputs_spec(raster = "pixelGroupMap", qs2 = "cohortData", csv = "species")
+  expect_identical(spec$file, c(NA, "cohortData.qs2", "species.csv"))
 })
 
 test_that("outputs_spec passes per-object arguments to the save function", {
@@ -114,9 +118,9 @@ test_that("outputs_spec refuses arguments for objects it does not save", {
   )
 })
 
-test_that("outputs_spec qs, csv and typed raster saves run through SpaDES.core", {
+test_that("outputs_spec qs2, csv and typed raster saves run through SpaDES.core", {
   ## SpaDES.core has no file extension for fwrite(), so an unnamed csv row stopped simInit() with
-  ## "no file extension"; and it names qs_save() files .qs2
+  ## "no file extension"
   skip_if_not_installed("SpaDES.core")
   skip_if_not_installed("qs2")
   skip_if_not_installed("data.table")
@@ -128,7 +132,7 @@ test_that("outputs_spec qs, csv and typed raster saves run through SpaDES.core",
     objects = list(pixelGroupMap = r, cohortData = tbl, species = tbl),
     outputs = outputs_spec(
       raster = "pixelGroupMap",
-      qs = "cohortData",
+      qs2 = "cohortData",
       csv = "species",
       arguments = list(pixelGroupMap = list(datatype = "INT4U"))
     )
@@ -137,7 +141,7 @@ test_that("outputs_spec qs, csv and typed raster saves run through SpaDES.core",
   f <- stats::setNames(out$file, out$objectName)
   expect_identical(
     basename(unname(f[c("pixelGroupMap", "cohortData", "species")])),
-    c("pixelGroupMap_year1.tif", "cohortData_year1.qs", "species_year1.csv")
+    c("pixelGroupMap_year1.tif", "cohortData_year1.qs2", "species_year1.csv")
   )
   expect_identical(terra::datatype(terra::rast(f[["pixelGroupMap"]])), "INT4U")
   expect_identical(qs2::qs_read(f[["cohortData"]]), tbl)

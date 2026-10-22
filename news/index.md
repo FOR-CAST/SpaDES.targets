@@ -3,6 +3,42 @@
 ## SpaDES.targets (development version)
 
 - [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
+  and
+  [`tar_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/tar_simspades.md)
+  can run a stage in an R subprocess: `launcher = "callr"`, with
+  `renv_profile` naming the renv profile it activates first. Then
+  SpaDES.core and the modules’ packages need to be installed only in
+  that profile, not in the pipeline’s library; only SpaDES.targets is
+  needed in both. The arguments go to the subprocess through a file and
+  only the manifest comes back. A `SpatRaster` in `objects` whose values
+  are in a file crosses as a reference to the file, so the subprocess
+  reads it from disk as the calling process would. New `setup` runs a
+  function in the process that runs the simulation, before `simInit()`,
+  for state that cannot be passed as an object, such as logging in to a
+  service the modules download from.
+  [`tar_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/tar_simspades.md)
+  also takes a quoted expression as `fingerprint`
+  (e.g. `quote(stage_code)`, naming a target), refuses
+  `fingerprint = TRUE` beside `renv_profile` because it would read
+  package versions from the wrong library, and passes `...` to the
+  primary target (e.g. `resources`). Stages that use none of these keep
+  the same command, so no targets re-run (0.0.0.9034).
+
+- `outputs_spec(qs = , csv = )` now saves. SpaDES.core has no file
+  extension for
+  [`data.table::fwrite()`](https://rdrr.io/pkg/data.table/man/fwrite.html),
+  so any `csv` object stopped `simInit()` with “no file extension”, and
+  it named [`qs2::qs_save()`](https://rdrr.io/pkg/qs2/man/qs_save.html)
+  files `.qs2`, not the documented `.qs`. Both groups now name their
+  files `<objectName>.qs` and `<objectName>.csv`, as vectors are named
+  `.gpkg`; SpaDES.core still adds the time (`species_year1.csv`).
+  Neither group had been run against SpaDES.core before. New
+  `outputs_spec(arguments = )` passes per-object arguments to the save
+  function, e.g. `list(pixelGroupMap = list(datatype = "INT4U"))` to
+  keep a raster of integer codes from being written as floating point
+  (0.0.0.9033).
+
+- [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
   sets `.useCache = FALSE` for every module of the stage that does not
   set `.useCache` itself. The safe options switch reproducible’s cache
   off, but SpaDES.core decides whether an event is cached from the

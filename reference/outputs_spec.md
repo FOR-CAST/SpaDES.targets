@@ -21,7 +21,8 @@ outputs_spec(
   rds = character(),
   qs = character(),
   csv = character(),
-  saveTime = NULL
+  saveTime = NULL,
+  arguments = list()
 )
 ```
 
@@ -69,20 +70,29 @@ outputs_spec(
   every (object, time) combination. `NULL` (default) lets `SpaDES.core`
   save once at `end(sim)`.
 
+- arguments:
+
+  A named `list` of further arguments to an object's save function, one
+  element per object, e.g.
+  `list(pixelGroupMap = list(datatype = "INT4U"))` to keep a raster of
+  codes as integers. Each name must be one of the objects above.
+
 ## Value
 
 A `data.frame` with `objectName`, `file`, `fun`, `package` (and
-`saveTime` when supplied, and `arguments` when there are vectors,
-holding the `writeVector()` options), suitable as
-`SpaDES.core::simInit(outputs=)`. Vectors are named `<objectName>.gpkg`;
-other filenames are left `NA` for `SpaDES.core` to derive (objectName +
-time + extension). `SpaDES.core` adds the time to the `.gpkg` names too.
+`saveTime` when supplied, and `arguments` when there are vectors or
+`arguments`, holding each row's save arguments), suitable as
+`SpaDES.core::simInit(outputs=)`. Vectors, `qs` and `csv` objects are
+named `<objectName>.gpkg`, `.qs` and `.csv`; raster and RDS filenames
+are left `NA` for `SpaDES.core` to derive (objectName + time +
+extension). `SpaDES.core` adds the time to every name, e.g.
+`species_year1.csv`.
 
 ## Details
 
 This covers the common inter-stage handoff and timeseries cases; for
-anything more exotic (per-object save `arguments`, mixed save functions
-for one object) build the `data.frame` directly – see
+anything more exotic (mixed save functions for one object) build the
+`data.frame` directly – see
 [`?SpaDES.core::outputs`](https://spades-core.predictiveecology.org/reference/simList-accessors-outputs.html).
 
 ## See also

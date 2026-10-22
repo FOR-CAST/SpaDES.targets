@@ -4,10 +4,11 @@ The worker behind
 [`tar_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/tar_simspades.md).
 Runs
 [`SpaDES.core::simInitAndSpades()`](https://spades-core.predictiveecology.org/reference/simInitAndSpades.html)
-in-process under the safe options
+under the safe options
 ([`with_spades_safe_options()`](https://github.com/FOR-CAST/SpaDES.targets/reference/with_spades_safe_options.md)),
-with this stage's saved outputs (and figures) directed to `out_dir`,
-then returns the manifest of files it wrote via
+in this process or in an R subprocess (`launcher`), with this stage's
+saved outputs (and figures) directed to `out_dir`, then returns the
+manifest of files it wrote via
 [`extract_outputs()`](https://github.com/FOR-CAST/SpaDES.targets/reference/extract_outputs.md)
 (plus any `plain` in-memory objects). The `simList` itself is never
 returned or serialized.
@@ -33,7 +34,10 @@ run_simspades(
   mem_workers = NULL,
   mem_frac = 0.5,
   fingerprint = NULL,
-  .options = list()
+  .options = list(),
+  setup = NULL,
+  launcher = c("in_process", "callr"),
+  renv_profile = NULL
 )
 ```
 
@@ -179,6 +183,36 @@ run_simspades(
 
   Extra options merged over
   [`spades_safe_options()`](https://github.com/FOR-CAST/SpaDES.targets/reference/spades_safe_options.md).
+
+- setup:
+
+  A function, or `NULL`, called with no arguments in the process that
+  runs the simulation, after the safe options are set and before the
+  seed and `simInit()`. For session state that cannot be passed as an
+  object, such as logging in to a web service the modules download from.
+  With `launcher = "callr"` it is serialized to the subprocess: call
+  package functions with `::`, and do not rely on objects in the global
+  environment.
+
+- launcher:
+
+  Where the simulation runs: `"in_process"` (default), or `"callr"`, a
+  new R process started with
+  [`callr::r()`](https://callr.r-lib.org/reference/r.html). Use
+  `"callr"` when the simulation's packages must not load into this
+  process, for example when they are installed only in a separate renv
+  profile. The arguments go to the subprocess through a file and only
+  the manifest comes back. A `SpatRaster` in `objects` whose values are
+  in a file crosses as a reference to that file, so the subprocess reads
+  it from disk as this process would.
+
+- renv_profile:
+
+  With `launcher = "callr"`, the renv profile the subprocess activates
+  before it loads anything: it sets `RENV_PROFILE` and sources
+  `renv/activate.R` from the working directory. SpaDES.targets must be
+  installed in that profile's library. `NULL` (default) leaves the
+  subprocess on this process's library paths.
 
 ## Value
 

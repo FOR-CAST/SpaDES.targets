@@ -27,7 +27,11 @@ tar_simspades(
   mem_frac = getOption("SpaDES.targets.mem_frac", 0.5),
   fingerprint = getOption("SpaDES.targets.fingerprint", FALSE),
   fingerprint_modules = NULL,
-  .options = list()
+  .options = list(),
+  setup = NULL,
+  launcher = c("in_process", "callr"),
+  renv_profile = NULL,
+  ...
 )
 ```
 
@@ -150,8 +154,12 @@ tar_simspades(
   `paths$modulePath`, default `"modules"`, and packages per
   `getOption("SpaDES.targets.fingerprint_packages", "remote")`), so that
   `targets` sees any change to that code. A character vector is spliced
-  as given. Opt-in because turning it on changes every stage's command
-  once, which invalidates all existing stages on the next run.
+  as given. A quoted expression, e.g. `quote(stage_code)` naming another
+  target, is spliced as code, so the stage depends on that target: use
+  it with `renv_profile`, where `TRUE` would read package versions from
+  the wrong library and is an error. Opt-in because turning it on
+  changes every stage's command once, which invalidates all existing
+  stages on the next run.
 
 - fingerprint_modules:
 
@@ -169,6 +177,29 @@ tar_simspades(
   `extra_modules`). Ignored when `fingerprint` is `FALSE`; an error
   beside a supplied `fingerprint` vector. `NULL` (default) leaves the
   command exactly as before.
+
+- setup:
+
+  A **quoted** expression giving the function
+  [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
+  calls before `simInit()` (see there), e.g. `quote(drive_login)`, so
+  the stage depends on it. `NULL` (default) for none.
+
+- launcher, renv_profile:
+
+  Passed to
+  [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md):
+  `launcher = "callr"` runs the stage in an R subprocess, and
+  `renv_profile` names the renv profile that subprocess activates. Then
+  only the target command needs SpaDES.targets in the pipeline's own
+  library; SpaDES.core and the modules' packages need only be in the
+  profile.
+
+- ...:
+
+  Further arguments to
+  [`targets::tar_target_raw()`](https://docs.ropensci.org/targets/reference/tar_target.html)
+  for the primary target, such as `resources`, `deployment` or `cue`.
 
 ## Value
 
@@ -195,6 +226,9 @@ saved files via
 on `name$manifest` (passing `name_files` as the `files` dependency),
 feeding them to their own `simInit` through `inputs`. No `simList` ever
 crosses a target boundary.
+
+`setup`, `launcher` and `renv_profile` enter the command only when set,
+so a stage that leaves them at their defaults keeps the same command.
 
 ## See also
 

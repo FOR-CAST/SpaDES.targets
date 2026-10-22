@@ -3,12 +3,13 @@
 Run [`SpaDES`](https://spades.predictiveecology.org/) simulations as
 stages of a [`targets`](https://docs.ropensci.org/targets/) pipeline.
 
-Each stage runs `simInitAndSpades()` **in-process** and returns only the
-discrete components the next stage needs — plain objects as ordinary
-targets and spatial (`terra`) objects as `format = "file"` targets — so
-a whole `simList` is **never serialized** across a target boundary
-(avoiding the recursive-environment bloat and pointer-serialization
-fragility of `saveSimList()`/`loadSimList()`).
+Each stage runs `simInitAndSpades()` **in-process** (or, with
+`launcher = "callr"`, in an R subprocess that can use its own renv
+profile) and returns only the discrete components the next stage needs —
+plain objects as ordinary targets and spatial (`terra`) objects as
+`format = "file"` targets — so a whole `simList` is **never serialized**
+across a target boundary (avoiding the recursive-environment bloat and
+pointer-serialization fragility of `saveSimList()`/`loadSimList()`).
 
 It also provides the options **firewall** that makes `targets` the sole
 cache (`reproducible.useCache = FALSE`, etc.), plus terra-first spatial

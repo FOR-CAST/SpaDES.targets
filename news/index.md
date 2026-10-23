@@ -2,6 +2,13 @@
 
 ## SpaDES.targets (development version)
 
+- `outputs_spec(qs = )` is renamed `outputs_spec(qs2 = )` and names its
+  files `<objectName>.qs2`. The files are written by
+  [`qs2::qs_save()`](https://rdrr.io/pkg/qs2/man/qs_save.html), while
+  `.qs` is the extension of the deprecated qs package’s format. A call
+  that still passes `qs =` now stops with “unused argument”
+  (0.0.0.9035).
+
 - [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
   and
   [`tar_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/tar_simspades.md)

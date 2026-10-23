@@ -19,7 +19,7 @@ outputs_spec(
   raster = character(),
   vect = character(),
   rds = character(),
-  qs = character(),
+  qs2 = character(),
   csv = character(),
   saveTime = NULL,
   arguments = list()
@@ -48,10 +48,10 @@ outputs_spec(
   Character vector of object names to save with
   [`saveRDS()`](https://rdrr.io/r/base/readRDS.html) (`.rds`).
 
-- qs:
+- qs2:
 
   Character vector of object names to save with
-  [`qs2::qs_save()`](https://rdrr.io/pkg/qs2/man/qs_save.html) (`.qs`);
+  [`qs2::qs_save()`](https://rdrr.io/pkg/qs2/man/qs_save.html) (`.qs2`);
   read back with
   [`qs2::qs_read()`](https://rdrr.io/pkg/qs2/man/qs_read.html) (see
   [`sim_inputs()`](https://github.com/FOR-CAST/SpaDES.targets/reference/sim_inputs.md)).
@@ -82,8 +82,8 @@ outputs_spec(
 A `data.frame` with `objectName`, `file`, `fun`, `package` (and
 `saveTime` when supplied, and `arguments` when there are vectors or
 `arguments`, holding each row's save arguments), suitable as
-`SpaDES.core::simInit(outputs=)`. Vectors, `qs` and `csv` objects are
-named `<objectName>.gpkg`, `.qs` and `.csv`; raster and RDS filenames
+`SpaDES.core::simInit(outputs=)`. Vectors, `qs2` and `csv` objects are
+named `<objectName>.gpkg`, `.qs2` and `.csv`; raster and RDS filenames
 are left `NA` for `SpaDES.core` to derive (objectName + time +
 extension). `SpaDES.core` adds the time to every name, e.g.
 `species_year1.csv`.

@@ -232,13 +232,25 @@ run_simspades <- function(
       args$debug <- 1L
     }
     run_one <- function() {
-      sim <- do.call(SpaDES.core::simInitAndSpades, args)
+      sim <- call_by_name(quote(SpaDES.core::simInitAndSpades), args)
       extract_outputs(sim, plain = plain, base_dir = ".")
     }
     if (is.null(log_file)) run_one() else with_run_logging(run_one, log_file)
   })
   ok <- TRUE
   result
+}
+
+# Call `fun` (a quoted function name, e.g. `quote(SpaDES.core::simInitAndSpades)`) with `args` by
+# name. do.call() writes each argument's value into the call it builds, so the values stay on the
+# call stack for the whole run, and code that records sys.calls() copies them: parallelly stores
+# sys.calls() on every cluster node, and future names a new cluster by serializing it, so a module
+# that starts N workers serializes the stage's inputs N times. In LandWeb, 8 plot workers over a
+# stage's 211 MiB of reporting polygons passed 2 GiB, and tools::md5sum() stopped with "long
+# vectors not supported yet". Here the call holds only names, bound in a new environment.
+call_by_name <- function(fun, args, envir = parent.frame()) {
+  env <- list2env(args, parent = envir)
+  eval(as.call(c(fun, sapply(names(args), as.name, simplify = FALSE))), env)
 }
 
 # Run the stage in a new R process (`launcher = "callr"`). The arguments go through a file, and
@@ -279,7 +291,15 @@ subprocess_run <- function(args_file, activate) {
   if (activate) {
     source(file.path("renv", "activate.R"))
   }
-  do.call(SpaDES.targets::run_simspades, readRDS(args_file))
+  ## by name, as call_by_name() does, which callr's global enclosure cannot reach
+  args <- readRDS(args_file)
+  eval(
+    as.call(c(
+      quote(SpaDES.targets::run_simspades),
+      sapply(names(args), as.name, simplify = FALSE)
+    )),
+    list2env(args)
+  )
 }
 
 # Turn caching off for every module of the stage that does not set `.useCache`. The safe options

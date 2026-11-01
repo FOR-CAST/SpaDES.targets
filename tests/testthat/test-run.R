@@ -473,6 +473,34 @@ test_that("run_simspades unpacks terra objects passed in `objects`", {
   expect_s4_class(got$disturbanceList$mining, "SpatVector")
 })
 
+test_that("run_simspades passes its arguments by name, keeping their values off the call stack", {
+  ## parallelly stores sys.calls() on every cluster node and future serializes the cluster to name
+  ## it, so a value on the stack is copied once per worker: 8 plot workers over 211 MiB of inputs
+  ## passed 2 GiB, and tools::md5sum() stopped with "long vectors not supported yet"
+  seen <- NULL
+  testthat::local_mocked_bindings(
+    simInitAndSpades = function(...) {
+      seen <<- list(
+        call = sys.call(),
+        stack = length(serialize(sys.calls(), NULL)),
+        args = list(...)
+      )
+      list()
+    },
+    .package = "SpaDES.core"
+  )
+  testthat::local_mocked_bindings(extract_outputs = function(...) list())
+  big <- list(x = stats::runif(1e6))
+
+  run_simspades(modules = "m", objects = list(x = 1), out_dir = withr::local_tempdir())
+  small <- seen$stack
+  run_simspades(modules = "m", objects = big, out_dir = withr::local_tempdir())
+
+  expect_true(all(vapply(as.list(seen$call)[-1], is.symbol, logical(1))))
+  expect_lt(seen$stack - small, length(serialize(big, NULL)) / 2)
+  expect_identical(seen$args$objects, big)
+})
+
 test_that("launcher = 'callr' hands every run argument to the subprocess", {
   seen <- NULL
   testthat::local_mocked_bindings(run_in_subprocess = function(args, renv_profile) {
@@ -563,13 +591,19 @@ test_that("subprocess_run activates renv, then runs the stage with the saved arg
   saveRDS(list(modules = "m", seed = 2L), f)
   seen <- NULL
   testthat::local_mocked_bindings(run_simspades = function(...) {
-    seen <<- list(args = list(...), activated = getOption("SpaDES.targets.test_activated"))
+    seen <<- list(
+      args = list(...),
+      call = sys.call(),
+      activated = getOption("SpaDES.targets.test_activated")
+    )
     "manifest"
   })
 
   expect_identical(subprocess_run(f, activate = TRUE), "manifest")
   expect_true(seen$activated)
   expect_identical(seen$args, list(modules = "m", seed = 2L))
+  ## by name, so the saved values are not written into the call (see call_by_name())
+  expect_identical(as.list(seen$call)[-1], list(modules = quote(modules), seed = quote(seed)))
 })
 
 test_that("launcher = 'callr' runs the stage, and setup, in another R process", {

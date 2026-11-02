@@ -2,6 +2,24 @@
 
 ## SpaDES.targets (development version)
 
+- [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
+  passes its arguments to `simInitAndSpades()` by name, not by value,
+  and so does a `launcher = "callr"` subprocess to
+  [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md).
+  [`do.call()`](https://rdrr.io/r/base/do.call.html) wrote every value,
+  the stage’s `objects` included, into the call stack for the whole run.
+  parallelly stores
+  [`sys.calls()`](https://rdrr.io/r/base/sys.parent.html) on each
+  cluster node, and future names a new cluster by serializing it, so a
+  module that started a
+  [`future::multisession`](https://future.futureverse.org/reference/multisession.html)
+  plan serialized the stage’s inputs once per worker. In LandWeb, the
+  NRV summary of the study area with the largest reporting polygons (211
+  MiB) failed after 18 hours, when it started 8 plot workers, with “long
+  vectors not supported yet” from
+  [`tools::md5sum()`](https://rdrr.io/r/tools/md5sum.html). Stage
+  commands do not change, so no targets re-run (0.0.0.9036).
+
 - `outputs_spec(qs = )` is renamed `outputs_spec(qs2 = )` and names its
   files `<objectName>.qs2`. The files are written by
   [`qs2::qs_save()`](https://rdrr.io/pkg/qs2/man/qs_save.html), while

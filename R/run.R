@@ -5,7 +5,9 @@
 #' an R subprocess (`launcher`), with this stage's saved outputs (and figures)
 #' directed to `out_dir`, then returns the manifest of files it wrote via
 #' [extract_outputs()] (plus any `plain` in-memory objects). The `simList`
-#' itself is never returned or serialized.
+#' itself is never returned or serialized. During the run, GDAL's write time in
+#' GeoPackages is fixed, as in [write_spatial()], so a re-run on the same data
+#' writes the same files.
 #'
 #' @param modules Character vector (or list) of module names.
 #' @param objects Named `list` of in-memory objects passed to
@@ -198,6 +200,7 @@ run_simspades <- function(
   )
   ok <- FALSE
   on.exit(finalize_scratch(scratch_run, ok), add = TRUE)
+  local_gpkg_date()
   params <- no_module_cache(params, modules)
   result <- with_spades_safe_options(.options = .options, {
     if (!is.null(setup)) {

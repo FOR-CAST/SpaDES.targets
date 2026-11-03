@@ -23,7 +23,9 @@ Writes a \code{terra} \code{SpatRaster} (default extension \code{.tif}) or \code
 has no \code{sf} path). The returned path is what a \code{targets} \code{format = "file"}
 target should yield so that \code{targets} hashes the file's contents. A
 GeoPackage's key column is named \code{fid_gpkg}, as in \code{\link[=outputs_spec]{outputs_spec()}}, so that
-a field named \code{FID} is kept as it is.
+a field named \code{FID} is kept as it is. GDAL's write time in a GeoPackage is
+fixed (\code{OGR_CURRENT_DATE}, 2000-01-01, unless already set), so the same data
+gives the same file.
 }
 \seealso{
 \code{\link[=read_spatial]{read_spatial()}}

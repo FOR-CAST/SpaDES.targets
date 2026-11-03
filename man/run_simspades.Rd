@@ -148,5 +148,7 @@ under the safe options (\code{\link[=with_spades_safe_options]{with_spades_safe_
 an R subprocess (\code{launcher}), with this stage's saved outputs (and figures)
 directed to \code{out_dir}, then returns the manifest of files it wrote via
 \code{\link[=extract_outputs]{extract_outputs()}} (plus any \code{plain} in-memory objects). The \code{simList}
-itself is never returned or serialized.
+itself is never returned or serialized. During the run, GDAL's write time in
+GeoPackages is fixed, as in \code{\link[=write_spatial]{write_spatial()}}, so a re-run on the same data
+writes the same files.
 }

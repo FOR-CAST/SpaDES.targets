@@ -501,6 +501,22 @@ test_that("run_simspades passes its arguments by name, keeping their values off 
   expect_identical(seen$args$objects, big)
 })
 
+test_that("run_simspades fixes the GeoPackage write date for the run only", {
+  withr::local_envvar(OGR_CURRENT_DATE = NA)
+  seen <- NULL
+  testthat::local_mocked_bindings(
+    simInitAndSpades = function(...) {
+      seen <<- Sys.getenv("OGR_CURRENT_DATE")
+      list()
+    },
+    .package = "SpaDES.core"
+  )
+  testthat::local_mocked_bindings(extract_outputs = function(...) list())
+  run_simspades(modules = "m", out_dir = withr::local_tempdir())
+  expect_identical(seen, "2000-01-01T00:00:00.000Z")
+  expect_identical(Sys.getenv("OGR_CURRENT_DATE", NA), NA_character_)
+})
+
 test_that("launcher = 'callr' hands every run argument to the subprocess", {
   seen <- NULL
   testthat::local_mocked_bindings(run_in_subprocess = function(args, renv_profile) {

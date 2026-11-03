@@ -15,7 +15,9 @@ is_spatial <- function(x) {
 #' has no `sf` path). The returned path is what a `targets` `format = "file"`
 #' target should yield so that `targets` hashes the file's contents. A
 #' GeoPackage's key column is named `fid_gpkg`, as in [outputs_spec()], so that
-#' a field named `FID` is kept as it is.
+#' a field named `FID` is kept as it is. GDAL's write time in a GeoPackage is
+#' fixed (`OGR_CURRENT_DATE`, 2000-01-01, unless already set), so the same data
+#' gives the same file.
 #'
 #' @param x A `SpatRaster`, `SpatVector`, or `sf`/`sfc` object.
 #' @param path Destination file path.
@@ -24,6 +26,7 @@ is_spatial <- function(x) {
 #' @seealso [read_spatial()]
 #' @export
 write_spatial <- function(x, path, overwrite = TRUE) {
+  local_gpkg_date()
   if (inherits(x, "SpatRaster")) {
     terra::writeRaster(x, path, overwrite = overwrite)
   } else if (inherits(x, "SpatVector")) {
@@ -45,6 +48,17 @@ write_spatial <- function(x, path, overwrite = TRUE) {
 ## fields carries a dummy integer `FID`, which terra reads back as numeric. Naming the key column
 ## `fid_gpkg` keeps such a field as an ordinary one.
 gpkg_layer_options <- "FID=fid_gpkg"
+
+## GDAL writes the time of writing into a GeoPackage (`gpkg_contents.last_change`), so the same layer
+## written twice gives two different files, and a `format = "file"` target that tracks one re-runs
+## everything downstream although nothing changed. A fixed OGR_CURRENT_DATE makes the file depend only
+## on its data. A value already set is kept.
+local_gpkg_date <- function(envir = parent.frame()) {
+  if (!nzchar(Sys.getenv("OGR_CURRENT_DATE"))) {
+    withr::local_envvar(OGR_CURRENT_DATE = "2000-01-01T00:00:00.000Z", .local_envir = envir)
+  }
+  invisible()
+}
 
 write_vector <- function(x, path, overwrite) {
   if (identical(tolower(tools::file_ext(path)), "gpkg")) {

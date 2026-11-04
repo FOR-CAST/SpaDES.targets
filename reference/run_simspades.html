@@ -4,12 +4,16 @@ under the safe options (with_spades_safe_options()), in this process or in
 an R subprocess (launcher), with this stage's saved outputs (and figures)
 directed to out_dir, then returns the manifest of files it wrote via
 extract_outputs() (plus any plain in-memory objects). The simList
-itself is never returned or serialized."><meta property="og:description" content="The worker behind tar_simspades(). Runs SpaDES.core::simInitAndSpades()
+itself is never returned or serialized. During the run, GDAL's write time in
+GeoPackages is fixed, as in write_spatial(), so a re-run on the same data
+writes the same files."><meta property="og:description" content="The worker behind tar_simspades(). Runs SpaDES.core::simInitAndSpades()
 under the safe options (with_spades_safe_options()), in this process or in
 an R subprocess (launcher), with this stage's saved outputs (and figures)
 directed to out_dir, then returns the manifest of files it wrote via
 extract_outputs() (plus any plain in-memory objects). The simList
-itself is never returned or serialized."></head><body>
+itself is never returned or serialized. During the run, GDAL's write time in
+GeoPackages is fixed, as in write_spatial(), so a re-run on the same data
+writes the same files."></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -17,7 +21,7 @@ itself is never returned or serialized."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9036</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9037</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -49,7 +53,9 @@ under the safe options (<code><a href="with_spades_safe_options.html">with_spade
 an R subprocess (<code>launcher</code>), with this stage's saved outputs (and figures)
 directed to <code>out_dir</code>, then returns the manifest of files it wrote via
 <code><a href="extract_outputs.html">extract_outputs()</a></code> (plus any <code>plain</code> in-memory objects). The <code>simList</code>
-itself is never returned or serialized.</p>
+itself is never returned or serialized. During the run, GDAL's write time in
+GeoPackages is fixed, as in <code><a href="write_spatial.html">write_spatial()</a></code>, so a re-run on the same data
+writes the same files.</p>
     </div>
 
     <div class="section level2">

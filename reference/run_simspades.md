@@ -11,7 +11,10 @@ saved outputs (and figures) directed to `out_dir`, then returns the
 manifest of files it wrote via
 [`extract_outputs()`](https://github.com/FOR-CAST/SpaDES.targets/reference/extract_outputs.md)
 (plus any `plain` in-memory objects). The `simList` itself is never
-returned or serialized.
+returned or serialized. During the run, GDAL's write time in GeoPackages
+is fixed, as in
+[`write_spatial()`](https://github.com/FOR-CAST/SpaDES.targets/reference/write_spatial.md),
+so a re-run on the same data writes the same files.
 
 ## Usage
 

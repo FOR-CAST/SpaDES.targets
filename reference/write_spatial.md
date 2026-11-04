@@ -7,7 +7,9 @@ Writes a `terra` `SpatRaster` (default extension `.tif`) or `SpatVector`
 `format = "file"` target should yield so that `targets` hashes the
 file's contents. A GeoPackage's key column is named `fid_gpkg`, as in
 [`outputs_spec()`](https://github.com/FOR-CAST/SpaDES.targets/reference/outputs_spec.md),
-so that a field named `FID` is kept as it is.
+so that a field named `FID` is kept as it is. GDAL's write time in a
+GeoPackage is fixed (`OGR_CURRENT_DATE`, 2000-01-01, unless already
+set), so the same data gives the same file.
 
 ## Usage
 

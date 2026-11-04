@@ -3,6 +3,19 @@
 ## SpaDES.targets (development version)
 
 - [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
+  and
+  [`write_spatial()`](https://github.com/FOR-CAST/SpaDES.targets/reference/write_spatial.md)
+  fix GDAL’s write time in GeoPackages (`OGR_CURRENT_DATE`, set to
+  2000-01-01 unless already set), only while they run. GDAL stamped the
+  time of writing into `gpkg_contents`, so the same layer written twice
+  gave two different files, and a stage that re-ran on unchanged data
+  outdated every stage downstream of its `*_files` target. In LandWeb a
+  re-run of the preamble or data preparation re-ran about 23 hours of
+  downstream stages. Stage commands do not change; files written before
+  this carry their old dates, so each stage’s next run writes different
+  bytes once (0.0.0.9037).
+
+- [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
   passes its arguments to `simInitAndSpades()` by name, not by value,
   and so does a `launcher = "callr"` subprocess to
   [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md).

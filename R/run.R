@@ -219,7 +219,9 @@ run_simspades <- function(
     if (!is.null(inputs)) {
       args$inputs <- resolve_input_files(inputs)
     }
-    if (!is.null(outputs)) {
+    ## an empty table (outputs_spec() naming nothing) is left out: SpaDES.core keeps it as it is,
+    ## then stops because it lacks the columns of its own file table
+    if (NROW(outputs)) {
       args$outputs <- outputs
     }
     if (!is.null(loadOrder)) {

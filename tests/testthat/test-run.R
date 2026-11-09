@@ -669,3 +669,34 @@ test_that("launcher = 'callr' runs the stage, and setup, in another R process", 
   expect_identical(res$pids[["setup"]], res$pids[["sim"]])
   expect_identical(res$src, terra::sources(terra::rast(tif))) # read from its file, not copied
 })
+
+test_that("run_simspades passes simInitAndSpades() no outputs table when outputs_spec() names nothing", {
+  got <- list()
+  testthat::local_mocked_bindings(
+    simInitAndSpades = function(...) {
+      got[[length(got) + 1L]] <<- names(list(...))
+      list()
+    },
+    .package = "SpaDES.core"
+  )
+  testthat::local_mocked_bindings(extract_outputs = function(...) list())
+
+  run_simspades(modules = "m", out_dir = withr::local_tempdir(), outputs = outputs_spec())
+  run_simspades(modules = "m", out_dir = withr::local_tempdir(), outputs = outputs_spec(rds = "x"))
+
+  expect_false("outputs" %in% got[[1L]])
+  expect_true("outputs" %in% got[[2L]])
+})
+
+test_that("run_simspades runs a stage that saves nothing, with outputs = outputs_spec()", {
+  ## SpaDES.core keeps an empty outputs table as it is, then stops because it lacks the file-table
+  ## columns: "output table must have columns named file, fun, package, objectName, ..."
+  base <- withr::local_tempdir()
+  expect_no_error(run_simspades(
+    modules = character(),
+    times = list(start = 0, end = 1),
+    paths = list(modulePath = base, inputPath = base, cachePath = base),
+    out_dir = file.path(base, "out"),
+    outputs = outputs_spec()
+  ))
+})

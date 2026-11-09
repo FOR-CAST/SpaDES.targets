@@ -3,6 +3,15 @@
 ## SpaDES.targets (development version)
 
 - [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
+  no longer passes an empty `outputs` table to `simInitAndSpades()`. A
+  stage given `outputs = outputs_spec()` with no objects, i.e. one that
+  saves nothing, stopped in `simInit()` with “output table must have
+  columns named file, fun, package, objectName, saveTime, saved,
+  arguments”: SpaDES.core keeps an empty table as it is, without the
+  columns it then checks for. Commands of stages that save something do
+  not change, so their targets do not re-run (0.0.0.9038).
+
+- [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
   and
   [`write_spatial()`](https://github.com/FOR-CAST/SpaDES.targets/reference/write_spatial.md)
   fix GDAL’s write time in GeoPackages (`OGR_CURRENT_DATE`, set to

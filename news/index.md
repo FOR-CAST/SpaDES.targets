@@ -2,6 +2,14 @@
 
 ## SpaDES.targets (development version)
 
+- [`stage_fingerprint()`](https://github.com/FOR-CAST/SpaDES.targets/reference/stage_fingerprint.md),
+  and so `tar_simspades(fingerprint = TRUE)`, no longer stops when none
+  of a stage’s modules declares a package in `reqdPkgs`; the fingerprint
+  then holds the modules’ entries alone. It stopped with “‘names’
+  attribute \[1\] must be the same length as the vector \[0\]”. Commands
+  of stages whose modules declare packages do not change, so their
+  targets do not re-run (0.0.0.9040).
+
 - [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
   no longer passes an empty `outputs` table to `simInitAndSpades()`. A
   stage given `outputs = outputs_spec()` with no objects, i.e. one that

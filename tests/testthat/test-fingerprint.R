@@ -185,6 +185,21 @@ test_that("stage_fingerprint() combines modules and packages under stable names"
   )
 })
 
+test_that("stage_fingerprint() takes modules that declare no reqdPkgs", {
+  root <- withr::local_tempdir()
+  dir.create(file.path(root, "a"))
+  dir.create(file.path(root, "b"))
+  writeLines("defineModule(sim, list(name = \"a\"))", file.path(root, "a", "a.R"))
+  writeLines(
+    "defineModule(sim, list(name = \"b\", reqdPkgs = list()))",
+    file.path(root, "b", "b.R")
+  )
+  for (p in c("remote", "all")) {
+    fp <- stage_fingerprint(c("a", "b"), modulePath = root, packages = p)
+    expect_identical(names(fp), c("module:a", "module:b"))
+  }
+})
+
 test_that("stage_fingerprint() finds each module in whichever modulePath entry holds it", {
   ## SpaDES.core accepts several module paths, e.g. c("modules", "modules/scfm/modules")
   root <- withr::local_tempdir()

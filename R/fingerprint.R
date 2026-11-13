@@ -89,6 +89,10 @@ stage_fingerprint <- function(modules, modulePath = "modules",
   pkgNames <- sort(unique(unlist(lapply(modules, function(m) {
     .module_reqd_pkgs(file.path(dirs[[m]], paste0(m, ".R")))
   }))))
+  ## no module declares a package: nothing to add (paste0() would name an empty vector "pkg:")
+  if (!length(pkgNames)) {
+    return(mods)
+  }
   pkgs <- vapply(
     pkgNames,
     function(p) .package_fingerprint(p, remoteOnly = identical(packages, "remote")),

@@ -1,5 +1,7 @@
 # SpaDES.targets (development version)
 
+* `stage_fingerprint()`, and so `tar_simspades(fingerprint = TRUE)`, no longer stops when none of a stage's modules declares a package in `reqdPkgs`; the fingerprint then holds the modules' entries alone. It stopped with "'names' attribute [1] must be the same length as the vector [0]". Commands of stages whose modules declare packages do not change, so their targets do not re-run (0.0.0.9040).
+
 * `run_simspades()` no longer passes an empty `outputs` table to `simInitAndSpades()`. A stage given `outputs = outputs_spec()` with no objects, i.e. one that saves nothing, stopped in `simInit()` with "output table must have columns named file, fun, package, objectName, saveTime, saved, arguments": SpaDES.core keeps an empty table as it is, without the columns it then checks for. Commands of stages that save something do not change, so their targets do not re-run (0.0.0.9038).
 
 * `run_simspades()` and `write_spatial()` fix GDAL's write time in GeoPackages (`OGR_CURRENT_DATE`, set to 2000-01-01 unless already set), only while they run. GDAL stamped the time of writing into `gpkg_contents`, so the same layer written twice gave two different files, and a stage that re-ran on unchanged data outdated every stage downstream of its `*_files` target. In LandWeb a re-run of the preamble or data preparation re-ran about 23 hours of downstream stages. Stage commands do not change; files written before this carry their old dates, so each stage's next run writes different bytes once (0.0.0.9037).

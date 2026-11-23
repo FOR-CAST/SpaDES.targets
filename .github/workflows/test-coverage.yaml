@@ -50,3 +50,7 @@ jobs:
       - name: Test coverage
         run: covr::codecov()
         shell: Rscript {0}
+        env:
+          ## Codecov no longer takes uploads from this repository without a token; covr reads it
+          ## from CODECOV_TOKEN (a repository or organization secret)
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

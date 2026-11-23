@@ -283,6 +283,95 @@ test_that("node_ram_gb returns positive RAM (or NA off Linux)", {
   }
 })
 
+## A stand-in for the filesystem node_ram_gb() reads, deleted when `env` ends: /proc/meminfo with
+## `mem_total_gb`, /proc/self/cgroup holding the `cgroup` lines, and `limits` (a named list: file
+## path below the root -> its content, bytes or "max").
+fake_proc_root <- function(
+  mem_total_gb = 755.4,
+  cgroup = character(),
+  limits = list(),
+  env = parent.frame()
+) {
+  root <- withr::local_tempdir(.local_envir = env)
+  dir.create(file.path(root, "proc", "self"), recursive = TRUE)
+  writeLines(
+    sprintf("MemTotal:       %.0f kB", mem_total_gb * 1024^2),
+    file.path(root, "proc", "meminfo")
+  )
+  writeLines(cgroup, file.path(root, "proc", "self", "cgroup"))
+  for (p in names(limits)) {
+    f <- file.path(root, p)
+    dir.create(dirname(f), recursive = TRUE, showWarnings = FALSE)
+    writeLines(as.character(limits[[p]]), f)
+  }
+  root
+}
+
+## `x` GiB as the bytes a cgroup limit file holds
+gib_bytes <- function(x) format(x * 1024^3, scientific = FALSE)
+
+test_that("node_ram_gb takes a SLURM job's limit from the job's own cgroup (v2), below the root", {
+  job <- "sys/fs/cgroup/system.slice/slurmstepd.scope/job_1"
+  limits <- list("max", "max", "max", gib_bytes(8), "max", "max", "max")
+  names(limits) <- c(
+    "sys/fs/cgroup/memory.max",
+    "sys/fs/cgroup/system.slice/memory.max",
+    "sys/fs/cgroup/system.slice/slurmstepd.scope/memory.max",
+    file.path(job, "memory.max"),
+    file.path(job, "step_batch", "memory.max"),
+    file.path(job, "step_batch", "user", "memory.max"),
+    file.path(job, "step_batch", "user", "task_0", "memory.max")
+  )
+  root <- fake_proc_root(
+    cgroup = "0::/system.slice/slurmstepd.scope/job_1/step_batch/user/task_0",
+    limits = limits
+  )
+  expect_equal(node_ram_gb(root), 8)
+})
+
+test_that("node_ram_gb takes the job's limit from the memory controller's cgroup (v1)", {
+  root <- fake_proc_root(
+    cgroup = c(
+      "12:cpu,cpuacct:/slurm/uid_1/job_1/step_batch/task_0",
+      "11:memory:/slurm/uid_1/job_1/step_batch/task_0"
+    ),
+    limits = list(
+      ## v1's "no limit" is a very large number
+      "sys/fs/cgroup/memory/memory.limit_in_bytes" = "9223372036854771712",
+      "sys/fs/cgroup/memory/slurm/uid_1/job_1/memory.limit_in_bytes" = gib_bytes(12),
+      "sys/fs/cgroup/memory/slurm/uid_1/job_1/step_batch/task_0/memory.limit_in_bytes" = "9223372036854771712"
+    )
+  )
+  expect_equal(node_ram_gb(root), 12)
+})
+
+test_that("node_ram_gb takes a container's limit at the root, and the smallest of all", {
+  ## a container: its own cgroup is the root
+  root <- fake_proc_root(cgroup = "0::/", limits = list("sys/fs/cgroup/memory.max" = gib_bytes(16)))
+  expect_equal(node_ram_gb(root), 16)
+  ## physical memory smaller than the job's limit
+  root <- fake_proc_root(
+    mem_total_gb = 4,
+    cgroup = "0::/job_1",
+    limits = list("sys/fs/cgroup/job_1/memory.max" = gib_bytes(8))
+  )
+  expect_equal(node_ram_gb(root), 4)
+})
+
+test_that("node_ram_gb falls back to physical memory, and is NA when nothing is readable", {
+  ## no limit anywhere
+  root <- fake_proc_root(
+    cgroup = "0::/user.slice/user-1.slice",
+    limits = list("sys/fs/cgroup/memory.max" = "max", "sys/fs/cgroup/user.slice/memory.max" = "max")
+  )
+  expect_equal(node_ram_gb(root), 755.4)
+  ## no /proc/self/cgroup: the root's limit still counts
+  root <- fake_proc_root(limits = list("sys/fs/cgroup/memory.max" = gib_bytes(32)))
+  unlink(file.path(root, "proc", "self", "cgroup"))
+  expect_equal(node_ram_gb(root), 32)
+  expect_identical(node_ram_gb(withr::local_tempdir()), NA_real_)
+})
+
 test_that("cap_terra_memory caps terra memmax at mem_frac * RAM / mem_workers", {
   skip_if_not_installed("terra")
   ram <- node_ram_gb()

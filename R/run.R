@@ -67,15 +67,17 @@
 #'   inspection. Before each run, leftover subdirs from earlier failed or killed
 #'   runs are swept once older than this many days (default 7), so transient
 #'   scratch never becomes long-term storage. `Inf` disables the sweep.
-#' @param mem_workers Integer or `NULL`. Number of crew workers sharing this node.
+#' @param mem_workers Integer or `NULL`. Number of crew workers sharing this node's
+#'   memory, or under a scheduler such as SLURM, sharing one job's memory limit.
 #'   When set, terra's per-process memory is capped at `mem_max = mem_frac * (this
-#'   node's RAM) / mem_workers` GB so that concurrent workers do not collectively
-#'   OOM the node (terra's default `memfrac` is a per-process fraction of RAM with
-#'   no cross-worker coordination). `NULL` (default) leaves terra at its defaults.
-#' @param mem_frac Numeric in (0, 1]; the fraction of the node's RAM that all its
-#'   workers' terra memory may collectively use (default 0.5, leaving headroom for
-#'   the OS, non-terra R memory, and co-tenant processes). Only used when
-#'   `mem_workers` is set.
+#'   node's RAM, or the job's limit) / mem_workers` GB so that concurrent workers do
+#'   not collectively OOM the node or the job (terra's default `memfrac` is a
+#'   per-process fraction of RAM with no cross-worker coordination). `NULL`
+#'   (default) leaves terra at its defaults.
+#' @param mem_frac Numeric in (0, 1]; the fraction of the node's RAM (or the job's
+#'   limit) that all its workers' terra memory may collectively use (default 0.5,
+#'   leaving headroom for the OS, non-terra R memory, and co-tenant processes). Only
+#'   used when `mem_workers` is set.
 #' @param fingerprint Not used by the run. [tar_simspades()] places the stage's
 #'   [stage_fingerprint()] here so that `targets`, which hashes the command, re-runs
 #'   the stage when its module code or companion packages change.
@@ -401,9 +403,10 @@ with_run_logging <- function(fn, log_file) {
 
 # Bound terra's per-process memory (`memmax`, GB) so that N crew workers sharing a
 # node do not collectively OOM it, and direct terra's scratch to a fast local dir.
-# `mem_workers` is the number of workers sharing this node (so the node's RAM is split
-# among them); `NULL`/`<= 0`, or an undeterminable node RAM, leaves terra at its
-# defaults. Idempotent; called once per run on the worker.
+# `mem_workers` is the number of workers sharing the memory node_ram_gb() finds (so it
+# is split among them): the workers on the node, or under a scheduler such as SLURM,
+# the workers in one job; `NULL`/`<= 0`, or an undeterminable node RAM, leaves terra at
+# its defaults. Idempotent; called once per run on the worker.
 cap_terra_memory <- function(mem_workers, mem_frac = 0.5, tempdir = NULL) {
   if (!is.null(tempdir) && dir.exists(tempdir)) {
     try(terra::terraOptions(tempdir = tempdir), silent = TRUE)
@@ -420,23 +423,54 @@ cap_terra_memory <- function(mem_workers, mem_frac = 0.5, tempdir = NULL) {
   invisible(memmax)
 }
 
-# Total memory (GB) available to this process: the smaller of physical RAM
-# (`/proc/meminfo`) and any cgroup (v2 then v1) memory limit, so a containerized
-# worker is sized to its quota rather than the host. `NA` if undeterminable.
-node_ram_gb <- function() {
+# Total memory (GB) available to this process: the smallest of physical RAM
+# (`/proc/meminfo`) and the memory limits of the process's own cgroup and of every
+# cgroup above it, up to the root (v2, and v1's memory controller). A container's
+# limit is at the root of the tree it sees; a scheduler such as SLURM puts a job's
+# limit on the job's own cgroup, below the root, so reading the root alone would size
+# a job's workers to the whole node. `NA` if undeterminable. `root` prefixes every
+# path, for tests.
+node_ram_gb <- function(root = "") {
   read1 <- function(p, n) {
     if (!file.exists(p)) {
       return(character())
     }
     tryCatch(suppressWarnings(readLines(p, n = n)), error = function(e) character())
   }
+  # "/a/b" -> c("", "/a", "/a/b"): a cgroup and every cgroup above it
+  up <- function(path) {
+    parts <- strsplit(path, "/", fixed = TRUE)[[1L]]
+    parts <- parts[nzchar(parts)]
+    c(
+      "",
+      vapply(
+        seq_along(parts),
+        function(k) paste0("/", paste(parts[seq_len(k)], collapse = "/")),
+        ""
+      )
+    )
+  }
   gb <- Inf
-  line <- grep("^MemTotal:", read1("/proc/meminfo", 50L), value = TRUE)
+  line <- grep("^MemTotal:", read1(paste0(root, "/proc/meminfo"), 50L), value = TRUE)
   if (length(line)) {
     kb <- suppressWarnings(as.numeric(gsub("\\D", "", line[1L])))
     if (!is.na(kb)) gb <- min(gb, kb / 1024 / 1024)
   }
-  for (p in c("/sys/fs/cgroup/memory.max", "/sys/fs/cgroup/memory/memory.limit_in_bytes")) {
+  # this process's cgroup: v2 "0::<path>"; v1 "<n>:<controllers>:<path>" with memory among them
+  cg <- read1(paste0(root, "/proc/self/cgroup"), 100L)
+  v1_memory <- "^[0-9]+:([^:]*,)?memory(,[^:]*)?:"
+  v2 <- sub("^0::", "", grep("^0::", cg, value = TRUE))
+  v1 <- sub(v1_memory, "", grep(v1_memory, cg, value = TRUE))
+  files <- c(
+    paste0(root, "/sys/fs/cgroup", up(if (length(v2)) v2[[1L]] else ""), "/memory.max"),
+    paste0(
+      root,
+      "/sys/fs/cgroup/memory",
+      up(if (length(v1)) v1[[1L]] else ""),
+      "/memory.limit_in_bytes"
+    )
+  )
+  for (p in files) {
     v <- read1(p, 1L)
     if (length(v) && grepl("^[0-9]+$", v[1L])) gb <- min(gb, as.numeric(v[1L]) / 1024^3)
   }

@@ -101,15 +101,17 @@ inspection. Before each run, leftover subdirs from earlier failed or killed
 runs are swept once older than this many days (default 7), so transient
 scratch never becomes long-term storage. \code{Inf} disables the sweep.}
 
-\item{mem_workers}{Integer or \code{NULL}. Number of crew workers sharing this node.
-When set, terra's per-process memory is capped at \verb{mem_max = mem_frac * (this node's RAM) / mem_workers} GB so that concurrent workers do not collectively
-OOM the node (terra's default \code{memfrac} is a per-process fraction of RAM with
-no cross-worker coordination). \code{NULL} (default) leaves terra at its defaults.}
+\item{mem_workers}{Integer or \code{NULL}. Number of crew workers sharing this node's
+memory, or under a scheduler such as SLURM, sharing one job's memory limit.
+When set, terra's per-process memory is capped at \verb{mem_max = mem_frac * (this node's RAM, or the job's limit) / mem_workers} GB so that concurrent workers do
+not collectively OOM the node or the job (terra's default \code{memfrac} is a
+per-process fraction of RAM with no cross-worker coordination). \code{NULL}
+(default) leaves terra at its defaults.}
 
-\item{mem_frac}{Numeric in (0, 1]; the fraction of the node's RAM that all its
-workers' terra memory may collectively use (default 0.5, leaving headroom for
-the OS, non-terra R memory, and co-tenant processes). Only used when
-\code{mem_workers} is set.}
+\item{mem_frac}{Numeric in (0, 1]; the fraction of the node's RAM (or the job's
+limit) that all its workers' terra memory may collectively use (default 0.5,
+leaving headroom for the OS, non-terra R memory, and co-tenant processes). Only
+used when \code{mem_workers} is set.}
 
 \item{fingerprint}{Not used by the run. \code{\link[=tar_simspades]{tar_simspades()}} places the stage's
 \code{\link[=stage_fingerprint]{stage_fingerprint()}} here so that \code{targets}, which hashes the command, re-runs

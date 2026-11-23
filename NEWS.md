@@ -1,5 +1,7 @@
 # SpaDES.targets (development version)
 
+* The memory cap `run_simspades()` sets for terra (`mem_workers`) now takes the memory limit of the worker's own cgroup and of every cgroup above it, not only the root's. A container's limit is at the root, but a scheduler such as SLURM sets a job's limit on the job's own cgroup, below the root, so inside a SLURM job the cap was sized to the whole node: 755 GB in a job limited to 8 GB, so terra could plan to use many times what the job may. Under SLURM, `mem_workers` counts the workers in one job, not on the node. Stage commands do not change, so no targets re-run (0.0.0.9041).
+
 * `stage_fingerprint()`, and so `tar_simspades(fingerprint = TRUE)`, no longer stops when none of a stage's modules declares a package in `reqdPkgs`; the fingerprint then holds the modules' entries alone. It stopped with "'names' attribute [1] must be the same length as the vector [0]". Commands of stages whose modules declare packages do not change, so their targets do not re-run (0.0.0.9040).
 
 * `run_simspades()` no longer passes an empty `outputs` table to `simInitAndSpades()`. A stage given `outputs = outputs_spec()` with no objects, i.e. one that saves nothing, stopped in `simInit()` with "output table must have columns named file, fun, package, objectName, saveTime, saved, arguments": SpaDES.core keeps an empty table as it is, without the columns it then checks for. Commands of stages that save something do not change, so their targets do not re-run (0.0.0.9038).

@@ -2,6 +2,17 @@
 
 ## SpaDES.targets (development version)
 
+- The memory cap
+  [`run_simspades()`](https://github.com/FOR-CAST/SpaDES.targets/reference/run_simspades.md)
+  sets for terra (`mem_workers`) now takes the memory limit of the
+  worker’s own cgroup and of every cgroup above it, not only the root’s.
+  A container’s limit is at the root, but a scheduler such as SLURM sets
+  a job’s limit on the job’s own cgroup, below the root, so inside a
+  SLURM job the cap was sized to the whole node: 755 GB in a job limited
+  to 8 GB, so terra could plan to use many times what the job may. Under
+  SLURM, `mem_workers` counts the workers in one job, not on the node.
+  Stage commands do not change, so no targets re-run (0.0.0.9041).
+
 - [`stage_fingerprint()`](https://github.com/FOR-CAST/SpaDES.targets/reference/stage_fingerprint.md),
   and so `tar_simspades(fingerprint = TRUE)`, no longer stops when none
   of a stage’s modules declares a package in `reqdPkgs`; the fingerprint

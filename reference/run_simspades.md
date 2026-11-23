@@ -159,19 +159,21 @@ run_simspades(
 
 - mem_workers:
 
-  Integer or `NULL`. Number of crew workers sharing this node. When set,
-  terra's per-process memory is capped at
-  `mem_max = mem_frac * (this node's RAM) / mem_workers` GB so that
-  concurrent workers do not collectively OOM the node (terra's default
-  `memfrac` is a per-process fraction of RAM with no cross-worker
-  coordination). `NULL` (default) leaves terra at its defaults.
+  Integer or `NULL`. Number of crew workers sharing this node's memory,
+  or under a scheduler such as SLURM, sharing one job's memory limit.
+  When set, terra's per-process memory is capped at
+  `mem_max = mem_frac * (this node's RAM, or the job's limit) / mem_workers`
+  GB so that concurrent workers do not collectively OOM the node or the
+  job (terra's default `memfrac` is a per-process fraction of RAM with
+  no cross-worker coordination). `NULL` (default) leaves terra at its
+  defaults.
 
 - mem_frac:
 
-  Numeric in (0, 1\]; the fraction of the node's RAM that all its
-  workers' terra memory may collectively use (default 0.5, leaving
-  headroom for the OS, non-terra R memory, and co-tenant processes).
-  Only used when `mem_workers` is set.
+  Numeric in (0, 1\]; the fraction of the node's RAM (or the job's
+  limit) that all its workers' terra memory may collectively use
+  (default 0.5, leaving headroom for the OS, non-terra R memory, and
+  co-tenant processes). Only used when `mem_workers` is set.
 
 - fingerprint:
 

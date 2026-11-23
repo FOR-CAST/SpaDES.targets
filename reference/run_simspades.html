@@ -21,7 +21,7 @@ writes the same files."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">SpaDES.targets</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9040</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9041</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -190,17 +190,19 @@ scratch never becomes long-term storage. <code>Inf</code> disables the sweep.</p
 
 
 <dt id="arg-mem-workers">mem_workers<a class="anchor" aria-label="anchor" href="#arg-mem-workers"></a></dt>
-<dd><p>Integer or <code>NULL</code>. Number of crew workers sharing this node.
-When set, terra's per-process memory is capped at <code>mem_max = mem_frac * (this node's RAM) / mem_workers</code> GB so that concurrent workers do not collectively
-OOM the node (terra's default <code>memfrac</code> is a per-process fraction of RAM with
-no cross-worker coordination). <code>NULL</code> (default) leaves terra at its defaults.</p></dd>
+<dd><p>Integer or <code>NULL</code>. Number of crew workers sharing this node's
+memory, or under a scheduler such as SLURM, sharing one job's memory limit.
+When set, terra's per-process memory is capped at <code>mem_max = mem_frac * (this node's RAM, or the job's limit) / mem_workers</code> GB so that concurrent workers do
+not collectively OOM the node or the job (terra's default <code>memfrac</code> is a
+per-process fraction of RAM with no cross-worker coordination). <code>NULL</code>
+(default) leaves terra at its defaults.</p></dd>
 
 
 <dt id="arg-mem-frac">mem_frac<a class="anchor" aria-label="anchor" href="#arg-mem-frac"></a></dt>
-<dd><p>Numeric in (0, 1]; the fraction of the node's RAM that all its
-workers' terra memory may collectively use (default 0.5, leaving headroom for
-the OS, non-terra R memory, and co-tenant processes). Only used when
-<code>mem_workers</code> is set.</p></dd>
+<dd><p>Numeric in (0, 1]; the fraction of the node's RAM (or the job's
+limit) that all its workers' terra memory may collectively use (default 0.5,
+leaving headroom for the OS, non-terra R memory, and co-tenant processes). Only
+used when <code>mem_workers</code> is set.</p></dd>
 
 
 <dt id="arg-fingerprint">fingerprint<a class="anchor" aria-label="anchor" href="#arg-fingerprint"></a></dt>
